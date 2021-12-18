@@ -12,11 +12,12 @@
 #include <functional>
 
 struct RendererBase {
-    virtual std::function<void(void)> get_render_func(void) const;
+    using RenderFunction = std::function<void(void)>;
+    virtual RenderFunction get_render_func(void) = delete;
 };
 
 namespace renderables {
-    struct Intro : RendererBase { std::function<void(void)> get_render_func(void) const override; };
+    struct Intro : RendererBase { RenderFunction get_render_func(void) const; };
 }
 
 namespace tleilax {
