@@ -1,7 +1,9 @@
-#include <iostream>
 #include <tleilax.h>
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    tleilax::Application app;
+
+    app.run({960, 640});
+
     return 0;
 }

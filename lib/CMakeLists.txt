@@ -1,3 +1,4 @@
-add_library(tleilax-lib tleilax.cpp)
+set(SOURCES tleilax.cpp renderables/intro.cpp)
+add_library(tleilax-lib ${SOURCES})
 target_link_libraries(tleilax-lib EnTT raylib)
 target_include_directories(tleilax-lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
