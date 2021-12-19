@@ -4,21 +4,26 @@
 
 #ifndef TLEILAX_CPP_TLEILAX_H
 #define TLEILAX_CPP_TLEILAX_H
+#include <Galaxy.h>
+#include <concepts>
 #include <cstdint>
-#include <entt/entt.hpp>
+#include <functional>
 #include <raylib.h>
 #include <string_view>
-#include <concepts>
-#include <functional>
 
 struct RendererBase {
-    using RenderFunction = std::function<void(void)>;
-    virtual RenderFunction get_render_func(void) = delete;
+    virtual std::function<void()> get_render_func() = delete;
 };
 
 namespace renderables {
-    struct Intro : RendererBase { RenderFunction get_render_func(void) const; };
-}
+    struct Intro : RendererBase {
+        [[nodiscard]] std::function<void()> get_render_func() const;
+    };
+    struct GalaxyView : RendererBase {
+        int amount_stars;
+        [[nodiscard]] std::function<void()> get_render_func() const;
+    };
+}// namespace renderables
 
 namespace tleilax {
     struct Config {
@@ -32,6 +37,7 @@ namespace tleilax {
     public:
         Application() = default;
         void run(const Config &);
+
     private:
         std::function<void(void)> render_func;
     };

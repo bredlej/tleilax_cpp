@@ -1,4 +1,13 @@
-set(SOURCES tleilax.cpp renderables/intro.cpp)
+set(SOURCES
+        tleilax.cpp
+        renderables/intro.cpp
+        renderables/galaxy.cpp
+        Galaxy.cpp
+        )
+set(INCLUDE_DIRS
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/extern
+        )
 add_library(tleilax-lib ${SOURCES})
 target_link_libraries(tleilax-lib EnTT raylib)
-target_include_directories(tleilax-lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(tleilax-lib PUBLIC ${INCLUDE_DIRS})

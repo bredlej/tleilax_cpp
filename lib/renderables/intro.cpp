@@ -3,7 +3,7 @@
 //
 #include <tleilax.h>
 
-std::function<void(void)> renderables::Intro::get_render_func(void) const {
+std::function<void(void)> renderables::Intro::get_render_func() const {
     return []() {
         BeginDrawing();
         ClearBackground(BLACK);
