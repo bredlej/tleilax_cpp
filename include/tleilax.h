@@ -28,10 +28,10 @@ namespace renderables {
 namespace tleilax {
     struct Config {
         static constexpr std::string_view title = "Tleilax";
-        struct {
+        static constexpr struct {
             uint32_t width;
             uint32_t height;
-        } window;
+        } window {800, 600};
     };
     struct Application {
     public:

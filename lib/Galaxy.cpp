@@ -31,8 +31,8 @@ void Galaxy::populate() {
     }
 }
 
-void Galaxy::_render_visible(const float distance) {
-    _camera.position.y = distance * sinf(90 * PI / 180.0f);
+void Galaxy::_render_visible() const {
+
     BeginMode3D(_camera);
     DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
 
@@ -43,9 +43,23 @@ void Galaxy::_render_visible(const float distance) {
     EndMode3D();
 }
 
-void Galaxy::render() {
+Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const float cameraDistance,
+                                  const float horizontalDistance, const float horizontalAngle,
+                                  const float verticalAngle) {
+    Camera camera;
+    camera.target = cameraInitialPosition;
+    camera.up = Vector3{0.0f, 1.0f, 0.0f};
+    camera.fovy = 45.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
+    camera.position.x = horizontalDistance * cosf(horizontalAngle * PI / 180.0f);
+    camera.position.z = horizontalDistance * sinf(horizontalAngle * PI / 180.0f);
+    camera.position.y = cameraDistance * sinf(verticalAngle * PI / 180.0f);
+    return camera;
+}
+
+void Galaxy::render() const {
     BeginDrawing();
     ClearBackground(BLACK);
-    _render_visible(100.);
+    _render_visible();
     EndDrawing();
 }

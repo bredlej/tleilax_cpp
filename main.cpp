@@ -3,7 +3,7 @@
 int main() {
     tleilax::Application app;
 
-    app.run({960, 640});
+    app.run({});
 
     return 0;
 }

@@ -6,9 +6,6 @@
 #define TLEILAX_COMPONENTS_H
 #include <cstdint>
 
-struct Coordinates{
-    int32_t x, y, z;
-};
 struct StarColor{
     uint8_t r, g, b, a;
 };
