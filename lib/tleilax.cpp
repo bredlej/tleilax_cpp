@@ -14,6 +14,7 @@ void tleilax::Application::run(const Config &config) {
 
     while (!WindowShouldClose()) {
         render_func();
+        g.update();
     }
     CloseWindow();
 }

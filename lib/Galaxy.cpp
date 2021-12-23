@@ -24,7 +24,17 @@ void Galaxy::populate() {
                 if (is_star_at(x, y, z, pcg(_star_occurence_chance))) {
                     const auto star = _registry.create();
                     _registry.emplace<Vector3>(star, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
-                    _registry.emplace<StarColor>(star, StarColor{static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), 255});
+
+                    if (pcg(100) < 5) {
+                        const auto explosion_counter = pcg(5)+1;
+                        _registry.emplace<Exploding>(star, static_cast<uint8_t>(explosion_counter));
+                        _registry.emplace<StarColor>(star, StarColor{255, 255, 255, 255});
+                        _registry.emplace<Size>(star, static_cast<float>(explosion_counter));
+                    }
+                    else {
+                        _registry.emplace<StarColor>(star, StarColor{static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), 255});
+                        _registry.emplace<Size>(star, 1.0f);
+                    }
                 }
             }
         }
@@ -36,9 +46,10 @@ void Galaxy::_render_visible() const {
     BeginMode3D(_camera);
     DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
 
-    _registry.view<Vector3, StarColor>().each([&](const Vector3 &coords, const StarColor color) {
+    _registry.view<Vector3, StarColor, Size>().each([&](const Vector3 &coords, const StarColor color, const Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
-        DrawSphere(star_coords, 1., {color.r, color.g, color.b, color.a});
+        DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
+        //DrawLine3D(star_coords, {star_coords.x, -_visible_size.y /2, star_coords.z }, DARKGRAY);
     });
     EndMode3D();
 }
@@ -52,8 +63,10 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     camera.fovy = 45.0f;
     camera.projection = CAMERA_PERSPECTIVE;
     camera.position.x = horizontalDistance * cosf(horizontalAngle * PI / 180.0f);
-    camera.position.z = horizontalDistance * sinf(horizontalAngle * PI / 180.0f);
-    camera.position.y = cameraDistance * sinf(verticalAngle * PI / 180.0f);
+    camera.position.y = horizontalDistance * sinf(horizontalAngle * PI / 180.0f);
+    camera.position.z = cameraDistance * sinf(verticalAngle * PI / 180.0f);
+    SetCameraMode(camera, CAMERA_ORBITAL);
+    UpdateCamera(&camera);
     return camera;
 }
 
@@ -62,4 +75,8 @@ void Galaxy::render() const {
     ClearBackground(BLACK);
     _render_visible();
     EndDrawing();
+}
+
+void Galaxy::update() {
+    UpdateCamera(&_camera);
 }

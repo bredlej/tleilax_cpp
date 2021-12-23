@@ -6,7 +6,13 @@
 #define TLEILAX_COMPONENTS_H
 #include <cstdint>
 
+struct Size {
+    float size;
+};
 struct StarColor{
     uint8_t r, g, b, a;
+};
+struct Exploding {
+    uint8_t counter;
 };
 #endif//TLEILAX_COMPONENTS_H
