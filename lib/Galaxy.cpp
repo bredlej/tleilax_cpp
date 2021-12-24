@@ -17,6 +17,7 @@ constexpr auto is_star_at = [](auto x, auto y, auto z, auto chance) {
 };
 
 void Galaxy::populate() {
+    auto before = std::chrono::high_resolution_clock::now();
     for (int32_t z = 0; z < _visible_size.z; z++) {
         for (int32_t y = 0; y < _visible_size.y; y++) {
             for (int32_t x = 0; x < _visible_size.x; x++) {
@@ -26,12 +27,11 @@ void Galaxy::populate() {
                     _registry.emplace<Vector3>(star, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 
                     if (pcg(100) < 5) {
-                        const auto explosion_counter = pcg(5)+1;
+                        const auto explosion_counter = pcg(5) + 1;
                         _registry.emplace<Exploding>(star, static_cast<uint8_t>(explosion_counter));
                         _registry.emplace<StarColor>(star, StarColor{255, 255, 255, 255});
                         _registry.emplace<Size>(star, static_cast<float>(explosion_counter));
-                    }
-                    else {
+                    } else {
                         _registry.emplace<StarColor>(star, StarColor{static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), 255});
                         _registry.emplace<Size>(star, 1.0f);
                     }
@@ -39,6 +39,8 @@ void Galaxy::populate() {
             }
         }
     }
+    auto after = std::chrono::high_resolution_clock::now() - before;
+    std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }
 
 void Galaxy::_render_visible() const {
@@ -46,11 +48,13 @@ void Galaxy::_render_visible() const {
     BeginMode3D(_camera);
     DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
 
-    _registry.view<Vector3, StarColor, Size>().each([&](const Vector3 &coords, const StarColor color, const Size size) {
+    _registry.view<Vector3, StarColor, Size>().each([&](const entt::entity entity, const Vector3 &coords, const StarColor color, const Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
-        //DrawLine3D(star_coords, {star_coords.x, -_visible_size.y /2, star_coords.z }, DARKGRAY);
-    });
+        if (_registry.any_of<Nova>(entity)) {
+            DrawSphereWires(star_coords, 5, 6, 6, VIOLET);  
+        }
+    });    
     EndMode3D();
 }
 
@@ -74,9 +78,39 @@ void Galaxy::render() const {
     BeginDrawing();
     ClearBackground(BLACK);
     _render_visible();
+    DrawFPS(10, 10);
     EndDrawing();
 }
 
 void Galaxy::update() {
     UpdateCamera(&_camera);
+    if (IsKeyPressed(KEY_SPACE)) {
+        _tick();
+    }
+}
+
+void Galaxy::_explode_stars(const ExplosionEvent &ev) {
+    auto pos = _registry.get<Vector3>(ev.e);
+    _registry.remove_if_exists<Exploding>(ev.e);
+    _registry.emplace<Nova>(ev.e);
+     std::printf("Explosion at [%g, %g, %g]\n",pos.x, pos.y, pos.z);
+}
+
+void Galaxy::_initialize() {
+    _dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
+}
+
+
+void Galaxy::_tick() {
+
+    auto view = _registry.view<Exploding, Size, Vector3>();
+    view.each([this](const entt::entity entity, Exploding &exploding, Size &size, Vector3 &position) {
+        if (exploding.counter > 0) {
+            exploding.counter -= 1;
+            size.size -= 1.0f;
+        } else {
+            _dispatcher.enqueue<ExplosionEvent>(entity);
+        }
+    });    
+    _dispatcher.update();    
 }

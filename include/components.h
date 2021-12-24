@@ -6,6 +6,8 @@
 #define TLEILAX_COMPONENTS_H
 #include <cstdint>
 
+struct Vector3;
+
 struct Size {
     float size;
 };
@@ -14,5 +16,9 @@ struct StarColor{
 };
 struct Exploding {
     uint8_t counter;
+};
+struct Nova {};
+struct Coordinates {
+    float x, y, z;
 };
 #endif//TLEILAX_COMPONENTS_H

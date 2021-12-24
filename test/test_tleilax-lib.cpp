@@ -3,6 +3,7 @@
 //
 #include <tleilax.h>
 #include <gtest/gtest.h>
+#include <cstdio>
 
 class TleilaxTest : public testing::Test {
 protected:
@@ -11,6 +12,27 @@ protected:
 
 TEST_F(TleilaxTest, RunsTest) {
     EXPECT_TRUE(true);
+}
+
+TEST_F(TleilaxTest, DispatcherTest) {
+    
+    entt::dispatcher dispatcher{};
+    
+    struct Emission {
+        int i;
+    };
+    
+    struct listener {
+        void receive(const Emission &emission) {
+            ASSERT_EQ(1, emission.i);
+        };
+    };
+    
+    listener listener;
+    dispatcher.sink<Emission>().connect<&listener::receive>(listener);
+
+    dispatcher.enqueue<Emission>(1);
+    dispatcher.update();
 }
 
 int main(int ac, char *av[]) {
