@@ -3,6 +3,7 @@
 //
 
 #include "Galaxy.h"
+#include <cmath>
 
 constexpr auto seed_function = [](uint32_t x, uint32_t y, uint32_t z) {
     return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
@@ -74,8 +75,8 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     camera.up = Vector3{0.0f, 1.0f, 0.0f};
     camera.fovy = 45.0f;
     camera.projection = CAMERA_PERSPECTIVE;
-    camera.position.x = horizontalDistance * cosf(horizontalAngle * PI / 180.0f);
-    camera.position.y = horizontalDistance * sinf(horizontalAngle * PI / 180.0f);
+    camera.position.x = horizontalDistance * std::cosh(horizontalAngle * PI / 180.0f);
+    camera.position.y = horizontalDistance * std::sinh(horizontalAngle * PI / 180.0f);
     camera.position.z = cameraDistance * sinf(verticalAngle * PI / 180.0f);
     SetCameraMode(camera, CAMERA_ORBITAL);
     UpdateCamera(&camera);
