@@ -10,10 +10,15 @@
 #include <entt/entt.hpp>
 #include <pcg/pcg_random.hpp>
 #include <raylib.h>
+#include <raymath.h>
 #include <chrono>
 
 struct ExplosionEvent {
     entt::entity e;
+};
+struct NovaSeekEvent {
+    entt::entity e;
+    Vector3 destination;
 };
 
 class Galaxy {
@@ -41,6 +46,7 @@ private:
     void _render_visible() const;
     void _tick();
     void _explode_stars(const ExplosionEvent &);
+    void _send_fleet_to_nova(const NovaSeekEvent &);
 };
 
 #endif//TLEILAX_GALAXY_H

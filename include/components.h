@@ -18,7 +18,18 @@ struct Exploding {
     uint8_t counter;
 };
 struct Nova {};
+struct NovaSeeker {
+    uint32_t capacity;
+};
+struct Fleet {
+    int i;
+};
+
 struct Coordinates {
-    float x, y, z;
+    int32_t x, y, z;
+};
+
+struct Destination {
+    Coordinates dest;
 };
 #endif//TLEILAX_COMPONENTS_H

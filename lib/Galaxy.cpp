@@ -34,6 +34,10 @@ void Galaxy::populate() {
                     } else {
                         _registry.emplace<StarColor>(star, StarColor{static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), 255});
                         _registry.emplace<Size>(star, 1.0f);
+
+                        if (pcg(100) < 10) {
+                            _registry.emplace<NovaSeeker>(star, pcg(5) + 1);
+                        }
                     }
                 }
             }
@@ -52,9 +56,13 @@ void Galaxy::_render_visible() const {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
         if (_registry.any_of<Nova>(entity)) {
-            DrawSphereWires(star_coords, 5, 6, 6, VIOLET);  
+            DrawSphereWires(star_coords, 5, 6, 6, VIOLET);
         }
-    });    
+    });
+    _registry.view<Fleet, Vector3, Size>().each([&](const Fleet &fleet, const Vector3 pos, const Size size) {
+        Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
+        DrawSphere(fleet_coords, size.size, GREEN);
+    });
     EndMode3D();
 }
 
@@ -93,13 +101,20 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
     auto pos = _registry.get<Vector3>(ev.e);
     _registry.remove_if_exists<Exploding>(ev.e);
     _registry.emplace<Nova>(ev.e);
-     std::printf("Explosion at [%g, %g, %g]\n",pos.x, pos.y, pos.z);
+    std::printf("Explosion at [%g, %g, %g]\n", pos.x, pos.y, pos.z);
+    auto nova_seekers = _registry.view<NovaSeeker>();
+    nova_seekers.each([this, pos](const entt::entity entity, NovaSeeker &nova_seeker) {
+        if (nova_seeker.capacity > 0) {
+            _dispatcher.enqueue<NovaSeekEvent>(entity, pos);
+            nova_seeker.capacity -= 1;
+        }
+    });
 }
 
 void Galaxy::_initialize() {
     _dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
+    _dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
 }
-
 
 void Galaxy::_tick() {
 
@@ -111,6 +126,27 @@ void Galaxy::_tick() {
         } else {
             _dispatcher.enqueue<ExplosionEvent>(entity);
         }
-    });    
-    _dispatcher.update();    
+    });
+
+    auto fleets = _registry.view<Fleet, Vector3, Coordinates, Size>();
+    fleets.each( [] (const entt::entity entity, Fleet &fleet, Vector3 &pos, const Coordinates destination, const Size size) {
+        auto new_position = Vector3{static_cast<float>(destination.x), static_cast<float>(destination.y), static_cast<float>(destination.z)};
+        new_position = Vector3Normalize(Vector3Subtract(new_position, pos));
+        pos = Vector3Add(pos, new_position);
+        std::printf("Fleet [%g, %g, %g]\n", pos.x, pos.y, pos.z);
+    });
+    /*auto fleets = _registry.view<Fleet>();
+    fleets.each([](const entt::entity entity, Fleet &fleet) {
+        std::printf("Fleet: %d\n", entity);
+    });*/
+    _dispatcher.update();
+}
+void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
+    auto nova_seeker_pos = _registry.get<Vector3>(ev.e);
+    auto fleet = _registry.create();
+    _registry.emplace<Vector3>(fleet, nova_seeker_pos);
+    _registry.emplace<Size>(fleet, 0.5f);
+    _registry.emplace<Fleet>(fleet);
+    _registry.emplace<Destination>(fleet, Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
+    std::printf("Sending fleet from [%g, %g, %g] to [%g, %g, %g]\n", nova_seeker_pos.x, nova_seeker_pos.y, nova_seeker_pos.z, ev.destination.x, ev.destination.y, ev.destination.z);
 }
