@@ -4,7 +4,8 @@
 
 #include "Galaxy.h"
 #include <cmath>
-
+#define RLIGHTS_IMPLEMENTATION
+#include <rlights.h>
 constexpr auto seed_function = [](uint32_t x, uint32_t y, uint32_t z) {
     return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
 };
@@ -17,6 +18,21 @@ constexpr auto is_star_at = [](auto x, auto y, auto z, auto chance) {
     return 0 == chance;
 };
 
+static void place_star_instance_at(RenderInstance &render_instance, float x, float y, float z, const Vector3 size) {
+    Matrix m = MatrixIdentity();
+    Vector3 v = local_to_global_coords(Vector3{x, y, z}, size);
+    auto translation = MatrixTranslate(v.x, v.y, v.z);
+    auto rotation = MatrixRotate({1,0,0}, 0);
+    auto scale = MatrixScale(1.0f, 1.0f, 1.0f);
+
+    m = MatrixMultiply(m, translation);
+    m = MatrixMultiply(m, rotation);
+    m = MatrixMultiply(m, scale);
+
+    render_instance.matrices.emplace_back(m);
+    render_instance.count += 1;
+
+}
 void Galaxy::populate() {
     auto before = std::chrono::high_resolution_clock::now();
     for (int32_t z = 0; z < _visible_size.z; z++) {
@@ -26,7 +42,7 @@ void Galaxy::populate() {
                 if (is_star_at(x, y, z, pcg(_star_occurence_chance))) {
                     const auto star = _registry.create();
                     _registry.emplace<Vector3>(star, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
-
+                    place_star_instance_at(_render_instance, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), _visible_size);
                     if (pcg(100) < 5) {
                         const auto explosion_counter = pcg(5) + 1;
                         _registry.emplace<Exploding>(star, static_cast<uint8_t>(explosion_counter));
@@ -48,18 +64,19 @@ void Galaxy::populate() {
     std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }
 
-void Galaxy::_render_visible() const {
+void Galaxy::_render_visible()  {
 
     BeginMode3D(_camera);
     DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
 
-    _registry.view<Vector3, StarColor, Size>().each([&](const entt::entity entity, const Vector3 &coords, const StarColor color, const Size size) {
+    /*_registry.view<Vector3, StarColor, Size>().each([&](const entt::entity entity, const Vector3 &coords, const StarColor color, const Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
         if (_registry.any_of<Nova>(entity)) {
             DrawSphereWires(star_coords, 5, 6, 6, VIOLET);
         }
-    });
+    });*/
+    DrawMeshInstanced(_render_instance.model.meshes[0], _render_instance.model.materials[0], _render_instance.matrices.data(), _render_instance.count);
     _registry.view<Fleet, Vector3, Size>().each([&](const Fleet &fleet, const Vector3 pos, const Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
         DrawSphere(fleet_coords, size.size, GREEN);
@@ -83,7 +100,7 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     return camera;
 }
 
-void Galaxy::render() const {
+void Galaxy::render() {
     BeginDrawing();
     ClearBackground(BLACK);
     _render_visible();
@@ -93,6 +110,8 @@ void Galaxy::render() const {
 
 void Galaxy::update() {
     UpdateCamera(&_camera);
+    float cameraPos[3] = { _camera.position.x, _camera.position.y, _camera.position.z };
+    SetShaderValue(_render_instance.shader, _render_instance.shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
     if (IsKeyPressed(KEY_SPACE)) {
         _tick();
     }
@@ -100,7 +119,7 @@ void Galaxy::update() {
 
 void Galaxy::_explode_stars(const ExplosionEvent &ev) {
     auto pos = _registry.get<Vector3>(ev.e);
-    _registry.remove_if_exists<Exploding>(ev.e);
+    _registry.remove<Exploding>(ev.e);
     _registry.emplace<Nova>(ev.e);
     std::printf("Explosion at [%g, %g, %g]\n", pos.x, pos.y, pos.z);
     auto nova_seekers = _registry.view<NovaSeeker>();
@@ -118,7 +137,6 @@ void Galaxy::_initialize() {
 }
 
 void Galaxy::_tick() {
-
     auto view = _registry.view<Exploding, Size, Vector3>();
     view.each([this](const entt::entity entity, Exploding &exploding, Size &size, Vector3 &position) {
         if (exploding.counter > 0) {
@@ -136,10 +154,7 @@ void Galaxy::_tick() {
         pos = Vector3Add(pos, new_position);
         std::printf("Fleet [%g, %g, %g]\n", pos.x, pos.y, pos.z);
     });
-    /*auto fleets = _registry.view<Fleet>();
-    fleets.each([](const entt::entity entity, Fleet &fleet) {
-        std::printf("Fleet: %d\n", entity);
-    });*/
+
     _dispatcher.update();
 }
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
@@ -150,4 +165,38 @@ void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     _registry.emplace<Fleet>(fleet);
     _registry.emplace<Destination>(fleet, Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
     std::printf("Sending fleet from [%g, %g, %g] to [%g, %g, %g]\n", nova_seeker_pos.x, nova_seeker_pos.y, nova_seeker_pos.z, ev.destination.x, ev.destination.y, ev.destination.z);
+}
+
+RenderInstance Galaxy::_init_render_instance() {
+    Model m = LoadModelFromMesh(GenMeshSphere(1.0f, 6, 6));
+    Shader shader = LoadShader("assets/shaders/base_lightning_instanced.vs", "assets/shaders/lighting.fs");
+    RenderInstance r;
+    r.shader = shader;
+    // Get some shader loactions
+    shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(r.shader, "mvp");
+    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(r.shader, "viewPos");
+    shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(r.shader, "instanceTransform");
+
+    // Ambient light level
+    int ambientLoc = GetShaderLocation(r.shader, "ambient");
+    const float f[4]{
+            0.8f, 0.8f, 0.8f, 1.0f};
+    SetShaderValue(r.shader, ambientLoc, f, SHADER_UNIFORM_VEC4);
+    Vector3 v{50, 50, 0};
+    CreateLight(LIGHT_DIRECTIONAL, v, Vector3Zero(), WHITE, r.shader);
+
+    // NOTE: We are assigning the intancing shader to material.shader
+    // to be used on mesh drawing with DrawMeshInstanced()
+    Material material = LoadMaterialDefault();
+    material.shader = r.shader;
+    material.maps[MATERIAL_MAP_DIFFUSE].color = YELLOW;
+    m.materials[0] = material;
+
+    r.model = m;
+
+    return r;
+}
+Galaxy::~Galaxy() {
+    UnloadShader(_render_instance.shader);
+    UnloadModel(_render_instance.model);
 }

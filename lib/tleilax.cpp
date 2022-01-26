@@ -5,6 +5,7 @@
 
 void tleilax::Application::run(const Config &config) {
 
+    SetConfigFlags(FLAG_MSAA_4X_HINT);// Enable Multi Sampling Anti Aliasing 4x (if available)
     InitWindow(config.window.width, config.window.height, config.title.data());
     SetTargetFPS(60);
 
@@ -16,6 +17,7 @@ void tleilax::Application::run(const Config &config) {
         render_func();
         g.update();
     }
+
     CloseWindow();
 }
 
