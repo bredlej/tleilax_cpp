@@ -60,9 +60,9 @@ void Galaxy::_render_visible() const {
             DrawSphereWires(star_coords, 5, 6, 6, VIOLET);
         }
     });
-    _registry.view<Fleet, Vector3, Size>().each([&](const Fleet &fleet, const Vector3 pos, const Size size) {
+    _registry.view<Fleet, Vector3, Size>().each([&](const entt::entity entity, const Fleet &fleet, const Vector3 pos, const Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
-        DrawSphere(fleet_coords, size.size, GREEN);
+        DrawSphereWires(fleet_coords, size.size, 6, 6, GREEN);
     });
     EndMode3D();
 }
@@ -92,7 +92,9 @@ void Galaxy::render() const {
 }
 
 void Galaxy::update() {
-    UpdateCamera(&_camera);
+    if (IsKeyDown(KEY_A)) {
+        UpdateCamera(&_camera);
+    }
     if (IsKeyPressed(KEY_SPACE)) {
         _tick();
     }
@@ -117,6 +119,13 @@ void Galaxy::_initialize() {
     _dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
 }
 
+constexpr auto fleet_update_func = [] (const entt::entity entity, Fleet &fleet, Vector3 &pos, const Destination destination, const Size size) {
+    auto new_position = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
+    new_position = Vector3Normalize(Vector3Subtract(new_position, pos));
+    pos = Vector3Add(pos, new_position);
+    pos = Vector3{ceil(pos.x), ceil(pos.y), ceil(pos.z)};
+};
+
 void Galaxy::_tick() {
 
     auto view = _registry.view<Exploding, Size, Vector3>();
@@ -129,25 +138,16 @@ void Galaxy::_tick() {
         }
     });
 
-    auto fleets = _registry.view<Fleet, Vector3, Coordinates, Size>();
-    fleets.each( [] (const entt::entity entity, Fleet &fleet, Vector3 &pos, const Coordinates destination, const Size size) {
-        auto new_position = Vector3{static_cast<float>(destination.x), static_cast<float>(destination.y), static_cast<float>(destination.z)};
-        new_position = Vector3Normalize(Vector3Subtract(new_position, pos));
-        pos = Vector3Add(pos, new_position);
-        std::printf("Fleet [%g, %g, %g]\n", pos.x, pos.y, pos.z);
-    });
-    /*auto fleets = _registry.view<Fleet>();
-    fleets.each([](const entt::entity entity, Fleet &fleet) {
-        std::printf("Fleet: %d\n", entity);
-    });*/
+    auto fleets = _registry.view<Fleet, Vector3, Destination, Size>();
+    fleets.each( fleet_update_func );
+
     _dispatcher.update();
 }
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     auto nova_seeker_pos = _registry.get<Vector3>(ev.e);
     auto fleet = _registry.create();
     _registry.emplace<Vector3>(fleet, nova_seeker_pos);
-    _registry.emplace<Size>(fleet, 0.5f);
+    _registry.emplace<Size>(fleet, 1.5f);
     _registry.emplace<Fleet>(fleet);
     _registry.emplace<Destination>(fleet, Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
-    std::printf("Sending fleet from [%g, %g, %g] to [%g, %g, %g]\n", nova_seeker_pos.x, nova_seeker_pos.y, nova_seeker_pos.z, ev.destination.x, ev.destination.y, ev.destination.z);
 }

@@ -6,7 +6,7 @@
 void tleilax::Application::run(const Config &config) {
 
     InitWindow(config.window.width, config.window.height, config.title.data());
-    SetTargetFPS(60);
+    SetTargetFPS(144);
 
     Galaxy g;
     g.populate();
