@@ -28,7 +28,7 @@ void Galaxy::populate() {
                     _registry.emplace<Vector3>(star, static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 
                     if (pcg(100) < 5) {
-                        const auto explosion_counter = pcg(5) + 1;
+                        const auto explosion_counter = pcg(15) + 1;
                         _registry.emplace<Exploding>(star, static_cast<uint8_t>(explosion_counter));
                         _registry.emplace<StarColor>(star, StarColor{255, 255, 255, 255});
                         _registry.emplace<Size>(star, static_cast<float>(explosion_counter));
@@ -101,15 +101,23 @@ void Galaxy::update() {
 }
 
 void Galaxy::_explode_stars(const ExplosionEvent &ev) {
-    auto pos = _registry.get<Vector3>(ev.e);
-    _registry.remove_if_exists<Exploding>(ev.e);
+    auto explosion_position = _registry.get<Vector3>(ev.e);
+    _registry.remove<Exploding>(ev.e);
     _registry.emplace<Nova>(ev.e);
-    std::printf("Explosion at [%g, %g, %g]\n", pos.x, pos.y, pos.z);
+    std::printf("Explosion at [%g, %g, %g]\n", explosion_position.x, explosion_position.y, explosion_position.z);
     auto nova_seekers = _registry.view<NovaSeeker>();
-    nova_seekers.each([this, pos](const entt::entity entity, NovaSeeker &nova_seeker) {
+    nova_seekers.each([this, explosion_position](const entt::entity entity, NovaSeeker &nova_seeker) {
         if (nova_seeker.capacity > 0) {
-            _dispatcher.enqueue<NovaSeekEvent>(entity, pos);
+            _dispatcher.enqueue<NovaSeekEvent>(entity, explosion_position);
             nova_seeker.capacity -= 1;
+        }
+    });
+
+    auto fleets = _registry.view<Fleet, Vector3, Destination, Size>();
+    fleets.each( [=] (const entt::entity entity, Fleet &fleet, Vector3 &position, Destination &destination, const Size size) {
+        auto destination_vector = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
+        if (Vector3Distance(explosion_position, position) < Vector3Distance(destination_vector, position)) {
+            destination = Destination{static_cast<int32_t>(explosion_position.x), static_cast<int32_t>(explosion_position.y), static_cast<int32_t>(explosion_position.z)};
         }
     });
 }
