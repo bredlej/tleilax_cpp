@@ -12,6 +12,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <chrono>
+#include <functional>
 
 struct ExplosionEvent {
     entt::entity e;
@@ -47,6 +48,7 @@ private:
     void _tick();
     void _explode_stars(const ExplosionEvent &);
     void _send_fleet_to_nova(const NovaSeekEvent &);
+    std::function<void(const entt::registry &, const entt::entity)> _fleet_onclick_handle;
 };
 
 #endif//TLEILAX_GALAXY_H

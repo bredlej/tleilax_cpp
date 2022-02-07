@@ -62,7 +62,14 @@ void Galaxy::_render_visible() const {
     });
     _registry.view<Fleet, Vector3, Size>().each([&](const entt::entity entity, const Fleet &fleet, const Vector3 pos, const Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
-        DrawSphereWires(fleet_coords, size.size, 6, 6, GREEN);
+        if (GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), fleet_coords, size.size).hit) {
+            DrawSphereWires(fleet_coords, size.size, 6, 6, RED);
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                _fleet_onclick_handle(_registry, entity);
+            }
+        } else {
+            DrawSphereWires(fleet_coords, size.size, 6, 6, GREEN);
+        }
     });
     EndMode3D();
 }
@@ -99,7 +106,12 @@ void Galaxy::update() {
         _tick();
     }
 }
-
+static void change_course_upon_nearer_explosion(const Vector3 &explosion_position, const entt::entity entity, Fleet &fleet, Vector3 &position, Destination &destination, const Size size) {
+    auto destination_vector = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
+    if (Vector3Distance(explosion_position, position) < Vector3Distance(destination_vector, position)) {
+        destination = Destination{static_cast<int32_t>(explosion_position.x), static_cast<int32_t>(explosion_position.y), static_cast<int32_t>(explosion_position.z)};
+    }
+}
 void Galaxy::_explode_stars(const ExplosionEvent &ev) {
     auto explosion_position = _registry.get<Vector3>(ev.e);
     _registry.remove<Exploding>(ev.e);
@@ -114,20 +126,22 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
     });
 
     auto fleets = _registry.view<Fleet, Vector3, Destination, Size>();
-    fleets.each( [=] (const entt::entity entity, Fleet &fleet, Vector3 &position, Destination &destination, const Size size) {
-        auto destination_vector = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
-        if (Vector3Distance(explosion_position, position) < Vector3Distance(destination_vector, position)) {
-            destination = Destination{static_cast<int32_t>(explosion_position.x), static_cast<int32_t>(explosion_position.y), static_cast<int32_t>(explosion_position.z)};
-        }
+    fleets.each([=](const entt::entity entity, Fleet &fleet, Vector3 &position, Destination &destination, const Size size) {
+        change_course_upon_nearer_explosion(explosion_position, entity, fleet, position, destination, size);
     });
 }
 
 void Galaxy::_initialize() {
     _dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
     _dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
+    _fleet_onclick_handle = [](const entt::registry &registry, const entt::entity entity) {
+        auto position = registry.get<Vector3>(entity);
+        auto destination = registry.get<Destination>(entity);
+        std::printf("entity = [%d], fleet at [%.1f, %.1f, %.1f] moving towards [%d, %d, %d]\n", entity, position.x, position.y, position.z, destination.dest.x, destination.dest.y, destination.dest.z);
+    };
 }
 
-constexpr auto fleet_update_func = [] (const entt::entity entity, Fleet &fleet, Vector3 &pos, const Destination destination, const Size size) {
+constexpr auto fleet_update_func = [](const entt::entity entity, Fleet &fleet, Vector3 &pos, const Destination destination, const Size size) {
     auto new_position = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
     new_position = Vector3Normalize(Vector3Subtract(new_position, pos));
     pos = Vector3Add(pos, new_position);
@@ -147,7 +161,7 @@ void Galaxy::_tick() {
     });
 
     auto fleets = _registry.view<Fleet, Vector3, Destination, Size>();
-    fleets.each( fleet_update_func );
+    fleets.each(fleet_update_func);
 
     _dispatcher.update();
 }
