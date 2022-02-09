@@ -65,7 +65,7 @@ void Galaxy::_render_visible() const {
         if (GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), fleet_coords, size.size).hit) {
             DrawSphereWires(fleet_coords, size.size, 6, 6, RED);
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                _fleet_onclick_handle(_registry, entity);
+                FleetEntity::on_click(_registry, entity);
             }
         } else {
             DrawSphereWires(fleet_coords, size.size, 6, 6, GREEN);
@@ -135,18 +135,9 @@ void Galaxy::_initialize() {
     _dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
     _dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
     _fleet_onclick_handle = [](const entt::registry &registry, const entt::entity entity) {
-        auto position = registry.get<Vector3>(entity);
-        auto destination = registry.get<Destination>(entity);
-        std::printf("entity = [%d], fleet at [%.1f, %.1f, %.1f] moving towards [%d, %d, %d]\n", entity, position.x, position.y, position.z, destination.dest.x, destination.dest.y, destination.dest.z);
+
     };
 }
-
-constexpr auto fleet_update_func = [](const entt::entity entity, Fleet &fleet, Vector3 &pos, const Destination destination, const Size size) {
-    auto new_position = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
-    new_position = Vector3Normalize(Vector3Subtract(new_position, pos));
-    pos = Vector3Add(pos, new_position);
-    pos = Vector3{ceil(pos.x), ceil(pos.y), ceil(pos.z)};
-};
 
 void Galaxy::_tick() {
 
@@ -161,15 +152,42 @@ void Galaxy::_tick() {
     });
 
     auto fleets = _registry.view<Fleet, Vector3, Destination, Size>();
-    fleets.each(fleet_update_func);
+    fleets.each(FleetEntity::update);
 
     _dispatcher.update();
 }
+
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
-    auto nova_seeker_pos = _registry.get<Vector3>(ev.e);
-    auto fleet = _registry.create();
-    _registry.emplace<Vector3>(fleet, nova_seeker_pos);
-    _registry.emplace<Size>(fleet, 1.5f);
-    _registry.emplace<Fleet>(fleet);
-    _registry.emplace<Destination>(fleet, Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
+    FleetEntity fleet;
+    fleet.react_to_nova(_registry, ev);
+}
+
+void FleetEntity::react_to_nova(entt::registry &registry, const NovaSeekEvent &ev) {
+    if (_entity == entt::null) {
+        auto position = registry.get<Vector3>(ev.e);
+        _entity = create(registry, position);
+    }
+    registry.emplace<Destination>(_entity, Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
+}
+
+entt::entity FleetEntity::create(entt::registry &registry, Vector3 position) {
+    auto entity = registry.create();
+    registry.emplace<Vector3>(entity, position);
+    registry.emplace<Size>(entity, 1.5f);
+    registry.emplace<Fleet>(entity);
+
+    return entity;
+}
+
+void FleetEntity::update(const entt::entity entity, Fleet &fleet, Vector3 &pos, const Destination destination, const Size size) {
+    auto new_position = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
+    new_position = Vector3Normalize(Vector3Subtract(new_position, pos));
+    pos = Vector3Add(pos, new_position);
+    pos = Vector3{ceil(pos.x), ceil(pos.y), ceil(pos.z)};
+}
+
+void FleetEntity::on_click(const entt::registry &registry, entt::entity entity) {
+    auto position = registry.get<Vector3>(entity);
+    auto destination = registry.get<Destination>(entity);
+    std::printf("entity = [%d], fleet at [%.1f, %.1f, %.1f] moving towards [%d, %d, %d]\n", entity, position.x, position.y, position.z, destination.dest.x, destination.dest.y, destination.dest.z);
 }

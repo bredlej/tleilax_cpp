@@ -22,6 +22,17 @@ struct NovaSeekEvent {
     Vector3 destination;
 };
 
+class FleetEntity {
+public:
+    FleetEntity() : _entity{ entt::null } {};
+    static entt::entity create(entt::registry&, Vector3 position);
+    void react_to_nova(entt::registry &, const NovaSeekEvent &);
+    static void update(entt::entity entity, Fleet &fleet, Vector3 &pos, Destination destination, Size size);
+    static void on_click(const entt::registry &, entt::entity entity);
+private:
+    entt::entity _entity;
+};
+
 class Galaxy {
 public:
     Galaxy() : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)) { _initialize(); };
