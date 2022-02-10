@@ -22,6 +22,31 @@ struct NovaSeekEvent {
     Vector3 destination;
 };
 
+struct Chance {
+    uint32_t upper_bound;
+    uint32_t occurs_if_less_then;
+};
+
+class StarEntity {
+public:
+    StarEntity(const uint32_t occurence_chance, const Chance &&exploding_chance, const Chance &&nova_seeker_chance)
+        : _entity { entt::null },
+          _occurence_chance {occurence_chance},
+          _exploding_chance {exploding_chance},
+          _nova_seeker_chance {nova_seeker_chance}
+          {};
+
+    entt::entity create_at(entt::registry &, pcg32 &, Vector3 position);
+    bool is_created();
+    static void render(const entt::registry &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const StarColor color, const Size size);
+private:
+    entt::entity _entity;
+    uint32_t _occurence_chance;
+    Chance _exploding_chance;
+    Chance _nova_seeker_chance;
+};
+
+
 class FleetEntity {
 public:
     FleetEntity() : _entity{ entt::null } {};
