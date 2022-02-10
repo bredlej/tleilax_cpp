@@ -18,9 +18,9 @@ void Galaxy::populate() {
     for (int32_t z = 0; z < _visible_size.z; z++) {
         for (int32_t y = 0; y < _visible_size.y; y++) {
             for (int32_t x = 0; x < _visible_size.x; x++) {
-                StarEntity star(10000, {100, 5}, {100, 10});
-                pcg32 pcg(seed_function(x, y, z));
-                star.create_at(_registry, pcg, Vector3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
+                StarEntity star(7000, {100, 5}, {100, 10});
+                next_random_number(seed_function(x, y, z));
+                star.create_at(_registry, _pcg, Vector3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
             }
         }
     }
@@ -133,22 +133,23 @@ void Galaxy::_tick() {
 
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
-    fleet.react_to_nova(_registry, ev);
+    fleet.react_to_nova(_registry, _pcg, ev);
 }
 
-void FleetEntity::react_to_nova(entt::registry &registry, const NovaSeekEvent &ev) {
+void FleetEntity::react_to_nova(entt::registry &registry, pcg32 &pcg, const NovaSeekEvent &ev) {
     if (_entity == entt::null) {
         auto position = registry.get<Vector3>(ev.e);
-        _entity = create(registry, position);
+        _entity = create(registry, pcg, position);
     }
     registry.emplace<Destination>(_entity, Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
 }
 
-entt::entity FleetEntity::create(entt::registry &registry, Vector3 position) {
+entt::entity FleetEntity::create(entt::registry &registry, pcg32 &pcg, Vector3 position) {
     auto entity = registry.create();
     registry.emplace<Vector3>(entity, position);
     registry.emplace<Size>(entity, 1.5f);
-    registry.emplace<Fleet>(entity);
+
+    populate_fleet_with_ships(registry, entity, pcg);
 
     return entity;
 }
@@ -160,10 +161,49 @@ void FleetEntity::update(const entt::entity entity, Fleet &fleet, Vector3 &pos, 
     pos = Vector3{ceil(pos.x), ceil(pos.y), ceil(pos.z)};
 }
 
+void print_ships_info(const entt::registry &registry, const entt::entity &fleet_entity) {
+    const Fleet fleet = registry.get<Fleet>(fleet_entity);
+    std::printf("Fleet=[%d] has %d ships:\n", fleet_entity, fleet.ships.size());
+    for (auto ship : fleet.ships) {
+        const auto engine = registry.get<Engine>(ship);
+        const auto hull = registry.get<Hull>(ship);
+        const auto shield = registry.get<Shield>(ship);
+        const auto weapon = registry.get<Weapon>(ship);
+
+        std::printf("Ship=[%d] | Engine=[%.1f/%.1f], Hull=[%.1f/%.1f], Shield=[%.1f], Weapon=[%.1f]\n",
+                    ship,
+                    engine.speed, engine.max_speed,
+                    hull.health, hull.max_health,
+                    shield.absorption,
+                    weapon.damage);
+    }
+}
 void FleetEntity::on_click(const entt::registry &registry, entt::entity entity) {
     auto position = registry.get<Vector3>(entity);
     auto destination = registry.get<Destination>(entity);
     std::printf("entity = [%d], fleet at [%.1f, %.1f, %.1f] moving towards [%d, %d, %d]\n", entity, position.x, position.y, position.z, destination.dest.x, destination.dest.y, destination.dest.z);
+    print_ships_info(registry, entity);
+}
+
+void FleetEntity::populate_fleet_with_ships(entt::registry &registry, entt::entity fleet_entity, pcg32 &pcg) {
+    auto amount_ships = pcg(MAX_SHIPS_IN_FLEET);
+    std::vector<entt::entity> ships;
+    for (int i = 0; i < amount_ships; i++) {
+        entt::entity ship = registry.create();
+
+        Engine engine{static_cast<float>(pcg(10)), static_cast<float>(pcg(10) + pcg(10))};
+        Hull hull{static_cast<float>(pcg(10)), static_cast<float>(pcg(10) + pcg(10))};
+        Shield shield{static_cast<float>(pcg(10))};
+        Weapon weapon{static_cast<float>(pcg(10))};
+
+        registry.emplace<Engine>(ship, engine);
+        registry.emplace<Hull>(ship, hull);
+        registry.emplace<Shield>(ship, shield);
+        registry.emplace<Weapon>(ship, weapon);
+
+        ships.emplace_back(ship);
+    }
+    registry.emplace<Fleet>(fleet_entity, ships);
 }
 
 entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3 position) {

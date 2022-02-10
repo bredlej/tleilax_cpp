@@ -5,6 +5,8 @@
 #ifndef TLEILAX_COMPONENTS_H
 #define TLEILAX_COMPONENTS_H
 #include <cstdint>
+#include <vector>
+#include <entt/entt.hpp>
 
 struct Vector3;
 
@@ -21,8 +23,9 @@ struct Nova {};
 struct NovaSeeker {
     uint32_t capacity;
 };
+
 struct Fleet {
-    int i;
+    std::vector<entt::entity> ships;
 };
 
 struct Coordinates {
@@ -31,5 +34,25 @@ struct Coordinates {
 
 struct Destination {
     Coordinates dest;
+};
+
+// Ship Components
+
+struct Engine {
+    float speed;
+    float max_speed;
+};
+
+struct Hull {
+    float health;
+    float max_health;
+};
+
+struct Shield {
+    float absorption;
+};
+
+struct Weapon {
+    float damage;
 };
 #endif//TLEILAX_COMPONENTS_H
