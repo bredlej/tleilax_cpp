@@ -4,7 +4,9 @@
 
 #ifndef TLEILAX_CPP_TLEILAX_H
 #define TLEILAX_CPP_TLEILAX_H
+
 #include <Galaxy.h>
+#include <assets.h>
 #include <concepts>
 #include <cstdint>
 #include <functional>

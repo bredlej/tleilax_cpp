@@ -8,6 +8,9 @@ void tleilax::Application::run(const Config &config) {
     InitWindow(config.window.width, config.window.height, config.title.data());
     SetTargetFPS(144);
 
+    Assets assets;
+    auto ship_components = assets.ship_components(files::ship_components);
+
     Galaxy g;
     g.populate();
     render_func = [&g](){g.render();};
