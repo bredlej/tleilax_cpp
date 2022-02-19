@@ -8,6 +8,7 @@ include(cmake/CPM.cmake)
 include(cmake/fetch-googletest.cmake)
 include(cmake/fetch-entt.cmake)
 include(cmake/fetch-raylib.cmake)
+include(cmake/fetch-json.cmake)
 
 enable_testing()
 
