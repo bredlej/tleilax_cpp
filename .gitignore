@@ -6,3 +6,7 @@
 /.idea
 /out/build/x64-Release
 /CMakeSettings.json
+/.vs/
+/cmake-build-debug-visual-studio---vs-compiler/
+/cmake-build-release-visual-studio---vs-compiler/
+/out/
