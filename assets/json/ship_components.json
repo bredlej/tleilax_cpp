@@ -3,7 +3,59 @@
     {
       "id": "LASER1",
       "name": "Small laser turret",
-      "damage" : "1d4"
+      "power_usage": 1,
+      "damage" : "1d4",
+      "weight" : 1
+    },
+    {
+      "id": "LASER2",
+      "name": "Medium laser turret",
+      "power_usage": 3,
+      "damage" : "2d4",
+      "weight" : 2
+    },
+    {
+      "id": "LASER3",
+      "name": "Large laser turret",
+      "power_usage": 5,
+      "damage" : "2d4",
+      "weight" : 3
+    }
+  ],
+  "shields": [
+    {
+      "id": "SHIELD1",
+      "name": "Small shield",
+      "power_usage": 1,
+      "defense": 1,
+      "weight" : 1
+    }
+  ],
+  "engines": [
+    {
+      "id": "ENGINE1",
+      "name": "Small engine",
+      "power": 5,
+      "weight" : 1
+    },
+    {
+      "id": "ENGINE2",
+      "name": "Medium engine",
+      "power": 10,
+      "weight" : 2
+    },
+    {
+      "id": "ENGINE3",
+      "name": "Large engine",
+      "power": 15,
+      "weight" : 3
+    }
+  ],
+  "cargo": [
+    {
+      "id": "SOLAR-BOMB",
+      "name": "Solar bomb",
+      "weight" : 95
     }
   ]
 }

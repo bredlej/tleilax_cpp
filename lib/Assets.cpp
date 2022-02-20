@@ -11,3 +11,7 @@ nlohmann::json Assets::load_from_file(const std::string &file_name) {
 nlohmann::json Assets::get_ship_components() const {
     return ship_components;
 }
+
+nlohmann::json Assets::get_ships() const {
+    return ships;
+}
