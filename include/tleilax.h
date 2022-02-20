@@ -5,13 +5,14 @@
 #ifndef TLEILAX_CPP_TLEILAX_H
 #define TLEILAX_CPP_TLEILAX_H
 
-#include <Galaxy.h>
 #include <assets.h>
 #include <concepts>
 #include <cstdint>
 #include <functional>
+#include <galaxy.h>
 #include <raylib.h>
 #include <string_view>
+#include <ship.h>
 
 struct RendererBase {
     virtual std::function<void()> get_render_func() = delete;
