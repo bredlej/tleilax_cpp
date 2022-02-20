@@ -1,0 +1,9 @@
+{
+  "weapons": [
+    {
+      "id": "LASER1",
+      "name": "Small laser turret",
+      "damage" : "1d4"
+    }
+  ]
+}

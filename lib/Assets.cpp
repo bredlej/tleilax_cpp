@@ -3,7 +3,11 @@
 //
 #include <assets.h>
 
-nlohmann::json Assets::ship_components(const std::string_view file_name) {
-    std::ifstream file("assets/json/ship_components.json");
+nlohmann::json Assets::load_from_file(const std::string &file_name) {
+    std::ifstream file(file_name.c_str());
     return nlohmann::json::parse(file);
+}
+
+nlohmann::json Assets::get_ship_components() const {
+    return ship_components;
 }

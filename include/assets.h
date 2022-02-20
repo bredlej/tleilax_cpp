@@ -8,11 +8,17 @@
 #include <nlohmann/json.hpp>
 
 struct files {
-    static constexpr std::string_view ship_components = "assets/json/ship_components.json";
+    static constexpr const char * ship_components = "assets/json/ship_components.json";
 };
 
 struct Assets {
-    nlohmann::json ship_components(const std::string_view file_name);
+public:
+    explicit Assets(const std::string &ship_components_path) : ship_components {Assets::load_from_file(ship_components_path)} {};
+    static nlohmann::json load_from_file(const std::string& file_name);
+
+    nlohmann::json get_ship_components() const;
+private:
+    nlohmann::json ship_components;
 };
 
 #endif//TLEILAX_ASSETS_H
