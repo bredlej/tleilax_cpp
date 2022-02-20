@@ -2,7 +2,7 @@
 // Created by geoco on 19.12.2021.
 //
 
-#include "Galaxy.h"
+#include "galaxy.h"
 #include <cmath>
 
 constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
