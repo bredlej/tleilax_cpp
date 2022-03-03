@@ -4,6 +4,7 @@ set(SOURCES
         renderables/galaxy.cpp
         Galaxy.cpp
         Assets.cpp
+        Fleet.cpp
         )
 set(INCLUDE_DIRS
         ${PROJECT_SOURCE_DIR}/include
