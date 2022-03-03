@@ -8,51 +8,54 @@
 #include <vector>
 #include <entt/entt.hpp>
 
-struct Vector3;
+namespace components {
+    struct Vector3;
 
-struct Size {
-    float size;
-};
-struct StarColor{
-    uint8_t r, g, b, a;
-};
-struct Exploding {
-    uint8_t counter;
-};
-struct Nova {};
-struct NovaSeeker {
-    uint32_t capacity;
-};
+    struct Size {
+        float size;
+    };
+    struct StarColor{
+        uint8_t r, g, b, a;
+    };
+    struct Exploding {
+        uint8_t counter;
+    };
+    struct Nova {};
+    struct NovaSeeker {
+        uint32_t capacity;
+    };
 
-struct Fleet {
-    std::vector<entt::entity> ships;
-};
+    struct Fleet {
+        std::vector<entt::entity> ships;
+    };
 
-struct Coordinates {
-    int32_t x, y, z;
-};
+    struct Coordinates {
+        int32_t x, y, z;
+    };
 
-struct Destination {
-    Coordinates dest;
-};
+    struct Destination {
+        Coordinates dest;
+    };
 
-// Ship Components
+    // Ship Components
 
-struct Engine {
-    float speed;
-    float max_speed;
-};
+    struct Engine {
+        float speed;
+        float max_speed;
+    };
 
-struct Hull {
-    float health;
-    float max_health;
-};
+    struct Hull {
+        float health;
+        float max_health;
+    };
 
-struct Shield {
-    float absorption;
-};
+    struct Shield {
+        float absorption;
+    };
 
-struct Weapon {
-    float damage;
-};
+    struct Weapon {
+        float damage;
+    };
+}
+
 #endif//TLEILAX_COMPONENTS_H

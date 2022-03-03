@@ -13,14 +13,8 @@
 #include <raymath.h>
 #include <chrono>
 #include <functional>
-
-struct ExplosionEvent {
-    entt::entity e;
-};
-struct NovaSeekEvent {
-    entt::entity e;
-    Vector3 destination;
-};
+#include <fleet.h>
+#include <events.h>
 
 struct Chance {
     uint32_t upper_bound;
@@ -38,26 +32,12 @@ public:
 
     entt::entity create_at(entt::registry &, pcg32 &, Vector3 position);
     bool is_created();
-    static void render(const entt::registry &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const StarColor color, const Size size);
+    static void render(const entt::registry &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size);
 private:
     entt::entity _entity;
     uint32_t _occurence_chance;
     Chance _exploding_chance;
     Chance _nova_seeker_chance;
-};
-
-static constexpr uint32_t MAX_SHIPS_IN_FLEET = 10;
-
-class FleetEntity {
-public:
-    FleetEntity() : _entity{ entt::null } {};
-    static entt::entity create(entt::registry&, pcg32&, Vector3);
-    void react_to_nova(entt::registry &, pcg32 &, const NovaSeekEvent &);
-    static void update(entt::entity entity, Fleet &fleet, Vector3 &pos, Destination destination, Size size);
-    static void on_click(const entt::registry &, entt::entity entity);
-private:
-    entt::entity _entity;
-    static void populate_fleet_with_ships(entt::registry &, entt::entity, pcg32 &);
 };
 
 class Galaxy {
