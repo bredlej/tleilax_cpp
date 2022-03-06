@@ -59,7 +59,7 @@ void FleetEntity::populate_fleet_with_ships(entt::registry &registry, entt::enti
         components::Engine engine{static_cast<float>(pcg(10)), static_cast<float>(pcg(10) + pcg(10))};
         components::Hull hull{static_cast<float>(pcg(10)), static_cast<float>(pcg(10) + pcg(10))};
         components::Shield shield{static_cast<float>(pcg(10))};
-        components::Weapon weapon{static_cast<float>(pcg(10))};
+        components::Weapon weapon{"w1", "w1", 1, {1,1}, 3};
 
         entt::entity ship = Ship<components::Engine, components::Hull, components::Shield, components::Weapon>::create_with_components(registry, engine, hull, shield, weapon);
 

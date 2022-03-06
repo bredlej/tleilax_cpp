@@ -9,7 +9,7 @@ void tleilax::Application::run(const Config &config) {
     SetTargetFPS(144);
 
     Assets assets {files::ship_components, files::ships};
-
+    const ShipComponents ship_components{assets};
     Galaxy g;
     g.populate();
     render_func = [&g](){g.render();};
