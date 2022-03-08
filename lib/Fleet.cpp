@@ -5,7 +5,7 @@
 
 void FleetEntity::react_to_nova(entt::registry &registry, pcg32 &pcg, const NovaSeekEvent &ev) {
     if (_entity == entt::null) {
-        auto position = registry.get<Vector3>(ev.e);
+        auto position = registry.get<Vector3>(ev.source);
         _entity = create(registry, pcg, position);
     }
     registry.emplace<components::Destination>(_entity, components::Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
@@ -37,12 +37,13 @@ void print_ships_info(const entt::registry &registry, const entt::entity &fleet_
         const auto shield = registry.get<components::Shield>(ship);
         const auto weapon = registry.get<components::Weapon>(ship);
 
-        std::printf("Ship=[%d] | Engine=[%.1f/%.1f], Hull=[%.1f/%.1f], Shield=[%.1f], Weapon=[%.1f]\n",
+        std::printf("Ship=[%d] | Engine=[%.d/%.d], Hull=[%.1f/%.1f], Shield=[%.1d], Weapon=[%dd%d]\n",
                     ship,
-                    engine.speed, engine.max_speed,
+                    engine.power, engine.weight,
                     hull.health, hull.max_health,
-                    shield.absorption,
-                    weapon.damage);
+                    shield.defense,
+                    weapon.damage.amount,
+                    weapon.damage.sides);
     }
 }
 void FleetEntity::on_click(const entt::registry &registry, entt::entity entity) {
@@ -56,9 +57,9 @@ void FleetEntity::populate_fleet_with_ships(entt::registry &registry, entt::enti
     auto amount_ships = pcg(MAX_SHIPS_IN_FLEET);
     std::vector<entt::entity> ships;
     for (int i = 0; i < amount_ships; i++) {
-        components::Engine engine{static_cast<float>(pcg(10)), static_cast<float>(pcg(10) + pcg(10))};
+        components::Engine engine{"s1", "s1", 1, 1};
         components::Hull hull{static_cast<float>(pcg(10)), static_cast<float>(pcg(10) + pcg(10))};
-        components::Shield shield{static_cast<float>(pcg(10))};
+        components::Shield shield{"s1", "s1", 1, 1, 3};
         components::Weapon weapon{"w1", "w1", 1, {1,1}, 3};
 
         entt::entity ship = Ship<components::Engine, components::Hull, components::Shield, components::Weapon>::create_with_components(registry, engine, hull, shield, weapon);
