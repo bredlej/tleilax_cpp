@@ -131,6 +131,16 @@ struct ComponentRepository {
                 asset_parser<typename Ts::Type, Ts::Asset>(assets, instance_of_T<Ts>().converter_func)...);
     }
     std::tuple<std::vector<typename T::Type>, std::vector<typename Ts::Type>...> components;
+    template <typename C> std::vector<C> get();
 };
+
+template<typename T>
+std::vector<T> get(const auto &component_repository) {
+    return std::get<std::vector<T>>(component_repository.components);
+}
+
+
+using ShipComponentRepository = ComponentRepository<decltype(WeaponRepository), decltype(ShieldRepository), decltype(EngineRepository)>;
+
 
 #endif//TLEILAX_COMPONENTS_H

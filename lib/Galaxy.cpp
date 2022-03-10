@@ -3,7 +3,6 @@
 //
 
 #include "galaxy.h"
-#include <cmath>
 
 constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
     return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
@@ -133,9 +132,8 @@ void Galaxy::_tick() {
 
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
-    fleet.react_to_nova(_registry, _pcg, ev);
+    fleet.react_to_nova(_registry, _pcg, ev, _ship_components);
 }
-
 
 entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3 position) {
     if (pcg(_occurence_chance) == 0) {

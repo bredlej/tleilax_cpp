@@ -7,6 +7,7 @@
 
 #include <components.h>
 #include <cstdint>
+#include <cmath>
 #include <entt/entt.hpp>
 #include <pcg/pcg_random.hpp>
 #include <raylib.h>
@@ -41,6 +42,7 @@ private:
 };
 
 class Galaxy {
+
 public:
     explicit Galaxy(Assets &assets)
         : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)),
@@ -54,7 +56,7 @@ public:
     void populate();
     uint32_t next_random_number(const uint32_t max) { return max > 0 ? _pcg(max) : 0; };
 private:
-    ComponentRepository<decltype(WeaponRepository), decltype(ShieldRepository), decltype(EngineRepository)> _ship_components;
+    ShipComponentRepository _ship_components;
     entt::dispatcher _dispatcher{};
     entt::registry _registry{};    
     pcg32 _pcg;

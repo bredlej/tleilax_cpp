@@ -2,9 +2,9 @@ set(SOURCES
         tleilax.cpp
         renderables/intro.cpp
         renderables/galaxy.cpp
+        Fleet.cpp
         Galaxy.cpp
         Assets.cpp
-        Fleet.cpp
         )
 set(INCLUDE_DIRS
         ${PROJECT_SOURCE_DIR}/include
