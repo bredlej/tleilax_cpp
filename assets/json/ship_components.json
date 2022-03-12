@@ -57,5 +57,25 @@
       "name": "Solar bomb",
       "weight" : 95
     }
+  ],
+  "hulls": [
+    {
+      "id": "HULL1",
+      "name": "Steel alloy hull",
+      "health": 100,
+      "max_health": 100
+    },
+    {
+      "id": "HULL2",
+      "name": "Reinforced plasta-steel hull",
+      "health": 150,
+      "max_health": 150
+    },
+    {
+      "id": "HULL3",
+      "name": "Titanium hull",
+      "health": 200,
+      "max_health": 200
+    }
   ]
 }

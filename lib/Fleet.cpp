@@ -21,13 +21,12 @@ void print_ships_info(const entt::registry &registry, const entt::entity &fleet_
         const auto shield = registry.get<components::Shield>(ship);
         const auto weapon = registry.get<components::Weapon>(ship);
 
-        std::printf("Ship=[%d] | Engine=[%.d/%.d], Hull=[%.1f/%.1f], Shield=[%.1d], Weapon=[%dd%d]\n",
+        std::printf("Ship=[%d] | Engine=[%s: %.d/%.d], Hull=[%s: %.1f/%.1f], Shield=[%s: %.1d], Weapon=[%s: %dd%d]\n",
                     ship,
-                    engine.power, engine.weight,
-                    hull.health, hull.max_health,
-                    shield.defense,
-                    weapon.damage.amount,
-                    weapon.damage.sides);
+                    engine.name.c_str(), engine.power, engine.weight,
+                    hull.name.c_str(), hull.health, hull.max_health,
+                    shield.name.c_str(), shield.defense,
+                    weapon.name.c_str(), weapon.damage.amount, weapon.damage.sides);
     }
 }
 void FleetEntity::on_click(const entt::registry &registry, entt::entity entity) {

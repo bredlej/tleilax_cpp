@@ -7,17 +7,19 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-namespace ship_component {
+namespace assets {
     enum class types {
         weapon,
         shield,
         engine,
-        cargo
+        cargo,
+        hull
     };
     static std::unordered_map<types, const char *> names = {
             {types::weapon, "weapons"},
             {types::engine, "engines"},
             {types::shield, "shields"},
+            {types::hull, "hulls"},
             {types::cargo, "cargo"}};
 }// namespace ship_component
 

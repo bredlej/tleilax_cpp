@@ -38,14 +38,17 @@ public:
 private:
     entt::entity _entity;
     static void populate_fleet_with_ships(entt::registry &registry, entt::entity fleet_entity, pcg32 &pcg, const ShipComponentRepository &ship_components) {
-        auto amount_ships = pcg(MAX_SHIPS_IN_FLEET);
+        auto amount_ships = pcg(MAX_SHIPS_IN_FLEET + 1);
         std::vector<entt::entity> ships;
         std::vector<components::Weapon> weapons = get<components::Weapon>(ship_components);
         std::vector<components::Engine> engines = get<components::Engine>(ship_components);
+        std::vector<components::Hull> hulls = get<components::Hull>(ship_components);
+        std::vector<components::Shield> shields = get<components::Shield>(ship_components);
+
         for (int i = 0; i < amount_ships; i++) {
             components::Engine engine = engines[pcg(engines.size())];
-            components::Hull hull{static_cast<float>(pcg(10)), static_cast<float>(pcg(10) + pcg(10))};
-            components::Shield shield{"s1", "s1", 1, 1, 3};
+            components::Hull hull = hulls[pcg(hulls.size())];
+            components::Shield shield = shields[pcg(shields.size())];
             components::Weapon weapon = weapons[pcg(weapons.size())];
 
             entt::entity ship = Ship<components::Engine, components::Hull, components::Shield, components::Weapon>::create_with_components(registry, engine, hull, shield, weapon);

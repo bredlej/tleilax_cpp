@@ -55,6 +55,8 @@ namespace components {
     };
 
     struct Hull {
+        std::string id;
+        std::string name;
         float health;
         float max_health;
     };
@@ -76,11 +78,11 @@ namespace components {
     };
 }// namespace components
 
-template<typename ComponentT, ship_component::types AssetT>
+template<typename ComponentT, assets::types AssetT>
 static std::vector<ComponentT> asset_parser(const Assets &assets, const std::function<ComponentT(const nlohmann::json &)> converter_func) {
     std::vector<ComponentT> components;
     const auto &ship_components = assets.get_ship_components();
-    for (const auto &json : ship_components[ship_component::names[AssetT]]) {
+    for (const auto &json : ship_components[assets::names[AssetT]]) {
         components.emplace_back(converter_func(json));
     }
     return components;
@@ -92,6 +94,7 @@ constexpr auto str_to_dice_roll = [](const std::string &s) {
             static_cast<uint8_t>(std::stoi(s.substr(0, s.find(delimiter)))),
             static_cast<uint8_t>(std::stoi(s.substr(s.find(delimiter) + 1, s.length())))};
 };
+
 static components::Weapon weapon_from_json(const nlohmann::json &json) {
     return components::Weapon{json["id"], json["name"], json["power_usage"], str_to_dice_roll(json["damage"]), json["weight"]};
 }
@@ -104,18 +107,26 @@ static components::Engine engine_from_json(const nlohmann::json &json) {
     return components::Engine{json["id"], json["name"], json["power"], json["weight"]};
 }
 
-template<typename T, ship_component::types A, T (*json_parse_func)(const nlohmann::json &)>
-struct ConverterT {
+static components::Hull hull_from_json(const nlohmann::json &json) {
+    return components::Hull{json["id"], json["name"], json["health"], json["max_health"]};
+}
+
+/*
+ * Helper struct holding info how to convert from json to an internal component type
+ */
+template<typename T, assets::types A, T (*json_parse_func)(const nlohmann::json &)>
+struct RepositoryT {
     using Type = T;
 
 public:
     std::function<T(const nlohmann::json &)> converter_func = json_parse_func;
-    const static ship_component::types Asset = A;
+    const static assets::types Asset = A;
 };
 
-static ConverterT<components::Weapon, ship_component::types::weapon, weapon_from_json> WeaponRepository{};
-static ConverterT<components::Shield, ship_component::types::shield, shield_from_json> ShieldRepository{};
-static ConverterT<components::Engine, ship_component::types::engine, engine_from_json> EngineRepository{};
+static RepositoryT<components::Weapon, assets::types::weapon, weapon_from_json> WeaponRepository{};
+static RepositoryT<components::Shield, assets::types::shield, shield_from_json> ShieldRepository{};
+static RepositoryT<components::Engine, assets::types::engine, engine_from_json> EngineRepository{};
+static RepositoryT<components::Hull, assets::types::hull, hull_from_json> HullRepository{};
 
 template<typename T>
 constexpr auto instance_of_T = []() { T t; return t; };
@@ -131,7 +142,6 @@ struct ComponentRepository {
                 asset_parser<typename Ts::Type, Ts::Asset>(assets, instance_of_T<Ts>().converter_func)...);
     }
     std::tuple<std::vector<typename T::Type>, std::vector<typename Ts::Type>...> components;
-    template <typename C> std::vector<C> get();
 };
 
 template<typename T>
@@ -139,8 +149,11 @@ std::vector<T> get(const auto &component_repository) {
     return std::get<std::vector<T>>(component_repository.components);
 }
 
-
-using ShipComponentRepository = ComponentRepository<decltype(WeaponRepository), decltype(ShieldRepository), decltype(EngineRepository)>;
+using ShipComponentRepository = ComponentRepository<
+        decltype(WeaponRepository),
+        decltype(ShieldRepository),
+        decltype(EngineRepository),
+        decltype(HullRepository)>;
 
 
 #endif//TLEILAX_COMPONENTS_H
