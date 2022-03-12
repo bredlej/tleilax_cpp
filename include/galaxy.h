@@ -7,6 +7,7 @@
 
 #include <components.h>
 #include <cstdint>
+#include <cmath>
 #include <entt/entt.hpp>
 #include <pcg/pcg_random.hpp>
 #include <raylib.h>
@@ -41,15 +42,21 @@ private:
 };
 
 class Galaxy {
+
 public:
-    Galaxy() : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)) { _initialize(); };
+    explicit Galaxy(Assets &assets)
+        : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)),
+          _ship_components{assets.get_ship_components()} {_initialize();};
+    Galaxy()
+        : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)) { _initialize(); };
     ~Galaxy() = default;
 
     void render() const;
     void update();
-    void populate();  
+    void populate();
     uint32_t next_random_number(const uint32_t max) { return max > 0 ? _pcg(max) : 0; };
 private:
+    ShipComponentRepository _ship_components;
     entt::dispatcher _dispatcher{};
     entt::registry _registry{};    
     pcg32 _pcg;
@@ -58,9 +65,9 @@ private:
     static constexpr uint32_t _star_occurence_chance = 5000;
     void _initialize();
     Camera _camera;
-    Camera _initialize_camera(const Vector3 &cameraInitialPosition, const float cameraDistance,
-                              const float horizontalDistance, const float horizontalAngle,
-                              const float verticalAngle);
+    Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
+                              float horizontalDistance, float horizontalAngle,
+                              float verticalAngle);
 
     void _render_visible() const;
     void _tick();

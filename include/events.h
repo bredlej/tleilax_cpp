@@ -11,7 +11,7 @@ struct ExplosionEvent {
     entt::entity e;
 };
 struct NovaSeekEvent {
-    entt::entity e;
+    entt::entity source;
     Vector3 destination;
 };
 #endif//TLEILAX_EVENTS_H
