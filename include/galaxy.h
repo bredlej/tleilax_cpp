@@ -46,7 +46,7 @@ class Galaxy {
 public:
     explicit Galaxy(Assets &assets)
         : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)),
-          _ship_components(assets) {_initialize();};
+          _ship_components{assets.get_ship_components()} {_initialize();};
     Galaxy()
         : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)) { _initialize(); };
     ~Galaxy() = default;

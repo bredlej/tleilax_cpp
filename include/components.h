@@ -78,16 +78,6 @@ namespace components {
     };
 }// namespace components
 
-template<typename ComponentT, assets::types AssetT>
-static std::vector<ComponentT> asset_parser(const Assets &assets, const std::function<ComponentT(const nlohmann::json &)> converter_func) {
-    std::vector<ComponentT> components;
-    const auto &ship_components = assets.get_ship_components();
-    for (const auto &json : ship_components[assets::names[AssetT]]) {
-        components.emplace_back(converter_func(json));
-    }
-    return components;
-};
-
 constexpr auto str_to_dice_roll = [](const std::string &s) {
     std::string delimiter = "d";
     return components::dice_roll{
@@ -110,6 +100,19 @@ static components::Engine engine_from_json(const nlohmann::json &json) {
 static components::Hull hull_from_json(const nlohmann::json &json) {
     return components::Hull{json["id"], json["name"], json["health"], json["max_health"]};
 }
+
+/*
+ * Returns a vector of Components parsed from given json data with specified json->object converter function
+ */
+template<typename ComponentT, assets::types AssetT>
+static std::vector<ComponentT> json_to_component_converter(const nlohmann::json &json_data, const std::function<ComponentT(const nlohmann::json &)>& converter_func) {
+    std::vector<ComponentT> components;
+    const auto &json_components = json_data;
+    for (const auto &json : json_components[assets::names[AssetT]]) {
+        components.emplace_back(converter_func(json));
+    }
+    return components;
+};
 
 /*
  * Helper struct holding info how to convert from json to an internal component type
@@ -136,10 +139,10 @@ struct ComponentRepository {
     explicit ComponentRepository() {
         components = std::make_tuple(std::vector<typename T::Type>(), std::vector<typename Ts::Type>()...);
     }
-    explicit ComponentRepository(const Assets &assets) {
+    explicit ComponentRepository(const nlohmann::json &json_data) {
         components = std::make_tuple(
-                asset_parser<typename T::Type, T::Asset>(assets, instance_of_T<T>().converter_func),
-                asset_parser<typename Ts::Type, Ts::Asset>(assets, instance_of_T<Ts>().converter_func)...);
+                json_to_component_converter<typename T::Type, T::Asset>(json_data, instance_of_T<T>().converter_func),
+                json_to_component_converter<typename Ts::Type, Ts::Asset>(json_data, instance_of_T<Ts>().converter_func)...);
     }
     std::tuple<std::vector<typename T::Type>, std::vector<typename Ts::Type>...> components;
 };
