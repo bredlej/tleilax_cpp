@@ -27,13 +27,18 @@ void Galaxy::populate() {
     std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }
 
-void Galaxy::_render_visible() const {
+void Galaxy::_render_visible() {
 
     BeginMode3D(_camera);
     DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
 
     _registry.view<Vector3, components::StarColor, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
-        StarEntity::render(_registry, _visible_size, entity, coords, color, size);
+        Vector3 star_coords = local_to_global_coords(coords, _visible_size);
+        bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
+        StarEntity::render(_registry, _visible_size, entity, coords, color, size, star_is_selected);
+        if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            _on_star_selected(entity);
+        }
     });
 
     _registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
@@ -66,7 +71,7 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     return camera;
 }
 
-void Galaxy::render() const {
+void Galaxy::render() {
     BeginDrawing();
     ClearBackground(BLACK);
     _render_visible();
@@ -80,6 +85,11 @@ void Galaxy::update() {
     }
     if (IsKeyPressed(KEY_SPACE)) {
         _tick();
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        _path.from = entt::null;
+        _path.to = entt::null;
+        _path.checkpoints.clear();
     }
 }
 static void change_course_upon_nearer_explosion(const Vector3 &explosion_position, const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Destination &destination, const components::Size size) {
@@ -108,6 +118,7 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
 }
 
 void Galaxy::_initialize() {
+    _path = Path{};
     _dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
     _dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
 }
@@ -133,6 +144,39 @@ void Galaxy::_tick() {
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
     fleet.react_to_nova(_registry, _pcg, ev, _ship_components);
+}
+
+void Galaxy::_on_star_selected(const entt::entity entity) {
+    StarEntity::on_click(_registry, entity);
+    if (_path.from == entt::null) {
+        std::printf("From: %d\n", entity);
+        _path.from = entity;
+    } else {
+        std::printf("To: %d\n", entity);
+        _path.to = entity;
+    }
+    if (_path.from != entt::null && _path.to != entt::null) {
+        auto path = _path.calculate(_registry, [](const entt::registry &registry, const entt::entity source_entity) {
+            std::priority_queue<Node> nodes;
+            Vector3 source_position = registry.get<Vector3>(source_entity);
+            auto view = registry.view<Vector3, components::StarColor, components::Size>();
+            view.each([&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
+                Vector3 neighbour_position = registry.get<Vector3>(entity);
+                if (entity != source_entity) {
+                    auto distance = Vector3Distance(neighbour_position, source_position);
+                    if (distance < 20) {
+                        nodes.push(Node{false, entity, distance});
+                    }
+                }
+            });
+            return nodes;
+        });
+        while (!path.empty()) {
+            auto node = path.top();
+            std::printf("- Node: %d - %.1f\n", node.entity, node.cost);
+            path.pop();
+        }
+    }
 }
 
 entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3 position) {
@@ -161,10 +205,18 @@ entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3
 bool StarEntity::is_created() {
     return _entity != entt::null;
 }
-void StarEntity::render(const entt::registry &registry, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
+void StarEntity::render(const entt::registry &registry, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size, const bool is_selected) {
     Vector3 star_coords = local_to_global_coords(coords, visible_size);
     DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
+    if (is_selected) {
+        DrawSphereWires(star_coords, size.size + 1, 6, 6, GREEN);
+    }
     if (registry.any_of<components::Nova>(entity)) {
         DrawSphereWires(star_coords, 5, 6, 6, VIOLET);
     }
+}
+
+void StarEntity::on_click(const entt::registry &registry, const entt::entity entity) {
+    auto position = registry.get<Vector3>(entity);
+    std::printf("Clicked star=[%.1f, %.1f, %.1f]\n", position.x, position.y, position.z);
 }
