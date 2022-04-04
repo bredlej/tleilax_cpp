@@ -18,6 +18,7 @@
 #include <events.h>
 #include <path.h>
 #include <queue>
+#include <graph.h>
 
 struct Chance {
     uint32_t upper_bound;
@@ -45,6 +46,20 @@ private:
     Chance _nova_seeker_chance;
 };
 
+
+struct StarNode {
+    entt::entity entity;
+    bool visited;
+};
+
+struct StarNodeHash {
+    std::size_t operator() (const StarNode node) const {return static_cast<size_t>(node.entity);};
+};
+
+struct StarNodeEqual {
+    bool operator() (const StarNode first, const StarNode second) const {return first.entity == second.entity;};
+};
+
 class Galaxy {
 
 public:
@@ -60,6 +75,9 @@ public:
     void populate();
     uint32_t next_random_number(const uint32_t max) { return max > 0 ? _pcg(max) : 0; };
 private:
+    Graph<StarNode, float, StarNodeHash, StarNodeEqual> starGraph;
+    std::vector<std::pair<Vector3, Vector3>> paths;
+
     ShipComponentRepository _ship_components;
     entt::dispatcher _dispatcher{};
     entt::registry _registry{};    

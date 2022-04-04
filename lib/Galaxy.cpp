@@ -23,6 +23,21 @@ void Galaxy::populate() {
             }
         }
     }
+    _registry.view<Vector3, components::StarColor, components::Size>().each(
+            [&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
+                StarNode starNode{entity, true};
+                _registry.view<Vector3, components::StarColor, components::Size>().each(
+                        [&](const entt::entity _entity, const Vector3 &_coords, const components::StarColor _color, const components::Size _size) {
+                            if (entity != _entity) {
+                                StarNode next{_entity, false};
+                                const auto distance = Vector3Distance(coords, _coords);
+                                if (distance < 15.0f) {
+                                    starGraph.add_edge(starNode, next, distance, false);
+                                    paths.emplace_back(std::make_pair(coords, _coords));
+                                }
+                            }
+                        });
+            });
     auto after = std::chrono::high_resolution_clock::now() - before;
     std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }
@@ -39,6 +54,11 @@ void Galaxy::_render_visible() {
         if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _on_star_selected(entity);
         }
+
+    });
+
+    std::for_each(paths.begin(), paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
+        DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), YELLOW);
     });
 
     _registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
