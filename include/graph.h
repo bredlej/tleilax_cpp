@@ -14,7 +14,7 @@ class Graph {
 
 public:
     void add_edge(NodeT source_node, NodeT target_node, DistanceT distance, bool is_bidirectional);
-    AdjacencyList get() const { return adjacency_list; } ;
+    [[nodiscard]] AdjacencyList get() const { return adjacency_list; } ;
 
 private:
     AdjacencyList adjacency_list;
