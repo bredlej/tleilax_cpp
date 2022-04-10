@@ -14,4 +14,7 @@ struct NovaSeekEvent {
     entt::entity source;
     Vector3 destination;
 };
+struct StarSelectedEvent {
+    entt::entity entity;
+};
 #endif//TLEILAX_EVENTS_H

@@ -22,7 +22,7 @@ namespace components {
     struct Size {
         float size;
     };
-    struct StarColor {
+    struct Star {
         uint8_t r, g, b, a;
     };
     struct Exploding {
