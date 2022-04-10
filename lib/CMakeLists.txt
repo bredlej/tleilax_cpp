@@ -3,7 +3,6 @@ set(SOURCES
         renderables/intro.cpp
         renderables/galaxy.cpp
         Fleet.cpp
-        Path.cpp
         Galaxy.cpp
         Assets.cpp
         )
