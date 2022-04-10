@@ -38,7 +38,7 @@ public:
 
     entt::entity create_at(entt::registry &, pcg32 &, Vector3 position);
     bool is_created();
-    static void render(const entt::registry &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size, bool is_selected);
+    static void render(const entt::registry &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
     static void on_click(const entt::registry &, entt::entity);
 
 private:
@@ -46,20 +46,6 @@ private:
     uint32_t _occurence_chance;
     Chance _exploding_chance;
     Chance _nova_seeker_chance;
-};
-
-
-struct StarNode {
-    entt::entity entity;
-    bool visited;
-};
-
-struct StarNodeHash {
-    std::size_t operator() (const StarNode node) const {return static_cast<size_t>(node.entity);};
-};
-
-struct StarNodeEqual {
-    bool operator() (const StarNode first, const StarNode second) const {return first.entity == second.entity;};
 };
 
 class Galaxy {
@@ -77,7 +63,7 @@ public:
     void populate();
     uint32_t next_random_number(const uint32_t max) { return max > 0 ? _pcg(max) : 0; };
 private:
-    Graph<StarNode, float, StarNodeHash, StarNodeEqual> starGraph;
+    Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> starGraph;
     std::vector<std::pair<Vector3, Vector3>> paths;
     std::vector<std::pair<Vector3, Vector3>> selected_paths;
 

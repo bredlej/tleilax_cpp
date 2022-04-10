@@ -23,13 +23,13 @@ void Galaxy::populate() {
             }
         }
     }
-    _registry.view<Vector3, components::StarColor, components::Size>().each(
-            [&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
-                StarNode starNode{entity, true};
-                _registry.view<Vector3, components::StarColor, components::Size>().each(
-                        [&](const entt::entity _entity, const Vector3 &_coords, const components::StarColor _color, const components::Size _size) {
+    _registry.view<Vector3, components::Star, components::Size>().each(
+            [&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
+                GraphNode starNode{entity, true};
+                _registry.view<Vector3, components::Star, components::Size>().each(
+                        [&](const entt::entity _entity, const Vector3 &_coords, const components::Star _color, const components::Size _size) {
                             if (entity != _entity) {
-                                StarNode next{_entity, false};
+                                GraphNode next{_entity, false};
                                 const auto distance = Vector3Distance(coords, _coords);
                                 if (distance < 20.0f) {
                                     starGraph.add_edge(starNode, next, distance, false);
@@ -47,7 +47,7 @@ void Galaxy::_render_visible() {
     BeginMode3D(_camera);
     DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
 
-    _registry.view<Vector3, components::StarColor, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
+    _registry.view<Vector3, components::Star, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
         StarEntity::render(_registry, _visible_size, entity, coords, color, size, star_is_selected);
@@ -173,64 +173,13 @@ void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     fleet.react_to_nova(_registry, _pcg, ev, _ship_components);
 }
 
-std::vector<entt::entity> reconstruct_path(std::unordered_map<entt::entity, entt::entity>& came_from, const entt::entity current) {
-    std::vector<entt::entity> total_path{current};
-    entt::entity cur = current;
-    while(came_from.contains(cur)) {
-        cur = came_from[cur];
-        total_path.insert(total_path.begin(), cur);
-    }
-    return total_path;
+
+
+struct DistanceFunction {
+    float operator() (const Vector3 first, const Vector3 second) const {return Vector3Distance(first, second);};
 };
 
 
-static std::vector<entt::entity> calculate_path(const Graph<StarNode, float, StarNodeHash, StarNodeEqual> &star_graph, const entt::registry &registry, entt::entity from, entt::entity to) {
-    std::vector<entt::entity> calculated_path;
-    Vector3 destination_position = registry.get<Vector3>(to);
-    std::priority_queue<Node> open_set;
-    std::vector<entt::entity> open_set_v;
-    open_set.push(Node{from, 0});
-    open_set_v.push_back(from);
-    std::unordered_map<entt::entity, entt::entity> came_from;
-    std::unordered_map<entt::entity, float> g_score;
-    std::unordered_map<entt::entity, float> f_score;
-    registry.view<Vector3, components::StarColor, components::Size>()
-            .each([&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
-                if (entity != from) {
-                    g_score[entity] = 999999.9f;
-                    f_score[entity] = 999999.9f;
-                } else {
-                    g_score[entity] = 0.0f;
-                    f_score[entity] = 0.0f;
-                }
-            });
-
-    while (!open_set.empty()) {
-        Node this_node = open_set.top();
-        if (this_node.entity == to) {
-            calculated_path = reconstruct_path(came_from, this_node.entity);
-            break;
-        }
-        Vector3 this_position = registry.get<Vector3>(this_node.entity);
-        open_set.pop();
-        open_set_v.erase(std::remove(open_set_v.begin(), open_set_v.end(), this_node.entity), open_set_v.end());
-        const auto neighbours = star_graph.get()[StarNode{this_node.entity, false}];
-        for (const auto neighbour : neighbours) {
-            const auto neighbour_entity = neighbour.first.entity;
-            Vector3 neighbour_position = registry.get<Vector3>(neighbour_entity);
-            auto tentative_score = g_score[this_node.entity] + Vector3Distance(this_position, neighbour_position);
-            if (tentative_score < g_score[neighbour_entity]) {
-                came_from[neighbour_entity] = this_node.entity;
-                g_score[neighbour_entity] = tentative_score;
-                if (!(std::find(open_set_v.begin(), open_set_v.end(), neighbour_entity) != open_set_v.end())) {
-                    open_set.push(Node{neighbour_entity, tentative_score + Vector3Distance(neighbour_position, destination_position)});
-                    open_set_v.push_back(neighbour_entity);
-                }
-            }
-        }
-    }
-    return calculated_path;
-}
 
 void Galaxy::_on_star_selected(const entt::entity entity) {
     StarEntity::on_click(_registry, entity);
@@ -242,7 +191,7 @@ void Galaxy::_on_star_selected(const entt::entity entity) {
         _path.to = entity;
     }
     if (_path.from != entt::null && _path.to != entt::null) {
-        std::vector<entt::entity> calculated_path = calculate_path(starGraph, _registry, _path.from, _path.to);
+        std::vector<entt::entity> calculated_path = calculate_path<Vector3, components::Star, DistanceFunction>(starGraph, _registry, _path.from, _path.to);
         if (!calculated_path.empty()) {
             selected_paths.clear();
             for (size_t i = 0; i < calculated_path.size()-1; i++) {
@@ -261,11 +210,11 @@ entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3
 
         if (pcg(_exploding_chance.upper_bound) < _exploding_chance.occurs_if_less_then) {
             const auto explosion_counter = pcg(15) + 1;
+            registry.emplace<components::Star>(_entity, components::Star{255, 255, 255, 255});
             registry.emplace<components::Exploding>(_entity, static_cast<uint8_t>(explosion_counter));
-            registry.emplace<components::StarColor>(_entity, components::StarColor{255, 255, 255, 255});
             registry.emplace<components::Size>(_entity, static_cast<float>(explosion_counter));
         } else {
-            registry.emplace<components::StarColor>(_entity, components::StarColor{static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), 255});
+            registry.emplace<components::Star>(_entity, components::Star{static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), 255});
             registry.emplace<components::Size>(_entity, 1.0f);
 
             if (pcg(_nova_seeker_chance.upper_bound) < _nova_seeker_chance.occurs_if_less_then) {
@@ -280,7 +229,7 @@ entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3
 bool StarEntity::is_created() {
     return _entity != entt::null;
 }
-void StarEntity::render(const entt::registry &registry, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size, const bool is_selected) {
+void StarEntity::render(const entt::registry &registry, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, const bool is_selected) {
     Vector3 star_coords = local_to_global_coords(coords, visible_size);
     DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
     if (is_selected) {
