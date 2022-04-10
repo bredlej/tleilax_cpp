@@ -14,7 +14,7 @@ class Graph {
 
 public:
     void add_edge(NodeT source_node, NodeT target_node, DistanceT distance, bool is_bidirectional);
-    AdjacencyList get() { return adjacency_list; };
+    AdjacencyList get() const { return adjacency_list; } ;
 
 private:
     AdjacencyList adjacency_list;
@@ -27,4 +27,15 @@ void Graph<T, D, H, E>::add_edge(T source_node, T target_node, D distance, bool 
         adjacency_list[target_node].push_back(std::make_pair(source_node, distance));
     }
 }
+
+template<typename NodeT>
+struct SearchNode {
+    NodeT *previous;
+    NodeT current;
+};
+
+template<typename NodeT, typename CostFunc, typename HeuristicFunc>
+struct AStarPath {
+    std::vector<SearchNode<NodeT>> get_between(const auto &Graph, const NodeT&, const NodeT&);
+};
 #endif//TLEILAX_GRAPH_H

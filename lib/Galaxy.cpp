@@ -31,7 +31,7 @@ void Galaxy::populate() {
                             if (entity != _entity) {
                                 StarNode next{_entity, false};
                                 const auto distance = Vector3Distance(coords, _coords);
-                                if (distance < 15.0f) {
+                                if (distance < 20.0f) {
                                     starGraph.add_edge(starNode, next, distance, false);
                                     paths.emplace_back(std::make_pair(coords, _coords));
                                 }
@@ -54,12 +54,18 @@ void Galaxy::_render_visible() {
         if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _on_star_selected(entity);
         }
-
     });
 
-    std::for_each(paths.begin(), paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
-        DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), YELLOW);
-    });
+    if (selected_paths.empty()) {
+        std::for_each(paths.begin(), paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
+          DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), YELLOW);
+        });
+    }
+    else {
+        std::for_each(selected_paths.begin(), selected_paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
+            DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), BLUE);
+        });
+    }
 
     _registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
@@ -110,6 +116,7 @@ void Galaxy::update() {
         _path.from = entt::null;
         _path.to = entt::null;
         _path.checkpoints.clear();
+        selected_paths.clear();
     }
 }
 static void change_course_upon_nearer_explosion(const Vector3 &explosion_position, const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Destination &destination, const components::Size size) {
@@ -166,6 +173,65 @@ void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     fleet.react_to_nova(_registry, _pcg, ev, _ship_components);
 }
 
+std::vector<entt::entity> reconstruct_path(std::unordered_map<entt::entity, entt::entity>& came_from, const entt::entity current) {
+    std::vector<entt::entity> total_path{current};
+    entt::entity cur = current;
+    while(came_from.contains(cur)) {
+        cur = came_from[cur];
+        total_path.insert(total_path.begin(), cur);
+    }
+    return total_path;
+};
+
+
+static std::vector<entt::entity> calculate_path(const Graph<StarNode, float, StarNodeHash, StarNodeEqual> &star_graph, const entt::registry &registry, entt::entity from, entt::entity to) {
+    std::vector<entt::entity> calculated_path;
+    Vector3 destination_position = registry.get<Vector3>(to);
+    std::priority_queue<Node> open_set;
+    std::vector<entt::entity> open_set_v;
+    open_set.push(Node{from, 0});
+    open_set_v.push_back(from);
+    std::unordered_map<entt::entity, entt::entity> came_from;
+    std::unordered_map<entt::entity, float> g_score;
+    std::unordered_map<entt::entity, float> f_score;
+    registry.view<Vector3, components::StarColor, components::Size>()
+            .each([&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
+                if (entity != from) {
+                    g_score[entity] = 999999.9f;
+                    f_score[entity] = 999999.9f;
+                } else {
+                    g_score[entity] = 0.0f;
+                    f_score[entity] = 0.0f;
+                }
+            });
+
+    while (!open_set.empty()) {
+        Node this_node = open_set.top();
+        if (this_node.entity == to) {
+            calculated_path = reconstruct_path(came_from, this_node.entity);
+            break;
+        }
+        Vector3 this_position = registry.get<Vector3>(this_node.entity);
+        open_set.pop();
+        open_set_v.erase(std::remove(open_set_v.begin(), open_set_v.end(), this_node.entity), open_set_v.end());
+        const auto neighbours = star_graph.get()[StarNode{this_node.entity, false}];
+        for (const auto neighbour : neighbours) {
+            const auto neighbour_entity = neighbour.first.entity;
+            Vector3 neighbour_position = registry.get<Vector3>(neighbour_entity);
+            auto tentative_score = g_score[this_node.entity] + Vector3Distance(this_position, neighbour_position);
+            if (tentative_score < g_score[neighbour_entity]) {
+                came_from[neighbour_entity] = this_node.entity;
+                g_score[neighbour_entity] = tentative_score;
+                if (!(std::find(open_set_v.begin(), open_set_v.end(), neighbour_entity) != open_set_v.end())) {
+                    open_set.push(Node{neighbour_entity, tentative_score + Vector3Distance(neighbour_position, destination_position)});
+                    open_set_v.push_back(neighbour_entity);
+                }
+            }
+        }
+    }
+    return calculated_path;
+}
+
 void Galaxy::_on_star_selected(const entt::entity entity) {
     StarEntity::on_click(_registry, entity);
     if (_path.from == entt::null) {
@@ -176,25 +242,14 @@ void Galaxy::_on_star_selected(const entt::entity entity) {
         _path.to = entity;
     }
     if (_path.from != entt::null && _path.to != entt::null) {
-        auto path = _path.calculate(_registry, [](const entt::registry &registry, const entt::entity source_entity) {
-            std::priority_queue<Node> nodes;
-            Vector3 source_position = registry.get<Vector3>(source_entity);
-            auto view = registry.view<Vector3, components::StarColor, components::Size>();
-            view.each([&](const entt::entity entity, const Vector3 &coords, const components::StarColor color, const components::Size size) {
-                Vector3 neighbour_position = registry.get<Vector3>(entity);
-                if (entity != source_entity) {
-                    auto distance = Vector3Distance(neighbour_position, source_position);
-                    if (distance < 20) {
-                        nodes.push(Node{false, entity, distance});
-                    }
-                }
-            });
-            return nodes;
-        });
-        while (!path.empty()) {
-            auto node = path.top();
-            std::printf("- Node: %d - %.1f\n", node.entity, node.cost);
-            path.pop();
+        std::vector<entt::entity> calculated_path = calculate_path(starGraph, _registry, _path.from, _path.to);
+        if (!calculated_path.empty()) {
+            selected_paths.clear();
+            for (size_t i = 0; i < calculated_path.size()-1; i++) {
+                Vector3 first = _registry.get<Vector3>(calculated_path[i]);
+                Vector3 second = _registry.get<Vector3>(calculated_path[i+1]);
+                selected_paths.emplace_back(std::make_pair(first, second));
+            }
         }
     }
 }

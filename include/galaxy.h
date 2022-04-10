@@ -19,6 +19,8 @@
 #include <path.h>
 #include <queue>
 #include <graph.h>
+#include <xmemory>
+#include <variant>
 
 struct Chance {
     uint32_t upper_bound;
@@ -77,6 +79,7 @@ public:
 private:
     Graph<StarNode, float, StarNodeHash, StarNodeEqual> starGraph;
     std::vector<std::pair<Vector3, Vector3>> paths;
+    std::vector<std::pair<Vector3, Vector3>> selected_paths;
 
     ShipComponentRepository _ship_components;
     entt::dispatcher _dispatcher{};

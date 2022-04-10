@@ -11,7 +11,6 @@
 #include <queue>
 
 struct Node {
-    bool visited;
     entt::entity entity;
     float cost;
 
