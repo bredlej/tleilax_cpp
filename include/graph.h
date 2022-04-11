@@ -7,6 +7,8 @@
 
 #include <unordered_map>
 #include <vector>
+#include <entt/entt.hpp>
+#include <queue>
 
 template<typename NodeT, typename DistanceT, typename HashFuncT, typename EqualFuncT>
 class Graph {
@@ -33,6 +35,15 @@ struct GraphNode {
     bool visited;
 };
 
+struct PathNode {
+    entt::entity entity;
+    float cost;
+
+    bool operator<(const PathNode &node) const {
+        return cost < node.cost;
+    }
+};
+
 struct GraphNodeHash {
     std::size_t operator() (const GraphNode node) const {return static_cast<size_t>(node.entity);};
 };
@@ -49,7 +60,7 @@ static std::vector<entt::entity> reconstruct_path(std::unordered_map<entt::entit
         total_path.insert(total_path.begin(), cur);
     }
     return total_path;
-};
+}
 
 /**
  *
@@ -67,9 +78,9 @@ static std::vector<entt::entity> calculate_path(const Graph<GraphNode, float, Gr
     auto h = HeuristicFunc();
     std::vector<entt::entity> calculated_path;
     ComponentT destination_component = registry.get<ComponentT>(to);
-    std::priority_queue<Node> open_set;
+    std::priority_queue<PathNode> open_set;
     std::vector<entt::entity> open_set_v;
-    open_set.push(Node{from, 0});
+    open_set.push(PathNode{from, 0});
     open_set_v.push_back(from);
     std::unordered_map<entt::entity, entt::entity> came_from;
     std::unordered_map<entt::entity, float> g_score;
@@ -84,7 +95,7 @@ static std::vector<entt::entity> calculate_path(const Graph<GraphNode, float, Gr
             });
 
     while (!open_set.empty()) {
-        Node this_node = open_set.top();
+        PathNode this_node = open_set.top();
         if (this_node.entity == to) {
             calculated_path = reconstruct_path(came_from, this_node.entity);
             break;
@@ -101,7 +112,7 @@ static std::vector<entt::entity> calculate_path(const Graph<GraphNode, float, Gr
                 came_from[neighbour_entity] = this_node.entity;
                 g_score[neighbour_entity] = tentative_score;
                 if (!(std::find(open_set_v.begin(), open_set_v.end(), neighbour_entity) != open_set_v.end())) {
-                    open_set.push(Node{neighbour_entity, tentative_score + h(neighbour_component, destination_component)});
+                    open_set.push(PathNode{neighbour_entity, tentative_score + h(neighbour_component, destination_component)});
                     open_set_v.push_back(neighbour_entity);
                 }
             }
