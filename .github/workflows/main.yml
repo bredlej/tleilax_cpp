@@ -15,7 +15,7 @@ jobs:
           version: latest # optional, default is latest
           
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build_webasm -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
+        run: cmake -B ${{github.workspace}}/build_webasm -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DPLATFORM=Web
 
       - name: Build
         # Build your program with the given configuration
