@@ -17,6 +17,16 @@ jobs:
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build_webasm -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DPLATFORM=Web
 
+      - name: Copy Assets
+        # You may pin to the exact commit or the version.
+        # uses: MadaraUchiha/copy-action@7ddff6fc153a2ea2cd0fb88ed9750544c051e399
+        uses: MadaraUchiha/copy-action@0.0.1
+        with:
+          # Source file
+          source: assets
+          # Target file
+          target: ${{github.workspace}}/build_webasm/assets
+    
       - name: Build
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build_webasm
