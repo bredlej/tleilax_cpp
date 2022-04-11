@@ -35,7 +35,7 @@ namespace tleilax {
         static constexpr struct {
             uint32_t width;
             uint32_t height;
-        } window {1920, 1080};
+        } window {800, 600};
     };
     struct Application {
     public:
