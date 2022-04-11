@@ -109,10 +109,10 @@ void Galaxy::update() {
     if (IsKeyDown(KEY_A)) {
         UpdateCamera(&_camera);
     }
-    if (IsKeyPressed(KEY_Q)) {
+    if (IsKeyDown(KEY_Q)) {
         _tick();
     }
-    if (IsKeyPressed(KEY_C)) {
+    if (IsKeyDown(KEY_C)) {
         _path.from = entt::null;
         _path.to = entt::null;
         _path.checkpoints.clear();
