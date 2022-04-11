@@ -14,9 +14,9 @@ jobs:
         uses: MadaraUchiha/copy-action@0.0.1
         with:
           # Source file
-          source: ${{github.workspace}}/assets
+          source: assets
           # Target file
-          target: ${{github.workspace}}/build_webasm/assets
+          target: build_webasm/assets
         
       - name: Setup Emscripten toolchain
         uses: mymindstorm/setup-emsdk@29ba4851d6da084ffdc1e0fc390efadbd75df9d1 # point to v11
