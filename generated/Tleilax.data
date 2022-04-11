@@ -1,0 +1,256 @@
+{
+  "weapons": [
+    {
+      "id": "LASER1",
+      "name": "Small laser turret",
+      "power_usage": 1,
+      "damage" : "1d4",
+      "weight" : 1
+    },
+    {
+      "id": "LASER2",
+      "name": "Medium laser turret",
+      "power_usage": 3,
+      "damage" : "2d4",
+      "weight" : 2
+    },
+    {
+      "id": "LASER3",
+      "name": "Large laser turret",
+      "power_usage": 5,
+      "damage" : "2d4",
+      "weight" : 3
+    }
+  ],
+  "shields": [
+    {
+      "id": "SHIELD1",
+      "name": "Small shield",
+      "power_usage": 1,
+      "defense": 1,
+      "weight" : 1
+    }
+  ],
+  "engines": [
+    {
+      "id": "ENGINE1",
+      "name": "Small engine",
+      "power": 5,
+      "weight" : 1
+    },
+    {
+      "id": "ENGINE2",
+      "name": "Medium engine",
+      "power": 10,
+      "weight" : 2
+    },
+    {
+      "id": "ENGINE3",
+      "name": "Large engine",
+      "power": 15,
+      "weight" : 3
+    }
+  ],
+  "cargo": [
+    {
+      "id": "SOLAR-BOMB",
+      "name": "Solar bomb",
+      "weight" : 95
+    }
+  ],
+  "hulls": [
+    {
+      "id": "HULL1",
+      "name": "Steel alloy hull",
+      "health": 100,
+      "max_health": 100
+    },
+    {
+      "id": "HULL2",
+      "name": "Reinforced plasta-steel hull",
+      "health": 150,
+      "max_health": 150
+    },
+    {
+      "id": "HULL3",
+      "name": "Titanium hull",
+      "health": 200,
+      "max_health": 200
+    }
+  ]
+}{
+  "human" : [
+    {
+      "id": "SCOUT",
+      "name": "Scout",
+      "capacity": 3
+    },
+    {
+      "id": "INTERCEPTOR",
+      "name": "Interceptor",
+      "capacity": 5
+    },
+    {
+      "id": "TRANSPORTER",
+      "name": "Transporter",
+      "capacity": 10
+    }
+  ],
+  "tleilaxian": [
+    {
+      "id": "PHAGE",
+      "name": "Solar Phage",
+      "capacity": 100
+    },
+    {
+      "id": "NEUTROPHILE",
+      "name": "Neutrophile",
+      "capacity": 15
+    },
+    {
+      "id": "DRONE",
+      "name": "Drone",
+      "capacity": 3
+    }
+  ]
+}#version 330
+
+// Input vertex attributes (from vertex shader)
+in vec2 fragTexCoord;
+in vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// Output fragment color
+out vec4 finalColor;
+
+// NOTE: Add here your custom variables
+
+void main()
+{
+    // Texel color fetching from texture sampler
+    vec4 texelColor = texture(texture0, fragTexCoord);
+
+    // NOTE: Implement here your fragment shader code
+
+    finalColor = texelColor*colDiffuse;
+}
+#version 330
+
+// Input vertex attributes
+in vec3 vertexPosition;
+in vec2 vertexTexCoord;
+in vec3 vertexNormal;
+in vec4 vertexColor;
+
+in mat4 instanceTransform;
+
+// Input uniform values
+uniform mat4 mvp;
+uniform mat4 matNormal;
+
+// Output vertex attributes (to fragment shader)
+out vec3 fragPosition;
+out vec2 fragTexCoord;
+out vec4 fragColor;
+out vec3 fragNormal;
+
+// NOTE: Add here your custom variables
+
+void main()
+{
+    // Compute MVP for current instance
+    mat4 mvpi = mvp*instanceTransform;
+
+    // Send vertex attributes to fragment shader
+    fragPosition = vec3(mvpi*vec4(vertexPosition, 1.0));
+    fragTexCoord = vertexTexCoord;
+    fragColor = vertexColor;
+    fragNormal = normalize(vec3(matNormal*vec4(vertexNormal, 1.0)));
+
+    // Calculate final vertex position
+    gl_Position = mvpi*vec4(vertexPosition, 1.0);
+}#version 330
+
+// Input vertex attributes (from vertex shader)
+in vec3 fragPosition;
+in vec2 fragTexCoord;
+in vec4 fragColor;
+in vec3 fragNormal;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// Output fragment color
+out vec4 finalColor;
+
+// NOTE: Add here your custom variables
+
+#define     MAX_LIGHTS              4
+#define     LIGHT_DIRECTIONAL       0
+#define     LIGHT_POINT             1
+
+struct MaterialProperty {
+    vec3 color;
+    int useSampler;
+    sampler2D sampler;
+};
+
+struct Light {
+    int enabled;
+    int type;
+    vec3 position;
+    vec3 target;
+    vec4 color;
+};
+
+// Input lighting values
+uniform Light lights[MAX_LIGHTS];
+uniform vec4 ambient;
+uniform vec3 viewPos;
+
+void main()
+{
+    // Texel color fetching from texture sampler
+    vec4 texelColor = texture(texture0, fragTexCoord);
+    vec3 lightDot = vec3(0.0);
+    vec3 normal = normalize(fragNormal);
+    vec3 viewD = normalize(viewPos - fragPosition);
+    vec3 specular = vec3(0.0);
+
+    // NOTE: Implement here your fragment shader code
+
+    for (int i = 0; i < MAX_LIGHTS; i++)
+    {
+        if (lights[i].enabled == 1)
+        {
+            vec3 light = vec3(0.0);
+
+            if (lights[i].type == LIGHT_DIRECTIONAL)
+            {
+                light = -normalize(lights[i].target - lights[i].position);
+            }
+
+            if (lights[i].type == LIGHT_POINT)
+            {
+                light = normalize(lights[i].position - fragPosition);
+            }
+
+            float NdotL = max(dot(normal, light), 0.0);
+            lightDot += lights[i].color.rgb*NdotL;
+
+            float specCo = 0.0;
+            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
+            specular += specCo;
+        }
+    }
+
+    finalColor = (texelColor*((colDiffuse + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
+    finalColor += texelColor*(ambient/10.0)*colDiffuse;
+
+    // Gamma correction
+    finalColor = pow(finalColor, vec4(1.0/2.2));
+}
