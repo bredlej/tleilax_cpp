@@ -109,10 +109,10 @@ void Galaxy::update() {
     if (IsKeyDown(KEY_A)) {
         UpdateCamera(&_camera);
     }
-    if (IsKeyPressed(KEY_SPACE)) {
+    if (IsKeyPressed(KEY_Q)) {
         _tick();
     }
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+    if (IsKeyPressed(KEY_C)) {
         _path.from = entt::null;
         _path.to = entt::null;
         _path.checkpoints.clear();
@@ -178,8 +178,6 @@ void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
 struct DistanceFunction {
     float operator() (const Vector3 first, const Vector3 second) const {return Vector3Distance(first, second);};
 };
-
-
 
 void Galaxy::_on_star_selected(const entt::entity entity) {
     StarEntity::on_click(_registry, entity);
