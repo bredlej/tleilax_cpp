@@ -26,5 +26,20 @@ if (EMSCRIPTEN)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s TOTAL_MEMORY=32MB USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY ")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file assets -s TOTAL_MEMORY=32MB -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY ")
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so taht you can directly open it.
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory ../docs/generated)
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.js ../docs/generated/${PROJECT_NAME}.js)
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.wasm ../docs/generated/${PROJECT_NAME}.wasm)
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.html ../docs/generated/index.html)
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.data ../docs/generated/${PROJECT_NAME}.data)
 endif()
 

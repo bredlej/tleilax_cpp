@@ -4,6 +4,7 @@
 #include <assets.h>
 
 nlohmann::json Assets::load_from_file(const std::string &file_name) {
+    std::printf("LOADING ASSETS\n");
     std::ifstream file(file_name.c_str());
     return nlohmann::json::parse(file);
 }
