@@ -1,5 +1,5 @@
 set(SOURCES
-        tleilax.cpp
+        Tleilax.cpp
         renderables/intro.cpp
         renderables/galaxy.cpp
         Fleet.cpp

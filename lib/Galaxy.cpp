@@ -19,14 +19,14 @@ void Galaxy::populate() {
             for (int32_t x = 0; x < _visible_size.x; x++) {
                 StarEntity star(7000, {100, 5}, {100, 10});
                 next_random_number(seed_function(x, y, z));
-                star.create_at(_registry, _pcg, Vector3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
+                star.create_at(_core->registry, _core->pcg, Vector3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
             }
         }
     }
-    _registry.view<Vector3, components::Star, components::Size>().each(
+    _core->registry.view<Vector3, components::Star, components::Size>().each(
             [&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
                 GraphNode starNode{entity, true};
-                _registry.view<Vector3, components::Star, components::Size>().each(
+                _core->registry.view<Vector3, components::Star, components::Size>().each(
                         [&](const entt::entity _entity, const Vector3 &_coords, const components::Star _color, const components::Size _size) {
                             if (entity != _entity) {
                                 GraphNode next{_entity, false};
@@ -47,10 +47,10 @@ void Galaxy::_render_visible() {
     BeginMode3D(_camera);
     DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
 
-    _registry.view<Vector3, components::Star, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
+    _core->registry.view<Vector3, components::Star, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
-        StarEntity::render(_registry, _visible_size, entity, coords, color, size, star_is_selected);
+        StarEntity::render(_core->registry, _visible_size, entity, coords, color, size, star_is_selected);
         if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _on_star_selected(entity);
         }
@@ -67,12 +67,12 @@ void Galaxy::_render_visible() {
         });
     }
 
-    _registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
+    _core->registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
         if (GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), fleet_coords, size.size).hit) {
             DrawSphereWires(fleet_coords, size.size, 6, 6, RED);
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                FleetEntity::on_click(_registry, entity);
+                FleetEntity::on_click(_core->registry, entity);
             }
         } else {
             DrawSphereWires(fleet_coords, size.size, 6, 6, GREEN);
@@ -126,19 +126,19 @@ static void change_course_upon_nearer_explosion(const Vector3 &explosion_positio
     }
 }
 void Galaxy::_explode_stars(const ExplosionEvent &ev) {
-    auto explosion_position = _registry.get<Vector3>(ev.e);
-    _registry.remove<components::Exploding>(ev.e);
-    _registry.emplace<components::Nova>(ev.e);
+    auto explosion_position = _core->registry.get<Vector3>(ev.e);
+    _core->registry.remove<components::Exploding>(ev.e);
+    _core->registry.emplace<components::Nova>(ev.e);
     std::printf("Explosion at [%g, %g, %g]\n", explosion_position.x, explosion_position.y, explosion_position.z);
-    auto nova_seekers = _registry.view<components::NovaSeeker>();
+    auto nova_seekers = _core->registry.view<components::NovaSeeker>();
     nova_seekers.each([this, explosion_position](const entt::entity entity, components::NovaSeeker &nova_seeker) {
         if (nova_seeker.capacity > 0) {
-            _dispatcher.enqueue<NovaSeekEvent>(entity, explosion_position);
+            _core->dispatcher.enqueue<NovaSeekEvent>(entity, explosion_position);
             nova_seeker.capacity -= 1;
         }
     });
 
-    auto fleets = _registry.view<components::Fleet, Vector3, components::Destination, components::Size>();
+    auto fleets = _core->registry.view<components::Fleet, Vector3, components::Destination, components::Size>();
     fleets.each([=](const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Destination &destination, const components::Size size) {
         change_course_upon_nearer_explosion(explosion_position, entity, fleet, position, destination, size);
     });
@@ -146,31 +146,31 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
 
 void Galaxy::_initialize() {
     _path = Path{};
-    _dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
-    _dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
+    _core->dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
+    _core->dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
 }
 
 void Galaxy::_tick() {
 
-    auto view = _registry.view<components::Exploding, components::Size, Vector3>();
+    auto view = _core->registry.view<components::Exploding, components::Size, Vector3>();
     view.each([this](const entt::entity entity, components::Exploding &exploding, components::Size &size, Vector3 &position) {
         if (exploding.counter > 0) {
             exploding.counter -= 1;
             size.size -= 1.0f;
         } else {
-            _dispatcher.enqueue<ExplosionEvent>(entity);
+            _core->dispatcher.enqueue<ExplosionEvent>(entity);
         }
     });
 
-    auto fleets = _registry.view<components::Fleet, Vector3, components::Destination, components::Size>();
+    auto fleets = _core->registry.view<components::Fleet, Vector3, components::Destination, components::Size>();
     fleets.each(FleetEntity::update);
 
-    _dispatcher.update();
+    _core->dispatcher.update();
 }
 
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
-    fleet.react_to_nova(_registry, _pcg, ev, _ship_components);
+    fleet.react_to_nova(_core->registry, _core->pcg, ev, _ship_components);
 }
 
 
@@ -180,7 +180,7 @@ struct DistanceFunction {
 };
 
 void Galaxy::_on_star_selected(const entt::entity entity) {
-    StarEntity::on_click(_registry, entity);
+    StarEntity::on_click(_core->registry, entity);
     if (_path.from == entt::null) {
         std::printf("From: %d\n", entity);
         _path.from = entity;
@@ -189,12 +189,12 @@ void Galaxy::_on_star_selected(const entt::entity entity) {
         _path.to = entity;
     }
     if (_path.from != entt::null && _path.to != entt::null) {
-        std::vector<entt::entity> calculated_path = calculate_path<Vector3, components::Star, DistanceFunction>(starGraph, _registry, _path.from, _path.to);
+        std::vector<entt::entity> calculated_path = calculate_path<Vector3, components::Star, DistanceFunction>(starGraph, _core->registry, _path.from, _path.to);
         if (!calculated_path.empty()) {
             selected_paths.clear();
             for (size_t i = 0; i < calculated_path.size()-1; i++) {
-                Vector3 first = _registry.get<Vector3>(calculated_path[i]);
-                Vector3 second = _registry.get<Vector3>(calculated_path[i+1]);
+                Vector3 first = _core->registry.get<Vector3>(calculated_path[i]);
+                Vector3 second = _core->registry.get<Vector3>(calculated_path[i+1]);
                 selected_paths.emplace_back(std::make_pair(first, second));
             }
         }

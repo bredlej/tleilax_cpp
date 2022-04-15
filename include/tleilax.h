@@ -39,10 +39,12 @@ namespace tleilax {
     };
     struct Application {
     public:
-        Application() = default;
+        Application() : _assets{files::ship_components, files::ships}, _core(std::make_shared<Core>()) {};
         void run(const Config &);
-
+        std::shared_ptr<Core> _core;
+        std::shared_ptr<UIView> _ui_view;
     private:
+        Assets _assets;
         std::function<void(void)> render_func;
     };
 }// namespace tleilax
