@@ -20,6 +20,7 @@
 #include <graph.h>
 #include <utility>
 #include <variant>
+#include <memory>
 
 struct Chance {
     uint32_t upper_bound;

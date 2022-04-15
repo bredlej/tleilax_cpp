@@ -14,8 +14,8 @@ void tleilax::Application::run(const Config &config) {
     _ui_view = g;
 
     while (!WindowShouldClose()) {
-        _ui_view->render();
         _ui_view->update();
+        _ui_view->render();
     }
     CloseWindow();
 }

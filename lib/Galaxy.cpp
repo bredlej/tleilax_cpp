@@ -103,11 +103,18 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     return camera;
 }
 
+void draw_ui() {
+    DrawText("A - rotate view", 5, 530, 15, GREEN);
+    DrawText("T - update world", 5, 545, 15, GREEN);
+    DrawText("C - clear path selection ( click on two stars to calculate a path between them )", 5, 560, 15, GREEN);
+    DrawText("R - generate new world", 5, 575, 15, GREEN);
+}
 void Galaxy::render() {
     BeginDrawing();
     ClearBackground(BLACK);
     _render_visible();
     DrawFPS(10, 10);
+    draw_ui();
     EndDrawing();
 }
 
@@ -115,16 +122,13 @@ void Galaxy::update() {
     if (IsKeyDown(KEY_A)) {
         UpdateCamera(&_camera);
     }
-    else if (IsKeyDown(KEY_Q)) {
+    else if (IsKeyPressed(KEY_T)) {
         _tick();
     }
-    else if (IsKeyDown(KEY_C)) {
+    else if (IsKeyPressed(KEY_C)) {
         _clear_paths();
     }
-    else if (IsKeyDown(KEY_R)) {
-        populate();
-    }
-    else if (IsKeyPressed(KEY_T)) {
+    else if (IsKeyPressed(KEY_R)) {
         populate();
     }
 }

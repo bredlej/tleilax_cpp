@@ -14,7 +14,7 @@
 #include <raylib.h>
 #include <string_view>
 #include <ship.h>
-
+#include <memory>
 struct RendererBase {
     virtual std::function<void()> get_render_func() = delete;
 };
