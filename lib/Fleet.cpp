@@ -4,7 +4,6 @@
 #include <fleet.h>
 
 
-
 void FleetEntity::update(const entt::entity entity, components::Fleet &fleet, Vector3 &pos, const components::Destination destination, const components::Size size) {
     auto new_position = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
     new_position = Vector3Normalize(Vector3Subtract(new_position, pos));
@@ -30,8 +29,10 @@ void print_ships_info(const entt::registry &registry, const entt::entity &fleet_
     }
 }
 void FleetEntity::on_click(const entt::registry &registry, entt::entity entity) {
-    auto position = registry.get<Vector3>(entity);
-    auto destination = registry.get<components::Destination>(entity);
-    std::printf("entity = [%d], fleet at [%.1f, %.1f, %.1f] moving towards [%d, %d, %d]\n", entity, position.x, position.y, position.z, destination.dest.x, destination.dest.y, destination.dest.z);
-    print_ships_info(registry, entity);
+    if (registry.valid(entity)) {
+        auto position = registry.get<Vector3>(entity);
+        auto destination = registry.get<components::Destination>(entity);
+        std::printf("entity = [%d], fleet at [%.1f, %.1f, %.1f] moving towards [%d, %d, %d]\n", entity, position.x, position.y, position.z, destination.dest.x, destination.dest.y, destination.dest.z);
+        print_ships_info(registry, entity);
+    }
 }

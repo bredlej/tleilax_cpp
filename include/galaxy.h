@@ -8,8 +8,7 @@
 #include <components.h>
 #include <cstdint>
 #include <cmath>
-#include <entt/entt.hpp>
-#include <pcg/pcg_random.hpp>
+#include <core.h>
 #include <raylib.h>
 #include <raymath.h>
 #include <chrono>
@@ -19,6 +18,7 @@
 #include <path.h>
 #include <queue>
 #include <graph.h>
+#include <utility>
 #include <variant>
 
 struct Chance {
@@ -47,29 +47,26 @@ private:
     Chance _nova_seeker_chance;
 };
 
-class Galaxy {
-
+class Galaxy : public UIView {
 public:
-    explicit Galaxy(Assets &assets)
-        : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)),
+    explicit Galaxy(std::shared_ptr<Core> core, Assets &assets)
+        : _core {std::move(core)},
+          _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)),
           _ship_components{assets.get_ship_components()} {_initialize();};
-    Galaxy()
-        : _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)) { _initialize(); };
     ~Galaxy() = default;
 
-    void render();
-    void update();
+    void render() override;
+    void update() override;
     void populate();
-    uint32_t next_random_number(const uint32_t max) { return max > 0 ? _pcg(max) : 0; };
+    uint32_t next_random_number(const uint32_t max) { return max > 0 ? _core->pcg(max) : 0; };
 private:
     Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> starGraph;
     std::vector<std::pair<Vector3, Vector3>> paths;
     std::vector<std::pair<Vector3, Vector3>> selected_paths;
-
     ShipComponentRepository _ship_components;
-    entt::dispatcher _dispatcher{};
-    entt::registry _registry{};    
-    pcg32 _pcg;
+
+    std::shared_ptr<Core> _core;
+
     Vector3 _offset{0., 0., 0.};
     const Vector3 _visible_size{75, 50, 75};
     Path _path;
@@ -85,6 +82,8 @@ private:
     void _explode_stars(const ExplosionEvent &);
     void _send_fleet_to_nova(const NovaSeekEvent &);
     void _on_star_selected(const entt::entity);
+
+    void _clear_paths();
     std::function<void(const entt::registry &, const entt::entity)> _fleet_onclick_handle;
 };
 
