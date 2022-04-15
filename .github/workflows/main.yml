@@ -1,5 +1,7 @@
 name: Build and Deploy Webassembly Project
 on: [push, workflow_dispatch]
+env:
+  BUILD_WASM: 1
 jobs:
   build-and-deploy:
     concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
