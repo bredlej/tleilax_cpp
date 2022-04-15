@@ -82,6 +82,8 @@ private:
     void _explode_stars(const ExplosionEvent &);
     void _send_fleet_to_nova(const NovaSeekEvent &);
     void _on_star_selected(const entt::entity);
+
+    void _clear_paths();
     std::function<void(const entt::registry &, const entt::entity)> _fleet_onclick_handle;
 };
 

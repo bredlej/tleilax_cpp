@@ -12,8 +12,15 @@ constexpr auto local_to_global_coords = [](const auto coordinates, const auto vi
     return {coordinates.x - static_cast<float>(visible_size.x / 2), coordinates.y - static_cast<float>(visible_size.y / 2), coordinates.z - static_cast<float>(visible_size.z / 2)};
 };
 
+
 void Galaxy::populate() {
     auto before = std::chrono::high_resolution_clock::now();
+    _core->registry.clear();
+    paths.clear();
+    selected_paths.clear();
+    _clear_paths();
+    starGraph.get().clear();
+
     for (int32_t z = 0; z < _visible_size.z; z++) {
         for (int32_t y = 0; y < _visible_size.y; y++) {
             for (int32_t x = 0; x < _visible_size.x; x++) {
@@ -58,10 +65,9 @@ void Galaxy::_render_visible() {
 
     if (selected_paths.empty()) {
         std::for_each(paths.begin(), paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
-          DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), YELLOW);
+            DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), YELLOW);
         });
-    }
-    else {
+    } else {
         std::for_each(selected_paths.begin(), selected_paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
             DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), BLUE);
         });
@@ -109,16 +115,20 @@ void Galaxy::update() {
     if (IsKeyDown(KEY_A)) {
         UpdateCamera(&_camera);
     }
-    if (IsKeyDown(KEY_Q)) {
+    else if (IsKeyDown(KEY_Q)) {
         _tick();
     }
-    if (IsKeyDown(KEY_C)) {
-        _path.from = entt::null;
-        _path.to = entt::null;
-        _path.checkpoints.clear();
-        selected_paths.clear();
+    else if (IsKeyDown(KEY_C)) {
+        _clear_paths();
+    }
+    else if (IsKeyDown(KEY_R)) {
+        populate();
+    }
+    else if (IsKeyPressed(KEY_T)) {
+        populate();
     }
 }
+
 static void change_course_upon_nearer_explosion(const Vector3 &explosion_position, const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Destination &destination, const components::Size size) {
     auto destination_vector = Vector3{static_cast<float>(destination.dest.x), static_cast<float>(destination.dest.y), static_cast<float>(destination.dest.z)};
     if (Vector3Distance(explosion_position, position) < Vector3Distance(destination_vector, position)) {
@@ -173,32 +183,38 @@ void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     fleet.react_to_nova(_core->registry, _core->pcg, ev, _ship_components);
 }
 
-
-
 struct DistanceFunction {
-    float operator() (const Vector3 first, const Vector3 second) const {return Vector3Distance(first, second);};
+    float operator()(const Vector3 first, const Vector3 second) const { return Vector3Distance(first, second); };
 };
 
 void Galaxy::_on_star_selected(const entt::entity entity) {
-    StarEntity::on_click(_core->registry, entity);
-    if (_path.from == entt::null) {
-        std::printf("From: %d\n", entity);
-        _path.from = entity;
-    } else {
-        std::printf("To: %d\n", entity);
-        _path.to = entity;
-    }
-    if (_path.from != entt::null && _path.to != entt::null) {
-        std::vector<entt::entity> calculated_path = calculate_path<Vector3, components::Star, DistanceFunction>(starGraph, _core->registry, _path.from, _path.to);
-        if (!calculated_path.empty()) {
-            selected_paths.clear();
-            for (size_t i = 0; i < calculated_path.size()-1; i++) {
-                Vector3 first = _core->registry.get<Vector3>(calculated_path[i]);
-                Vector3 second = _core->registry.get<Vector3>(calculated_path[i+1]);
-                selected_paths.emplace_back(std::make_pair(first, second));
+    if (_core->registry.valid(entity)) {
+        StarEntity::on_click(_core->registry, entity);
+        if (_path.from == entt::null) {
+            std::printf("From: %d\n", entity);
+            _path.from = entity;
+        } else {
+            std::printf("To: %d\n", entity);
+            _path.to = entity;
+        }
+        if (_path.from != entt::null && _path.to != entt::null) {
+            std::vector<entt::entity> calculated_path = calculate_path<Vector3, components::Star, DistanceFunction>(starGraph, _core->registry, _path.from, _path.to);
+            if (!calculated_path.empty()) {
+                selected_paths.clear();
+                for (size_t i = 0; i < calculated_path.size() - 1; i++) {
+                    Vector3 first = _core->registry.get<Vector3>(calculated_path[i]);
+                    Vector3 second = _core->registry.get<Vector3>(calculated_path[i + 1]);
+                    selected_paths.emplace_back(std::make_pair(first, second));
+                }
             }
         }
     }
+}
+void Galaxy::_clear_paths() {
+    _path.from = entt::null;
+    _path.to = entt::null;
+    _path.checkpoints.clear();
+    selected_paths.clear();
 }
 
 entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3 position) {

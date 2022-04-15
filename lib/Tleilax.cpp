@@ -8,7 +8,7 @@ void tleilax::Application::run(const Config &config) {
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
     SetTargetFPS(144);
 
-    std::shared_ptr<Galaxy> g = std::make_shared<Galaxy>(_core, _assets);
+    auto g = std::make_shared<Galaxy>(_core, _assets);
     g->populate();
 
     _ui_view = g;
