@@ -22,6 +22,7 @@ enable_testing()
 
 add_subdirectory(test)
 add_subdirectory(lib)
+add_subdirectory(extern)
 add_executable(${PROJECT_NAME} main.cpp)
 
 if (${WASM})
