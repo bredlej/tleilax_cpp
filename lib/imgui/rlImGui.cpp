@@ -29,7 +29,7 @@
 **********************************************************************************************/
 #include "imgui/rlImGui.h"
 
-#include <imgui-1.87/imgui.h>
+#include <imgui/imgui.h>
 #include "raylib.h"
 #include "rlgl.h"
 
