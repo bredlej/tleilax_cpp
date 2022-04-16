@@ -3,6 +3,7 @@
 //
 
 #include "galaxy.h"
+#include <imgui/imgui.h>
 
 constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
     return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
@@ -11,15 +12,32 @@ constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint
 constexpr auto local_to_global_coords = [](const auto coordinates, const auto visible_size) -> Vector3 {
     return {coordinates.x - static_cast<float>(visible_size.x / 2), coordinates.y - static_cast<float>(visible_size.y / 2), coordinates.z - static_cast<float>(visible_size.z / 2)};
 };
+static float _distance_between_stars = 20.0f;
 
-
+void Galaxy::_recalculate_graph() {
+    _clear_paths();
+    paths.clear();
+    starGraph.get().clear();
+    _core->registry.view<Vector3, components::Star, components::Size>().each(
+            [&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
+                GraphNode starNode{entity, true};
+                _core->registry.view<Vector3, components::Star, components::Size>().each(
+                        [&](const entt::entity _entity, const Vector3 &_coords, const components::Star _color, const components::Size _size) {
+                            if (entity != _entity) {
+                                GraphNode next{_entity, false};
+                                const auto distance = Vector3Distance(coords, _coords);
+                                if (distance < _distance_between_stars) {
+                                    starGraph.add_edge(starNode, next, distance, false);
+                                    paths.emplace_back(std::make_pair(coords, _coords));
+                                }
+                            }
+                        });
+            });
+}
 void Galaxy::populate() {
     auto before = std::chrono::high_resolution_clock::now();
     _core->registry.clear();
-    paths.clear();
     selected_paths.clear();
-    _clear_paths();
-    starGraph.get().clear();
 
     for (int32_t z = 0; z < _visible_size.z; z++) {
         for (int32_t y = 0; y < _visible_size.y; y++) {
@@ -30,21 +48,8 @@ void Galaxy::populate() {
             }
         }
     }
-    _core->registry.view<Vector3, components::Star, components::Size>().each(
-            [&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
-                GraphNode starNode{entity, true};
-                _core->registry.view<Vector3, components::Star, components::Size>().each(
-                        [&](const entt::entity _entity, const Vector3 &_coords, const components::Star _color, const components::Size _size) {
-                            if (entity != _entity) {
-                                GraphNode next{_entity, false};
-                                const auto distance = Vector3Distance(coords, _coords);
-                                if (distance < 20.0f) {
-                                    starGraph.add_edge(starNode, next, distance, false);
-                                    paths.emplace_back(std::make_pair(coords, _coords));
-                                }
-                            }
-                        });
-            });
+
+    _recalculate_graph();
     auto after = std::chrono::high_resolution_clock::now() - before;
     std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }
@@ -103,33 +108,85 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     return camera;
 }
 
-void draw_ui() {
-    DrawText("A - rotate view", 5, 530, 15, GREEN);
-    DrawText("T - update world", 5, 545, 15, GREEN);
-    DrawText("C - clear path selection ( click on two stars to calculate a path between them )", 5, 560, 15, GREEN);
-    DrawText("R - generate new world", 5, 575, 15, GREEN);
+static bool open_demo = false;
+void Galaxy::_draw_ui() {
+    rlImGuiBegin();
+    if (open_demo) {
+        ImGui::ShowDemoWindow(&open_demo);
+    } else {
+        bool open = true;
+        static bool use_work_area = true;
+        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+
+        // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
+        // Based on your use case you may want one of the other.
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+        ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
+        ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
+        if (ImGui::Begin("Tleilax control", &open, flags)) {
+            if (_path.from == entt::null) {
+                ImGui::Text("No paths selected - click on two stars to establish a path between them");
+            }
+            else {
+                Vector3 from = _core->registry.get<Vector3>(_path.from);
+                ImGui::Text("Establishing path from (%.0f, %.0f, %.0f) ", from.x, from.y, from.z);
+                if (_path.to != entt::null) {
+                    ImGui::SameLine();
+                    Vector3 to = _core->registry.get<Vector3>(_path.to);
+                    ImGui::Text("to (%.0f, %.0f, %.0f) ", to.x, to.y, to.z);
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear")) {
+                        _clear_paths();
+                    }
+                }
+            }
+            ImGui::PushButtonRepeat(true);
+            if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
+                UpdateCamera(&_camera);
+            }
+            ImGui::PopButtonRepeat();
+            ImGui::SameLine();
+            if (ImGui::Button("Update")) {
+                _tick();
+            }
+            float dist_from = 1.0f;
+            float dist_to = 50.0f;
+            ImGui::DragScalar("Scroll distance between stars", ImGuiDataType_Float,  &_distance_between_stars, 0.5f,  &dist_from, &dist_to, "%f");
+            if  (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+                _recalculate_graph();
+            }
+            if (ImGui::Button("Generate new world")) {
+                populate();
+            }
+        }
+
+        ImGui::End();
+    }
+
+    rlImGuiEnd();
 }
 void Galaxy::render() {
     BeginDrawing();
     ClearBackground(BLACK);
     _render_visible();
-    DrawFPS(10, 10);
-    draw_ui();
+    DrawFPS(1260, 10);
+    _draw_ui();
     EndDrawing();
 }
 
 void Galaxy::update() {
     if (IsKeyDown(KEY_A)) {
         UpdateCamera(&_camera);
-    }
-    else if (IsKeyPressed(KEY_T)) {
+    } else if (IsKeyPressed(KEY_T)) {
         _tick();
-    }
-    else if (IsKeyPressed(KEY_C)) {
+    } else if (IsKeyPressed(KEY_C)) {
         _clear_paths();
-    }
-    else if (IsKeyPressed(KEY_R)) {
+    } else if (IsKeyPressed(KEY_R)) {
         populate();
+    }
+    if (IsKeyPressed(KEY_D)) {
+        open_demo = !open_demo;
     }
 }
 

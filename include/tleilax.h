@@ -8,13 +8,15 @@
 #include <assets.h>
 #include <concepts>
 #include <cstdint>
-#include <functional>
 #include <fleet.h>
+#include <functional>
 #include <galaxy.h>
-#include <raylib.h>
-#include <string_view>
-#include <ship.h>
+#include <imgui/rlImGui.h>
 #include <memory>
+#include <raylib.h>
+#include <ship.h>
+#include <string_view>
+
 struct RendererBase {
     virtual std::function<void()> get_render_func() = delete;
 };
@@ -35,7 +37,7 @@ namespace tleilax {
         static constexpr struct {
             uint32_t width;
             uint32_t height;
-        } window {800, 600};
+        } window {1280, 720};
     };
     struct Application {
     public:

@@ -6,6 +6,7 @@
 void tleilax::Application::run(const Config &config) {
 
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
+    rlImGuiSetup(true);
     SetTargetFPS(144);
 
     auto g = std::make_shared<Galaxy>(_core, _assets);
@@ -17,6 +18,7 @@ void tleilax::Application::run(const Config &config) {
         _ui_view->update();
         _ui_view->render();
     }
+    rlImGuiShutdown();
     CloseWindow();
 }
 
