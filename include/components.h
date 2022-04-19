@@ -45,6 +45,10 @@ namespace components {
         Coordinates dest;
     };
 
+    struct Path {
+        std::vector<entt::entity> checkpoints;
+    };
+
     // Ship Components
 
     struct Engine {
@@ -108,7 +112,7 @@ template<typename ComponentT, assets::types AssetT>
 static std::vector<ComponentT> json_to_component_converter(const nlohmann::json &json_data, const std::function<ComponentT(const nlohmann::json &)>& converter_func) {
     std::vector<ComponentT> components;
     const auto &json_components = json_data;
-    for (const auto &json : json_components[assets::names[AssetT]]) {
+    for (const auto &json : json_components[0][assets::names[AssetT]]) {
         components.emplace_back(converter_func(json));
     }
     return components;

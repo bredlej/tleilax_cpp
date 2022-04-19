@@ -45,7 +45,7 @@ struct PathNode {
 };
 
 struct GraphNodeHash {
-    std::size_t operator() (const GraphNode node) const {return static_cast<size_t>(node.entity);};
+    std::size_t operator() (const GraphNode node) const {return static_cast<size_t>(node.entity);}
 };
 
 struct GraphNodeEqualFunc {

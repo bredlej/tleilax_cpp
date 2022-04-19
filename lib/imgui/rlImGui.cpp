@@ -29,9 +29,13 @@
 **********************************************************************************************/
 #include "imgui/rlImGui.h"
 
-#include <imgui/imgui.h>
+#include "imgui/imgui.h"
 #include "raylib.h"
 #include "rlgl.h"
+
+#ifdef PLATFORM_DESKTOP
+#include <GLFW/glfw3.h>
+#endif
 
 #include <math.h>
 #include <vector>
@@ -59,6 +63,16 @@ static void rlImGuiNewFrame()
 
     io.DisplaySize.x = float(GetScreenWidth());
     io.DisplaySize.y = float(GetScreenHeight());
+    int width = io.DisplaySize.x, height = io.DisplaySize.y;
+#ifdef PLATFORM_DESKTOP
+    glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
+#endif
+    if (width > 0 && height > 0) {
+        io.DisplayFramebufferScale = ImVec2((float)width / io.DisplaySize.x, (float)height / io.DisplaySize.y);
+    }
+    else {
+        io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+    }
 
     io.DeltaTime = GetFrameTime();
 
@@ -248,7 +262,7 @@ static void rlImGuiRenderTriangles(unsigned int count, int indexStart, const ImV
 {
     if (count < 3)
         return;
-	
+
     Texture* texture = (Texture*)texturePtr;
 
     unsigned int textureId = (texture == nullptr) ? 0 : texture->id;
@@ -258,7 +272,7 @@ static void rlImGuiRenderTriangles(unsigned int count, int indexStart, const ImV
 
     for (unsigned int i = 0; i <= (count - 3); i += 3)
     {
-        if(rlCheckRenderBatchLimit(3)) 
+        if(rlCheckRenderBatchLimit(3))
         {
             rlBegin(RL_TRIANGLES);
             rlSetTexture(textureId);
@@ -282,7 +296,8 @@ static void rlImGuiRenderTriangles(unsigned int count, int indexStart, const ImV
 static void EnableScissor(float x, float y, float width, float height)
 {
     rlEnableScissorTest();
-    rlScissor((int)x, GetScreenHeight() - (int)(y + height), (int)width, (int)height);
+    ImGuiIO& io = ImGui::GetIO();
+    rlScissor((int)x * io.DisplayFramebufferScale.x, (GetScreenHeight() - (int)(y + height)) * io.DisplayFramebufferScale.y, (int)width * io.DisplayFramebufferScale.x, (int)height * io.DisplayFramebufferScale.y);
 }
 
 static void rlRenderData(ImDrawData* data)
@@ -300,7 +315,7 @@ static void rlRenderData(ImDrawData* data)
             if (cmd.UserCallback != nullptr)
             {
                 cmd.UserCallback(commandList, &cmd);
-  
+
                 continue;
             }
 

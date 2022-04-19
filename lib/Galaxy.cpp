@@ -170,7 +170,7 @@ void Galaxy::render() {
     BeginDrawing();
     ClearBackground(BLACK);
     _render_visible();
-    DrawFPS(1260, 10);
+    DrawFPS(1240, 10);
     _draw_ui();
     EndDrawing();
 }
@@ -202,9 +202,9 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
     _core->registry.emplace<components::Nova>(ev.e);
     std::printf("Explosion at [%g, %g, %g]\n", explosion_position.x, explosion_position.y, explosion_position.z);
     auto nova_seekers = _core->registry.view<components::NovaSeeker>();
-    nova_seekers.each([this, explosion_position](const entt::entity entity, components::NovaSeeker &nova_seeker) {
+    nova_seekers.each([this, ev](const entt::entity entity, components::NovaSeeker &nova_seeker) {
         if (nova_seeker.capacity > 0) {
-            _core->dispatcher.enqueue<NovaSeekEvent>(entity, explosion_position);
+            _core->dispatcher.enqueue<NovaSeekEvent>(entity, ev.e);
             nova_seeker.capacity -= 1;
         }
     });
@@ -241,12 +241,10 @@ void Galaxy::_tick() {
 
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
-    fleet.react_to_nova(_core->registry, _core->pcg, ev, _ship_components);
+    fleet.react_to_nova(_core->registry, _core->pcg, ev, _ship_components, starGraph);
 }
 
-struct DistanceFunction {
-    float operator()(const Vector3 first, const Vector3 second) const { return Vector3Distance(first, second); };
-};
+struct DistanceFunction;
 
 void Galaxy::_on_star_selected(const entt::entity entity) {
     if (_core->registry.valid(entity)) {
