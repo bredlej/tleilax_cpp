@@ -198,7 +198,7 @@ Module['FS_createPath']("/assets", "shaders", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/json/ship_components.json", "start": 0, "end": 1384}, {"filename": "/assets/json/ships.json", "start": 1384, "end": 1934}, {"filename": "/assets/shaders/base.fs", "start": 1934, "end": 2420}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 2420, "end": 3250}, {"filename": "/assets/shaders/lighting.fs", "start": 3250, "end": 5262}], "remote_package_size": 5262, "package_uuid": "8966ffcb-836d-4954-872a-85810970a4d6"});
+    loadPackage({"files": [{"filename": "/assets/json/ship_components.json", "start": 0, "end": 1384}, {"filename": "/assets/json/ships.json", "start": 1384, "end": 1934}, {"filename": "/assets/shaders/base.fs", "start": 1934, "end": 2420}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 2420, "end": 3250}, {"filename": "/assets/shaders/lighting.fs", "start": 3250, "end": 5262}], "remote_package_size": 5262, "package_uuid": "b3be4663-3c9d-4626-b692-cd2993b15d7f"});
 
   })();
 
@@ -10179,9 +10179,6 @@ var dynCall_viii = Module["dynCall_viii"] = createExportWrapper("dynCall_viii");
 
 /** @type {function(...*):?} */
 var dynCall_v = Module["dynCall_v"] = createExportWrapper("dynCall_v");
-
-/** @type {function(...*):?} */
-var dynCall_viiiif = Module["dynCall_viiiif"] = createExportWrapper("dynCall_viiiif");
 
 /** @type {function(...*):?} */
 var dynCall_iiii = Module["dynCall_iiii"] = createExportWrapper("dynCall_iiii");
