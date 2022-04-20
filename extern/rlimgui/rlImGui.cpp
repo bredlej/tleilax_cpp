@@ -27,9 +27,9 @@
 *   SOFTWARE.
 *
 **********************************************************************************************/
-#include "imgui/rlImGui.h"
+#include "rlImGui.h"
 
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "raylib.h"
 #include "rlgl.h"
 
@@ -262,7 +262,7 @@ static void rlImGuiRenderTriangles(unsigned int count, int indexStart, const ImV
 {
     if (count < 3)
         return;
-
+	
     Texture* texture = (Texture*)texturePtr;
 
     unsigned int textureId = (texture == nullptr) ? 0 : texture->id;
@@ -272,7 +272,7 @@ static void rlImGuiRenderTriangles(unsigned int count, int indexStart, const ImV
 
     for (unsigned int i = 0; i <= (count - 3); i += 3)
     {
-        if(rlCheckRenderBatchLimit(3))
+        if(rlCheckRenderBatchLimit(3)) 
         {
             rlBegin(RL_TRIANGLES);
             rlSetTexture(textureId);
@@ -315,7 +315,7 @@ static void rlRenderData(ImDrawData* data)
             if (cmd.UserCallback != nullptr)
             {
                 cmd.UserCallback(commandList, &cmd);
-
+  
                 continue;
             }
 

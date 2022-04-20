@@ -30,7 +30,7 @@
 
 #pragma once
 
-#include <raylib.h>
+#include "raylib.h"
 
 #ifdef __cplusplus
 extern "C" {
