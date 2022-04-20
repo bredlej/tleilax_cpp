@@ -45,6 +45,10 @@ namespace components {
         Coordinates dest;
     };
 
+    struct Path {
+        std::vector<entt::entity> checkpoints;
+    };
+
     // Ship Components
 
     struct Engine {

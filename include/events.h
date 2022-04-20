@@ -12,7 +12,7 @@ struct ExplosionEvent {
 };
 struct NovaSeekEvent {
     entt::entity source;
-    Vector3 destination;
+    entt::entity destination;
 };
 struct StarSelectedEvent {
     entt::entity entity;
