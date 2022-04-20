@@ -86,7 +86,7 @@ void Galaxy::_render_visible() {
                 FleetEntity::on_click(_core->registry, entity);
             }
         } else {
-            DrawSphereWires(fleet_coords, size.size, 6, 6, GREEN);
+            DrawSphereWires(fleet_coords, size.size, 6, 6, SKYBLUE);
         }
     });
     EndMode3D();
@@ -160,7 +160,6 @@ void Galaxy::_draw_ui() {
                 populate();
             }
         }
-
         ImGui::End();
     }
 
@@ -233,8 +232,11 @@ void Galaxy::_tick() {
         }
     });
 
-    auto fleets = _core->registry.view<components::Fleet, Vector3, components::Destination, components::Size>();
-    fleets.each(FleetEntity::update);
+    auto fleets = _core->registry.view<components::Fleet, Vector3, components::Path>();
+
+    fleets.each([this](const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Path &path) {
+        FleetEntity::update(_core->registry, entity, fleet, position, path);
+    });
 
     _core->dispatcher.update();
 }

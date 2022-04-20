@@ -5,13 +5,13 @@
 #ifndef TLEILAX_FLEET_H
 #define TLEILAX_FLEET_H
 
-#include <entt/entt.hpp>
-#include <pcg/pcg_random.hpp>
 #include <components.h>
+#include <entt/entt.hpp>
 #include <events.h>
+#include <graph.h>
+#include <pcg/pcg_random.hpp>
 #include <raymath.h>
 #include <ship.h>
-#include <graph.h>
 
 static constexpr uint32_t MAX_SHIPS_IN_FLEET = 10;
 
@@ -37,11 +37,10 @@ public:
             _entity = create(registry, pcg, position, ship_components);
         }
         auto path_component = components::Path();
-        path_component.checkpoints = calculate_path<Vector3, components::Star, DistanceFunction>(graph, registry, _entity, ev.destination);;
+        path_component.checkpoints = calculate_path<Vector3, components::Star, DistanceFunction>(graph, registry, ev.source, ev.destination);;
         registry.emplace<components::Path>(_entity, path_component);
-        //registry.emplace<components::Destination>(_entity, components::Coordinates{static_cast<int32_t>(ev.destination.x), static_cast<int32_t>(ev.destination.y), static_cast<int32_t>(ev.destination.z)});
     }
-    static void update(entt::entity entity, components::Fleet &fleet, Vector3 &pos, components::Destination destination, components::Size size);
+    static void update(entt::registry &, entt::entity entity, components::Fleet &fleet, Vector3&, components::Path &path);
     static void on_click(const entt::registry &, entt::entity entity);
 private:
     entt::entity _entity;
@@ -52,7 +51,6 @@ private:
         std::vector<components::Engine> engines = get<components::Engine>(ship_components);
         std::vector<components::Hull> hulls = get<components::Hull>(ship_components);
         std::vector<components::Shield> shields = get<components::Shield>(ship_components);
-//-DCMAKE_TOOLCHAIN_FILE=/Users/bredlej/Coding/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DPLATFORM=Web
         for (int i = 0; i < amount_ships; i++) {
             components::Engine engine = engines[pcg(engines.size())];
             components::Hull hull = hulls[pcg(hulls.size())];
