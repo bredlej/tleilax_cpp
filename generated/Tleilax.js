@@ -198,7 +198,7 @@ Module['FS_createPath']("/assets", "shaders", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/json/ship_components.json", "start": 0, "end": 1384}, {"filename": "/assets/json/ships.json", "start": 1384, "end": 1934}, {"filename": "/assets/shaders/base.fs", "start": 1934, "end": 2420}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 2420, "end": 3250}, {"filename": "/assets/shaders/lighting.fs", "start": 3250, "end": 5262}], "remote_package_size": 5262, "package_uuid": "26d9c8a6-a917-42b7-a3f8-9eafa5cfedf2"});
+    loadPackage({"files": [{"filename": "/assets/json/ship_components.json", "start": 0, "end": 1384}, {"filename": "/assets/json/ships.json", "start": 1384, "end": 1934}, {"filename": "/assets/shaders/base.fs", "start": 1934, "end": 2420}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 2420, "end": 3250}, {"filename": "/assets/shaders/lighting.fs", "start": 3250, "end": 5262}], "remote_package_size": 5262, "package_uuid": "8966ffcb-836d-4954-872a-85810970a4d6"});
 
   })();
 
