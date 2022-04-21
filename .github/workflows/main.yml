@@ -1,5 +1,10 @@
 name: Build and Deploy Webassembly Project
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [ development ]
+  pull_request:
+    branches: [ development ]
+  workflow_dispatch:
 env:
   BUILD_WASM: 1
 jobs:
@@ -22,7 +27,13 @@ jobs:
       - name: Build
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build_webasm
-        
+      - name: Run unit tests
+        uses: HorstBaerbel/action-ctest@1.1
+        with:
+          sourcedir: '.'
+          builddir: ${{github.workspace}}/build_webasm
+          cmakeoptions: ''
+          ctestoptions: ''
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
