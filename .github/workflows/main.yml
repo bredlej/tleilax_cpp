@@ -9,33 +9,25 @@ env:
   BUILD_WASM: 1
 jobs:
   build-and-deploy:
-    concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
+    concurrency: ci-${{ github.ref }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v3
 
       - name: Setup Emscripten toolchain
-        uses: mymindstorm/setup-emsdk@29ba4851d6da084ffdc1e0fc390efadbd75df9d1 # point to v11
+        uses: mymindstorm/setup-emsdk@29ba4851d6da084ffdc1e0fc390efadbd75df9d1
         with:
-          # Version to install
-          version: latest # optional, default is latest
+          version: latest
           
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build_webasm -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DPLATFORM=Web
     
       - name: Build
-        # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build_webasm
-      - name: Run unit tests
-        uses: HorstBaerbel/action-ctest@1.1
-        with:
-          sourcedir: '.'
-          builddir: 'build'
-          cmakeoptions: ''
-          ctestoptions: ''
+        
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
-          branch: gh-pages # The branch the action should deploy to.
-          folder: docs # The folder the action should deploy.
+          branch: gh-pages
+          folder: docs
