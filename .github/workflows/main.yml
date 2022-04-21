@@ -31,7 +31,7 @@ jobs:
         uses: HorstBaerbel/action-ctest@1.1
         with:
           sourcedir: '.'
-          builddir: ${{github.workspace}}/build_webasm
+          builddir: 'build'
           cmakeoptions: ''
           ctestoptions: ''
       - name: Deploy 🚀
