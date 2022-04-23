@@ -45,7 +45,7 @@ public:
 private:
     entt::entity _entity;
     static void populate_fleet_with_ships(entt::registry &registry, entt::entity fleet_entity, pcg32 &pcg, const ShipComponentRepository &ship_components) {
-        auto amount_ships = pcg(MAX_SHIPS_IN_FLEET + 1);
+        auto amount_ships = pcg(MAX_SHIPS_IN_FLEET) + 1;
         std::vector<entt::entity> ships;
         std::vector<components::Weapon> weapons = get<components::Weapon>(ship_components);
         std::vector<components::Engine> engines = get<components::Engine>(ship_components);
