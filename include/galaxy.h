@@ -14,6 +14,7 @@
 #include <fleet.h>
 #include <functional>
 #include <graph.h>
+#include <imgui/imgui.h>
 #include <imgui/rlImGui.h>
 #include <memory>
 #include <path.h>
@@ -62,19 +63,19 @@ public:
     void populate();
     uint32_t next_random_number(const uint32_t max) { return max > 0 ? _core->pcg(max) : 0; };
 private:
-    Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> starGraph;
-    std::vector<std::pair<Vector3, Vector3>> paths;
+    static constexpr uint32_t _star_occurence_chance = 7000;
+    const Vector3 _visible_size{75, 50, 75};
+    Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> stars_graph;
+    std::vector<std::pair<Vector3, Vector3>> stars_paths;
     std::vector<std::pair<Vector3, Vector3>> selected_paths;
     ShipComponentRepository _ship_components;
-
-    std::shared_ptr<Core> _core;
-
-    Vector3 _offset{0., 0., 0.};
-    const Vector3 _visible_size{75, 50, 75};
-    Path _path;
-    static constexpr uint32_t _star_occurence_chance = 5000;
-    void _initialize();
     Camera _camera;
+    Path _path;
+    std::shared_ptr<Core> _core;
+    Vector3 _offset{0., 0., 0.};
+    entt::entity _selected_entity{entt::null};
+
+    void _initialize();
     Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
                               float horizontalDistance, float horizontalAngle,
                               float verticalAngle);
@@ -87,9 +88,16 @@ private:
 
     void _recalculate_graph();
     void _clear_paths();
-    void _draw_ui();
 
-    std::function<void(const entt::registry &, const entt::entity)> _fleet_onclick_handle;
+    void _render_stars();
+    void _render_paths();
+    void _render_fleets();
+
+    void _draw_ui();
+    void _draw_ui_tab_main(const ImGuiViewport *pViewport);
+    void _draw_ui_tab_debug();
+    void _draw_ui_main_path_selection();
+    void _draw_ui_main_entity_selection(const ImGuiViewport *pViewport);
 };
 
 #endif//TLEILAX_GALAXY_H
