@@ -7,6 +7,7 @@
 
 #include <entt/entt.hpp>
 #include <pcg/pcg_random.hpp>
+#include <name_generator.h>
 
 struct UIView {
     virtual void render() = 0;
@@ -18,5 +19,6 @@ public:
     entt::dispatcher dispatcher{};
     entt::registry registry{};
     pcg32 pcg;
+    NameGenerator name_generator{};
 };
 #endif//TLEILAX_CORE_H
