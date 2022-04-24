@@ -1,1 +1,1 @@
-CPMAddPackage("gh:skypjack/entt#v3.8.1@3.8.1")
+CPMAddPackage("gh:skypjack/entt#v3.10.0@3.10.0")
