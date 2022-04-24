@@ -4,6 +4,30 @@
 
 #include "galaxy.h"
 #include <imgui/imgui.h>
+#include <name_generator.h>
+
+template<>
+std::string NameGenerator::get_random_name<components::Star>(pcg32 &pcg) {
+    auto select_random_name = [&] () {
+        NameType category = static_cast<NameType>(pcg(_names.size()));
+
+        return _names[category][pcg(_names[category].size())];//.//[pcg(_names[static_cast<std::underlying_type_t<NameType>>(category)].size())];
+    };
+    auto randomize_name = [&] () {
+        auto name = select_random_name();
+        bool has_suffix = pcg(100) <= 50;
+        if (has_suffix) {
+            bool is_suffix_a_name = pcg(100) <= 50;
+            if (is_suffix_a_name) {
+                return name + " " + select_random_name();
+            } else {
+                return name + " " + star_suffixes[pcg(star_suffixes.size())];
+            }
+        }
+        return name;
+    };
+    return randomize_name();
+}
 
 constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
     return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
@@ -49,13 +73,14 @@ void Galaxy::populate() {
     auto before = std::chrono::high_resolution_clock::now();
     _core->registry.clear();
     selected_paths.clear();
+    _selected_entity = entt::null;
 
     for (int32_t z = 0; z < _visible_size.z; z++) {
         for (int32_t y = 0; y < _visible_size.y; y++) {
             for (int32_t x = 0; x < _visible_size.x; x++) {
                 StarEntity star(_star_occurence_chance, {100, 5}, {100, 10});
                 next_random_number(seed_function(x, y, z));
-                star.create_at(_core->registry, _core->pcg, Vector3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
+                star.create_at(_core->registry, _core, Vector3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
             }
         }
     }
@@ -121,6 +146,16 @@ void Galaxy::_render_stars() {
         if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             _on_star_selected(entity);
         }
+        EndMode3D();
+
+        auto *name = _core->registry.try_get<components::Name>(entity);
+        if (name) {
+            auto name_pos = GetWorldToScreenEx(star_coords, _camera, 1280, 720);
+            DrawRectangle(name_pos.x - 22, name_pos.y - 22, name->name.length() * 8, 12, BLACK);
+            DrawText(name->name.c_str(), name_pos.x - 20, name_pos.y - 20, 10, WHITE);
+        }
+
+        BeginMode3D(_camera);
     });
 }
 
@@ -187,10 +222,10 @@ void Galaxy::_draw_ui_main_path_selection() {
 }
 void Galaxy::_draw_ui_main_entity_selection(const ImGuiViewport *pViewport) {
     if (_selected_entity != entt::null) {
-        if (auto *fleet = _core->registry.try_get<components::Fleet>(_selected_entity)) {
+        auto *fleet = _core->registry.try_get<components::Fleet>(_selected_entity);
+        if (fleet) {
             auto path = _core->registry.get<components::Path>(_selected_entity);
             auto position = _core->registry.get<Vector3>(_selected_entity);
-            bool p_open = true;
             static int corner = 1;
             ImGuiIO &io = ImGui::GetIO();
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
@@ -218,11 +253,17 @@ void Galaxy::_draw_ui_main_entity_selection(const ImGuiViewport *pViewport) {
                 ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", position.x, position.y, position.z);
                 if (!path.checkpoints.empty()) {
                     auto &destination_position = _core->registry.get<Vector3>(path.checkpoints.back());
+                    auto &destination_name = _core->registry.get<components::Name>(path.checkpoints.back());
                     auto &next_stop_position = _core->registry.get<Vector3>(path.checkpoints.front());
+                    auto &next_stop_name = _core->registry.get<components::Name>(path.checkpoints.front());
                     ImGui::Text("Heading towards");
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", destination_name.name.c_str());
                     ImGui::SameLine();
                     ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", destination_position.x, destination_position.y, destination_position.z);
                     ImGui::Text(" -> next stop");
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", next_stop_name.name.c_str());
                     ImGui::SameLine();
                     ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", next_stop_position.x, next_stop_position.y, next_stop_position.z);
                 }
@@ -322,7 +363,6 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
     auto explosion_position = _core->registry.get<Vector3>(ev.e);
     _core->registry.remove<components::Exploding>(ev.e);
     _core->registry.emplace<components::Nova>(ev.e);
-    std::printf("Explosion at [%g, %g, %g]\n", explosion_position.x, explosion_position.y, explosion_position.z);
     auto nova_seekers = _core->registry.view<components::NovaSeeker>();
     nova_seekers.each([this, ev](const entt::entity entity, components::NovaSeeker &nova_seeker) {
         if (nova_seeker.capacity > 0) {
@@ -389,14 +429,16 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     return camera;
 }
 
-entt::entity StarEntity::create_at(entt::registry &registry, pcg32 &pcg, Vector3 position) {
+entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_ptr<Core> &core, Vector3 position) {
+    auto &pcg = core->pcg;
     if (pcg(_occurence_chance) == 0) {
         _entity = registry.create();
         registry.emplace<Vector3>(_entity, position);
-
+        registry.emplace<components::Name>(_entity, components::Name{core->name_generator.get_random_name<components::Star>(pcg)});
         if (pcg(_exploding_chance.upper_bound) < _exploding_chance.occurs_if_less_then) {
             const auto explosion_counter = pcg(15) + 1;
             registry.emplace<components::Star>(_entity, components::Star{255, 255, 255, 255});
+
             registry.emplace<components::Exploding>(_entity, static_cast<uint8_t>(explosion_counter));
             registry.emplace<components::Size>(_entity, static_cast<float>(explosion_counter));
         } else {

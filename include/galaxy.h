@@ -38,7 +38,7 @@ public:
           _nova_seeker_chance {nova_seeker_chance}
           {};
 
-    entt::entity create_at(entt::registry &, pcg32 &, Vector3 position);
+    entt::entity create_at(entt::registry &, const std::shared_ptr<Core> &, Vector3 position);
     bool is_created();
     static void render(const entt::registry &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
     static void on_click(const entt::registry &, entt::entity);

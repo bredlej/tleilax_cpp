@@ -10,11 +10,16 @@
 #include <functional>
 #include <tuple>
 #include <vector>
+#include <string>
 
 namespace components {
     struct dice_roll {
         uint8_t amount;
         uint8_t sides;
+    };
+
+    struct Name {
+        std::string name;
     };
 
     struct Vector3;
