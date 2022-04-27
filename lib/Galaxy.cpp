@@ -85,7 +85,9 @@ void Galaxy::populate() {
         }
     }
 
+    _generate_player_entity();
     _recalculate_graph();
+
     auto after = std::chrono::high_resolution_clock::now() - before;
     std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }
@@ -119,6 +121,10 @@ void Galaxy::_render_fleets() {
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 FleetEntity::on_click(_core->registry, entity);
                 _selected_entity = entity;
+                auto *fleet_path = _core->registry.try_get<components::Path>(entity);
+                if (fleet_path && !fleet_path->checkpoints.empty()) {
+                    _register_path_selection(fleet_path->checkpoints);
+                }
             }
         } else {
             DrawSphereWires(fleet_coords, size.size, 6, 6, SKYBLUE);
@@ -224,7 +230,7 @@ void Galaxy::_draw_ui_main_entity_selection(const ImGuiViewport *pViewport) {
     if (_selected_entity != entt::null) {
         auto *fleet = _core->registry.try_get<components::Fleet>(_selected_entity);
         if (fleet) {
-            auto path = _core->registry.get<components::Path>(_selected_entity);
+            auto *path = _core->registry.try_get<components::Path>(_selected_entity);
             auto position = _core->registry.get<Vector3>(_selected_entity);
             static int corner = 1;
             ImGuiIO &io = ImGui::GetIO();
@@ -251,11 +257,11 @@ void Galaxy::_draw_ui_main_entity_selection(const ImGuiViewport *pViewport) {
                 ImGui::Text("Currently at");
                 ImGui::SameLine();
                 ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", position.x, position.y, position.z);
-                if (!path.checkpoints.empty()) {
-                    auto &destination_position = _core->registry.get<Vector3>(path.checkpoints.back());
-                    auto &destination_name = _core->registry.get<components::Name>(path.checkpoints.back());
-                    auto &next_stop_position = _core->registry.get<Vector3>(path.checkpoints.front());
-                    auto &next_stop_name = _core->registry.get<components::Name>(path.checkpoints.front());
+                if (path && !path->checkpoints.empty()) {
+                    auto &destination_position = _core->registry.get<Vector3>(path->checkpoints.back());
+                    auto &destination_name = _core->registry.get<components::Name>(path->checkpoints.back());
+                    auto &next_stop_position = _core->registry.get<Vector3>(path->checkpoints.front());
+                    auto &next_stop_name = _core->registry.get<components::Name>(path->checkpoints.front());
                     ImGui::Text("Heading towards");
                     ImGui::SameLine();
                     ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", destination_name.name.c_str());
@@ -395,14 +401,17 @@ void Galaxy::_on_star_selected(const entt::entity entity) {
         if (_path.from != entt::null && _path.to != entt::null) {
             std::vector<entt::entity> calculated_path = calculate_path<Vector3, components::Star, DistanceFunction>(stars_graph, _core->registry, _path.from, _path.to);
             if (!calculated_path.empty()) {
-                selected_paths.clear();
-                for (size_t i = 0; i < calculated_path.size() - 1; i++) {
-                    Vector3 first = _core->registry.get<Vector3>(calculated_path[i]);
-                    Vector3 second = _core->registry.get<Vector3>(calculated_path[i + 1]);
-                    selected_paths.emplace_back(std::make_pair(first, second));
-                }
+                _register_path_selection(calculated_path);
             }
         }
+    }
+}
+void Galaxy::_register_path_selection(const std::vector<entt::entity> &calculated_path) {
+    selected_paths.clear();
+    for (size_t i = 0; i < calculated_path.size() - 1; i++) {
+        Vector3 first = _core->registry.get<Vector3>(calculated_path[i]);
+        Vector3 second = _core->registry.get<Vector3>(calculated_path[i + 1]);
+        selected_paths.emplace_back(std::make_pair(first, second));
     }
 }
 
@@ -427,6 +436,17 @@ Camera Galaxy::_initialize_camera(const Vector3 &cameraInitialPosition, const fl
     SetCameraMode(camera, CAMERA_ORBITAL);
     UpdateCamera(&camera);
     return camera;
+}
+
+void Galaxy::_generate_player_entity() {
+    std::vector<entt::entity> all_stars;
+    _core->registry.view<components::Star>().each([&](auto entity, auto star){
+        all_stars.emplace_back(entity);
+    });
+    entt::entity random_star = all_stars[_core->pcg(all_stars.size())];
+
+    entt::entity player_fleet = FleetEntity::create(_core->registry, _core->pcg, _core->registry.get<Vector3>(random_star), _ship_components);
+    _core->registry.emplace<components::PlayerControlled>(player_fleet);
 }
 
 entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_ptr<Core> &core, Vector3 position) {

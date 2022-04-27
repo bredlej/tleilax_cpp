@@ -86,6 +86,7 @@ private:
     void _send_fleet_to_nova(const NovaSeekEvent &);
     void _on_star_selected(const entt::entity);
 
+    void _generate_player_entity();
     void _recalculate_graph();
     void _clear_paths();
 
@@ -98,6 +99,7 @@ private:
     void _draw_ui_tab_debug();
     void _draw_ui_main_path_selection();
     void _draw_ui_main_entity_selection(const ImGuiViewport *pViewport);
+    void _register_path_selection(const std::vector<entt::entity> &calculated_path);
 };
 
 #endif//TLEILAX_GALAXY_H
