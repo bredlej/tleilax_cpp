@@ -12,6 +12,8 @@
 #include <pcg/pcg_random.hpp>
 #include <raymath.h>
 #include <ship.h>
+#include <core.h>
+#include <memory>
 
 static constexpr uint32_t MAX_SHIPS_IN_FLEET = 10;
 
@@ -22,26 +24,27 @@ struct DistanceFunction {
 class FleetEntity {
 public:
     FleetEntity() : _entity{ entt::null } {};
-    static entt::entity create(entt::registry &registry, pcg32 &pcg, Vector3 position, const ShipComponentRepository &ship_components) {
-        auto entity = registry.create();
-        registry.emplace<Vector3>(entity, position);
-        registry.emplace<components::Size>(entity, 1.5f);
+    static entt::entity create(const std::shared_ptr<Core> &core, pcg32 &pcg, Vector3 position, const ShipComponentRepository &ship_components) {
+        auto entity = core->registry.create();
+        core->registry.emplace<Vector3>(entity, position);
+        core->registry.emplace<components::Size>(entity, 1.5f);
 
-        populate_fleet_with_ships(registry, entity, pcg, ship_components);
-
+        populate_fleet_with_ships(core->registry, entity, pcg, ship_components);
+        core->dispatcher.enqueue<FleetCreationEvent>(entity);
         return entity;
     };
-    void react_to_nova(entt::registry &registry, pcg32 &pcg, const NovaSeekEvent &ev, const auto &ship_components, const Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> &graph) {
+    void react_to_nova(const std::shared_ptr<Core> &core, pcg32 &pcg, const NovaSeekEvent &ev, const auto &ship_components, const Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> &graph) {
         if (_entity == entt::null) {
-            auto position = registry.get<Vector3>(ev.source);
-            _entity = create(registry, pcg, position, ship_components);
+            auto position = core->registry.get<Vector3>(ev.source);
+            _entity = create(core,pcg, position, ship_components);
         }
         auto path_component = components::Path();
-        path_component.checkpoints = calculate_path<Vector3, components::Star, DistanceFunction>(graph, registry, ev.source, ev.destination);;
-        registry.emplace<components::Path>(_entity, path_component);
+        path_component.checkpoints = calculate_path<Vector3, components::Star, DistanceFunction>(graph, core->registry, ev.source, ev.destination);;
+        core->registry.emplace<components::Path>(_entity, path_component);
     }
-    static void update(entt::registry &, entt::entity entity, components::Fleet &fleet, Vector3&, components::Path &path);
+    static void update(const std::shared_ptr<Core> &, entt::entity entity, components::Fleet &fleet, Vector3&, components::Path &path);
     static void on_click(const entt::registry &, entt::entity entity);
+    entt::entity get_entity() {return _entity;}
 private:
     entt::entity _entity;
     static void populate_fleet_with_ships(entt::registry &registry, entt::entity fleet_entity, pcg32 &pcg, const ShipComponentRepository &ship_components) {

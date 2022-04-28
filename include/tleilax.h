@@ -16,20 +16,7 @@
 #include <raylib.h>
 #include <ship.h>
 #include <string_view>
-
-struct RendererBase {
-    virtual std::function<void()> get_render_func() = delete;
-};
-
-namespace renderables {
-    struct Intro : RendererBase {
-        [[nodiscard]] std::function<void()> get_render_func() const;
-    };
-    struct GalaxyView : RendererBase {
-        int amount_stars;
-        [[nodiscard]] std::function<void()> get_render_func() const;
-    };
-}// namespace renderables
+#include <utility>
 
 namespace tleilax {
     struct Config {
@@ -50,4 +37,5 @@ namespace tleilax {
         std::function<void(void)> render_func;
     };
 }// namespace tleilax
+
 #endif//TLEILAX_CPP_TLEILAX_H

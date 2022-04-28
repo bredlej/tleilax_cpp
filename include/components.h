@@ -54,7 +54,11 @@ namespace components {
         std::vector<entt::entity> checkpoints;
     };
 
-    struct PlayerControlled {};
+    struct PlayerControlled { int i; };
+
+    struct Vicinity {
+        std::vector<entt::entity> objects;
+    };
 
     // Ship Components
 
