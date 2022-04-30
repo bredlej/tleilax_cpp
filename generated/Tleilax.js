@@ -130,8 +130,8 @@ var Module = typeof Module != 'undefined' ? Module : {};
       }
 Module['FS_createPath']("/", "assets", true, true);
 Module['FS_createPath']("/assets", "names", true, true);
-Module['FS_createPath']("/assets", "json", true, true);
 Module['FS_createPath']("/assets", "shaders", true, true);
+Module['FS_createPath']("/assets", "json", true, true);
 
       /** @constructor */
       function DataRequest(start, end, audio) {
@@ -199,7 +199,7 @@ Module['FS_createPath']("/assets", "shaders", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/json/ship_components.json", "start": 725, "end": 2109}, {"filename": "/assets/json/ships.json", "start": 2109, "end": 2659}, {"filename": "/assets/shaders/base.fs", "start": 2659, "end": 3145}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3145, "end": 3975}, {"filename": "/assets/shaders/lighting.fs", "start": 3975, "end": 5987}], "remote_package_size": 5987, "package_uuid": "cbbc2e05-0da2-43a5-a811-ecfea07787b2"});
+    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "df7cb0ab-4d4e-4cbd-9bd6-9b38efe36532"});
 
   })();
 
@@ -10220,6 +10220,9 @@ var dynCall_v = Module["dynCall_v"] = createExportWrapper("dynCall_v");
 
 /** @type {function(...*):?} */
 var dynCall_iiii = Module["dynCall_iiii"] = createExportWrapper("dynCall_iiii");
+
+/** @type {function(...*):?} */
+var dynCall_dii = Module["dynCall_dii"] = createExportWrapper("dynCall_dii");
 
 /** @type {function(...*):?} */
 var dynCall_viiiii = Module["dynCall_viiiii"] = createExportWrapper("dynCall_viiiii");
