@@ -299,48 +299,45 @@ void Galaxy::_draw_ui_fleet_window() {
                 ImGui::SameLine();
                 ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", next_stop_position.x, next_stop_position.y, next_stop_position.z);
             }
-            if (ImGui::Button("Travel to")) {
+            if (!_ui_wants_to_set_course && ImGui::Button("Travel to")) {
                 _ui_wants_to_set_course = true;
+            } else if (_ui_wants_to_set_course && ImGui::Button("Cancel")) {
+                _ui_wants_to_set_course = false;
             }
-            if (_ui_wants_to_set_course) {
-                ImGui::SameLine();
-                if (ImGui::Button("Cancel")) {
-                    _ui_wants_to_set_course = false;
-                }
-            }
-            ImGui::Separator();
-            for (int i = 0; i < fleet->ships.size(); i++) {
-                const auto ship = fleet->ships[i];
-                const auto engine = _core->registry.get<components::Engine>(ship);
-                const auto hull = _core->registry.get<components::Hull>(ship);
-                const auto shield = _core->registry.get<components::Shield>(ship);
-                const auto weapon = _core->registry.get<components::Weapon>(ship);
-
-                if (ImGui::TreeNode((void *) (intptr_t) i, "Ship %d", ship)) {
-                    ImGui::Text("%s", engine.name.c_str());
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.d/%.d", engine.power, engine.weight);
-                    ImGui::Text("%s", hull.name.c_str());
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.1f/%.1f", hull.health, hull.max_health);
-                    ImGui::Text("%s", shield.name.c_str());
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.1d", shield.defense);
-                    ImGui::Text("%s", weapon.name.c_str());
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%dd%d", weapon.damage.amount, weapon.damage.sides);
-                    ImGui::TreePop();
-                    ImGui::Separator();
-                }
-            }
-            ImGui::Separator();
-            if (ImGui::Button("Exit")) {
-                _selected_entity = entt::null;
-            }
-            ImGui::EndChild();
         }
+        ImGui::Separator();
+        for (int i = 0; i < fleet->ships.size(); i++) {
+            const auto ship = fleet->ships[i];
+            const auto engine = _core->registry.get<components::Engine>(ship);
+            const auto hull = _core->registry.get<components::Hull>(ship);
+            const auto shield = _core->registry.get<components::Shield>(ship);
+            const auto weapon = _core->registry.get<components::Weapon>(ship);
+
+            if (ImGui::TreeNode((void *) (intptr_t) i, "Ship %d", ship)) {
+                ImGui::Text("%s", engine.name.c_str());
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.d/%.d", engine.power, engine.weight);
+                ImGui::Text("%s", hull.name.c_str());
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.1f/%.1f", hull.health, hull.max_health);
+                ImGui::Text("%s", shield.name.c_str());
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.1d", shield.defense);
+                ImGui::Text("%s", weapon.name.c_str());
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%dd%d", weapon.damage.amount, weapon.damage.sides);
+                ImGui::TreePop();
+                ImGui::Separator();
+            }
+        }
+        ImGui::Separator();
+        if (ImGui::Button("Exit")) {
+            _selected_entity = entt::null;
+        }
+        ImGui::EndChild();
     }
 }
+
 void Galaxy::_draw_ui_main_entity_selection() {
     if (_selected_entity != entt::null) {
         _draw_ui_fleet_window();
