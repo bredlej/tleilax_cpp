@@ -28,7 +28,7 @@ public:
         auto entity = core->registry.create();
         core->registry.emplace<Vector3>(entity, position);
         core->registry.emplace<components::Size>(entity, 1.5f);
-
+        core->registry.emplace<components::Range>(entity, 20.0f);
         populate_fleet_with_ships(core->registry, entity, pcg, ship_components);
         core->dispatcher.enqueue<FleetCreationEvent>(entity);
         return entity;
@@ -39,7 +39,7 @@ public:
             _entity = create(core,pcg, position, ship_components);
         }
         auto path_component = components::Path();
-        path_component.checkpoints = calculate_path<Vector3, components::Star, DistanceFunction>(graph, core->registry, ev.source, ev.destination);;
+        path_component.checkpoints = calculate_path<Vector3, DistanceFunction, components::Star>(graph, core->registry, ev.source, ev.destination);
         core->registry.emplace<components::Path>(_entity, path_component);
     }
     static void update(const std::shared_ptr<Core> &, entt::entity entity, components::Fleet &fleet, Vector3&, components::Path &path);

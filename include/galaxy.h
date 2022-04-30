@@ -74,7 +74,9 @@ private:
     std::shared_ptr<Core> _core;
     Vector3 _offset{0., 0., 0.};
     entt::entity _selected_entity{entt::null};
+    bool _ui_wants_to_set_course = false;
     bool _rotate = false;
+    std::vector<entt::entity> _get_nearest_stars(const entt::entity of_entity);
     void _initialize();
     Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
                               float horizontalDistance, float horizontalAngle,
@@ -86,9 +88,10 @@ private:
     void _send_fleet_to_nova(const NovaSeekEvent &);
     void _fleet_arrived_at_star(const ArrivalEvent &);
     void _entity_left_vicinity(const LeaveEvent &);
+    void _on_star_selected(const StarSelectedEvent &);
     void _update_vicinities();
-    void _on_star_selected(const entt::entity);
 
+    void _set_course_for_fleet(const entt::entity from, const entt::entity to);
     void _generate_player_entity();
     void _recalculate_graph();
     void _clear_paths();
@@ -101,7 +104,7 @@ private:
     void _draw_ui_tab_main(const ImGuiViewport *pViewport);
     void _draw_ui_tab_debug();
     void _draw_ui_main_path_selection();
-    void _draw_ui_main_entity_selection(const ImGuiViewport *pViewport);
+    void _draw_ui_main_entity_selection();
     void _draw_ui_fleet_window();
     void _register_path_selection(const std::vector<entt::entity> &calculated_path);
 };

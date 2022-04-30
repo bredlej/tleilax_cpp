@@ -24,6 +24,9 @@ namespace components {
 
     struct Vector3;
 
+    struct Range {
+        float distance;
+    };
     struct Size {
         float size;
     };

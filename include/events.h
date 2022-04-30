@@ -25,6 +25,10 @@ struct LeaveEvent {
     entt::entity what;
     entt::entity where;
 };
+struct DestinationReachedEvent {
+    entt::entity what;
+    entt::entity where;
+};
 struct NovaSeekEvent {
     entt::entity source;
     entt::entity destination;
