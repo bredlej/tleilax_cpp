@@ -40,7 +40,7 @@ public:
 
     entt::entity create_at(entt::registry &, const std::shared_ptr<Core> &, Vector3 position);
     bool is_created();
-    static void render(const entt::registry &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
+    static void render(const entt::registry &, const Camera &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
     static void on_click(const entt::registry &, entt::entity);
 
 private:
@@ -74,7 +74,9 @@ private:
     std::shared_ptr<Core> _core;
     Vector3 _offset{0., 0., 0.};
     entt::entity _selected_entity{entt::null};
-
+    bool _ui_wants_to_set_course = false;
+    bool _rotate = false;
+    std::vector<entt::entity> _get_nearest_stars(const entt::entity of_entity);
     void _initialize();
     Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
                               float horizontalDistance, float horizontalAngle,
@@ -84,8 +86,13 @@ private:
     void _tick();
     void _explode_stars(const ExplosionEvent &);
     void _send_fleet_to_nova(const NovaSeekEvent &);
-    void _on_star_selected(const entt::entity);
+    void _fleet_arrived_at_star(const ArrivalEvent &);
+    void _entity_left_vicinity(const LeaveEvent &);
+    void _on_star_selected(const StarSelectedEvent &);
+    void _update_vicinities();
 
+    void _set_course_for_fleet(const entt::entity from, const entt::entity to);
+    void _generate_player_entity();
     void _recalculate_graph();
     void _clear_paths();
 
@@ -97,7 +104,9 @@ private:
     void _draw_ui_tab_main(const ImGuiViewport *pViewport);
     void _draw_ui_tab_debug();
     void _draw_ui_main_path_selection();
-    void _draw_ui_main_entity_selection(const ImGuiViewport *pViewport);
+    void _draw_ui_main_entity_selection();
+    void _draw_ui_fleet_window();
+    void _register_path_selection(const std::vector<entt::entity> &calculated_path);
 };
 
 #endif//TLEILAX_GALAXY_H

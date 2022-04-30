@@ -24,6 +24,9 @@ namespace components {
 
     struct Vector3;
 
+    struct Range {
+        float distance;
+    };
     struct Size {
         float size;
     };
@@ -52,6 +55,12 @@ namespace components {
 
     struct Path {
         std::vector<entt::entity> checkpoints;
+    };
+
+    struct PlayerControlled { int i; };
+
+    struct Vicinity {
+        std::vector<entt::entity> objects;
     };
 
     // Ship Components

@@ -10,6 +10,25 @@
 struct ExplosionEvent {
     entt::entity e;
 };
+struct FleetCreationEvent {
+    entt::entity e;
+};
+struct PathCreationEvent {
+    entt::entity source;
+    entt::entity destination;
+};
+struct ArrivalEvent {
+    entt::entity what;
+    entt::entity where;
+};
+struct LeaveEvent {
+    entt::entity what;
+    entt::entity where;
+};
+struct DestinationReachedEvent {
+    entt::entity what;
+    entt::entity where;
+};
 struct NovaSeekEvent {
     entt::entity source;
     entt::entity destination;

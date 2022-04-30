@@ -73,7 +73,7 @@ static std::vector<entt::entity> reconstruct_path(std::unordered_map<entt::entit
  * @param to
  * @return
  */
-template<typename ComponentT, typename EntityMarkerT, typename HeuristicFunc>
+template<typename ComponentT, typename HeuristicFunc, typename ... EntityMarkerT>
 static std::vector<entt::entity> calculate_path(const Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> &graph, const entt::registry &registry, entt::entity from, entt::entity to) {
     auto h = HeuristicFunc();
     std::vector<entt::entity> calculated_path;
@@ -85,8 +85,8 @@ static std::vector<entt::entity> calculate_path(const Graph<GraphNode, float, Gr
     std::unordered_map<entt::entity, entt::entity> came_from;
     std::unordered_map<entt::entity, float> g_score;
 
-    registry.view<ComponentT, EntityMarkerT>()
-            .each([&](const entt::entity entity, const ComponentT &component, const EntityMarkerT marker) {
+    registry.view<ComponentT, EntityMarkerT...>()
+            .each([&](const entt::entity entity, const ComponentT &component, const EntityMarkerT... marker) {
                 if (entity != from) {
                     g_score[entity] = 999999.9f;
                 } else {
