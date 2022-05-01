@@ -16,6 +16,7 @@ class Graph {
 
 public:
     void add_edge(NodeT source_node, NodeT target_node, DistanceT distance, bool is_bidirectional);
+    void clear();
     [[nodiscard]] AdjacencyList get() const { return adjacency_list; } ;
 
 private:
@@ -28,6 +29,10 @@ void Graph<T, D, H, E>::add_edge(T source_node, T target_node, D distance, bool 
     if (is_bidirectional) {
         adjacency_list[target_node].push_back(std::make_pair(source_node, distance));
     }
+}
+template<typename T, typename D, typename H, typename E>
+void Graph<T, D, H, E>::clear() {
+    adjacency_list.clear();
 }
 
 struct GraphNode {

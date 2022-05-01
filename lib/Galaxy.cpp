@@ -56,7 +56,7 @@ static bool open_demo = false;
 void Galaxy::_recalculate_graph() {
     _clear_paths();
     stars_paths.clear();
-    stars_graph.get().clear();
+    stars_graph.clear();
     _core->registry.view<Vector3, components::Star, components::Size>().each(
             [&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
                 GraphNode starNode{entity, true};
