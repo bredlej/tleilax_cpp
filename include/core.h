@@ -8,7 +8,7 @@
 #include <entt/entt.hpp>
 #include <pcg/pcg_random.hpp>
 #include <name_generator.h>
-
+#include <colors.h>
 struct UIView {
     virtual void render() = 0;
     virtual void update() = 0;
@@ -20,5 +20,6 @@ public:
     entt::registry registry{};
     pcg32 pcg;
     NameGenerator name_generator{};
+    constexpr static Colors colors;
 };
 #endif//TLEILAX_CORE_H

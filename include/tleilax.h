@@ -34,7 +34,7 @@ namespace tleilax {
         std::shared_ptr<UIView> _ui_view;
     private:
         Assets _assets;
-        std::function<void(void)> render_func;
+        void _setup_imgui();
     };
 }// namespace tleilax
 

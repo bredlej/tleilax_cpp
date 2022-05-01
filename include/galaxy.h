@@ -24,11 +24,24 @@
 #include <utility>
 #include <variant>
 
+static void focus_camera(Camera &camera, Vector3 target, float fov) {
+    camera.target = target;
+    camera.fovy = fov;
+    UpdateCamera(&camera);
+}
+
 struct Chance {
     uint32_t upper_bound;
     uint32_t occurs_if_less_then;
 };
 
+struct CameraSettings {
+    float horizontalDistance = 10.0f;
+    float cameraDistance = 110.0f;
+    Vector3 target = {0.0f, 0.0f, 0.0f};
+    Vector2 angle = {45.0f, 45.0f};
+    bool focus_on_clicked = false;
+};
 class StarEntity {
 public:
     StarEntity(const uint32_t occurence_chance, const Chance &&exploding_chance, const Chance &&nova_seeker_chance)
@@ -40,7 +53,7 @@ public:
 
     entt::entity create_at(entt::registry &, const std::shared_ptr<Core> &, Vector3 position);
     bool is_created();
-    static void render(const entt::registry &, const Camera &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
+    static void render(const std::shared_ptr<Core> &, const Camera &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
     static void on_click(const entt::registry &, entt::entity);
 
 private:
@@ -54,7 +67,7 @@ class Galaxy : public UIView {
 public:
     explicit Galaxy(std::shared_ptr<Core> core, Assets &assets)
         : _core {std::move(core)},
-          _camera(_initialize_camera({0., 0., 0.}, 110., 10., 90., 90.)),
+          _camera(_initialize_camera({0., 0., 0.}, 101., 10., 90., 90.)),
           _ship_components{assets.get_ship_components()} {_initialize();};
     ~Galaxy() = default;
 
@@ -70,11 +83,13 @@ private:
     std::vector<std::pair<Vector3, Vector3>> selected_paths;
     ShipComponentRepository _ship_components;
     Camera _camera;
+    CameraSettings _camera_settings;
     Path _path;
     std::shared_ptr<Core> _core;
     Vector3 _offset{0., 0., 0.};
     entt::entity _selected_entity{entt::null};
     bool _ui_wants_to_set_course = false;
+
     bool _rotate = false;
     std::vector<entt::entity> _get_nearest_stars(const entt::entity of_entity);
     void _initialize();
@@ -82,6 +97,7 @@ private:
                               float horizontalDistance, float horizontalAngle,
                               float verticalAngle);
 
+    CameraSettings _cameraSettings;
     void _render_visible();
     void _tick();
     void _explode_stars(const ExplosionEvent &);
@@ -101,8 +117,9 @@ private:
     void _render_fleets();
 
     void _draw_ui();
-    void _draw_ui_tab_main(const ImGuiViewport *pViewport);
+    void _draw_ui_tab_main();
     void _draw_ui_tab_debug();
+    void _draw_ui_tab_camera();
     void _draw_ui_main_path_selection();
     void _draw_ui_main_entity_selection();
     void _draw_ui_fleet_window();

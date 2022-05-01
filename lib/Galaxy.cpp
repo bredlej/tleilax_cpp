@@ -108,7 +108,8 @@ void Galaxy::populate() {
 
 void Galaxy::render() {
     BeginDrawing();
-    ClearBackground(BLACK);
+
+    ClearBackground(_core->colors.col_0);
     _render_visible();
     DrawFPS(1240, 10);
     _draw_ui();
@@ -118,7 +119,7 @@ void Galaxy::render() {
 void Galaxy::_render_visible() {
 
     BeginMode3D(_camera);
-    DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, YELLOW);
+    DrawCubeWires({0., 0., 0.}, _visible_size.x, _visible_size.y, _visible_size.z, Colors::col_3);
 
     _render_stars();
     _render_paths();
@@ -130,11 +131,15 @@ void Galaxy::_render_visible() {
 void Galaxy::_render_fleets() {
     _core->registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
-        if (GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), fleet_coords, size.size).hit) {
-
-            DrawSphereWires(fleet_coords, size.size, 6, 6, RED);
+        const auto fleet_size_top = size.size / 2;
+        const auto fleet_size_bottom = size.size / 4;
+        if (GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), fleet_coords, 3).hit) {
+            DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_15);
 
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                if (_camera_settings.focus_on_clicked) {
+                    focus_camera(_camera, fleet_coords, 15.0f);
+                }
                 FleetEntity::on_click(_core->registry, entity);
                 _selected_entity = entity;
                 auto *fleet_path = _core->registry.try_get<components::Path>(entity);
@@ -143,11 +148,11 @@ void Galaxy::_render_fleets() {
                 }
             }
         } else {
-            auto is_player_fleet = _core->registry.try_get<components::PlayerControlled>(entity);
+            const auto is_player_fleet = _core->registry.try_get<components::PlayerControlled>(entity);
             if (is_player_fleet) {
-                DrawSphereWires(fleet_coords, size.size, 6, 6, GOLD);
+                DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_16);
             } else {
-                DrawSphereWires(fleet_coords, size.size, 6, 6, SKYBLUE);
+                DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_9);
             }
         }
     });
@@ -156,11 +161,11 @@ void Galaxy::_render_fleets() {
 void Galaxy::_render_paths() {
     if (selected_paths.empty()) {
         std::for_each(stars_paths.begin(), stars_paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
-            DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), YELLOW);
+            DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), Colors::col_3);
         });
     } else {
         std::for_each(selected_paths.begin(), selected_paths.end(), [&](const std::pair<Vector3, Vector3> &neighbours) {
-            DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), BLUE);
+            DrawLine3D(local_to_global_coords(neighbours.first, _visible_size), local_to_global_coords(neighbours.second, _visible_size), Colors::col_4);
         });
     }
 }
@@ -169,8 +174,11 @@ void Galaxy::_render_stars() {
     _core->registry.view<Vector3, components::Star, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
-        StarEntity::render(_core->registry, _camera, _visible_size, entity, coords, color, size, star_is_selected);
+        StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, star_is_selected);
         if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            if (_camera_settings.focus_on_clicked) {
+                focus_camera(_camera, star_coords, 15.0f);
+            }
             _core->dispatcher.enqueue<StarSelectedEvent>(entity);
         }
     });
@@ -178,6 +186,8 @@ void Galaxy::_render_stars() {
 
 void Galaxy::_draw_ui() {
     rlImGuiBegin();
+    ImGuiStyle *style = &ImGui::GetStyle();
+
     if (open_demo) {
         ImGui::ShowDemoWindow(&open_demo);
     } else {
@@ -192,7 +202,7 @@ void Galaxy::_draw_ui() {
             ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
             if (ImGui::IsMousePosValid())
                 if (ImGui::BeginTabBar("Controls", tab_bar_flags)) {
-                    _draw_ui_tab_main(viewport);
+                    _draw_ui_tab_main();
                     _draw_ui_tab_debug();
                     ImGui::EndTabBar();
                 }
@@ -202,20 +212,15 @@ void Galaxy::_draw_ui() {
 
     rlImGuiEnd();
 }
-void Galaxy::_draw_ui_tab_main(const ImGuiViewport *pViewport) {
+void Galaxy::_draw_ui_tab_main() {
     if (ImGui::BeginTabItem("Main")) {
         ImGui::PushButtonRepeat(true);
-        if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
-            UpdateCamera(&_camera);
-        }
-        ImGui::PopButtonRepeat();
-        ImGui::PushButtonRepeat(true);
-        ImGui::SameLine();
         if (ImGui::Button("Update")) {
             _tick();
         }
         ImGui::PopButtonRepeat();
-        _draw_ui_main_path_selection();
+        _draw_ui_tab_camera();
+        //_draw_ui_main_path_selection();
         _draw_ui_main_entity_selection();
         ImGui::EndTabItem();
     }
@@ -263,12 +268,12 @@ void Galaxy::_draw_ui_fleet_window() {
         if (ImGui::BeginChild("Selection", ImVec2(350, 600), true, window_flags)) {
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
             if (player_controlled) {
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Player fleet");
+                ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_16.r) / 255.0f, static_cast<float>(Colors::col_16.g) / 255.0f, static_cast<float>(Colors::col_16.b) / 255.0f, 1), "Player fleet");
             } else {
                 ImGui::Text("Selected fleet");
             }
             ImGui::SameLine();
-            ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "%d", _selected_entity);
+            ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%d", _selected_entity);
 
             auto *vicinity = _core->registry.try_get<components::Vicinity>(_selected_entity);
             if (vicinity && !vicinity->objects.empty()) {
@@ -276,28 +281,46 @@ void Galaxy::_draw_ui_fleet_window() {
                 std::for_each(vicinity->objects.begin(), vicinity->objects.end(), [&](entt::entity object) {
                     components::Name *object_name = _core->registry.try_get<components::Name>(object);
                     if (object_name) {
-                        ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", object_name->name.c_str());
+                        const auto *star = _core->registry.try_get<components::Star>(object);
+                        if (star) {
+                            ImGui::TextColored(ImVec4(static_cast<float>(star->r) / 255.0f, static_cast<float>(star->g) / 255.0f, static_cast<float>(star->b) / 255.0f, 1.0f), "%s", object_name->name.c_str());
+                        } else {
+                            ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", object_name->name.c_str());
+                        }
                     }
                 });
             }
             ImGui::Text("Currently at");
             ImGui::SameLine();
-            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", position.x, position.y, position.z);
+            ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%.0f, %.0f, %0.f", position.x, position.y, position.z);
             if (path && !path->checkpoints.empty()) {
-                auto &destination_position = _core->registry.get<Vector3>(path->checkpoints.back());
-                auto &destination_name = _core->registry.get<components::Name>(path->checkpoints.back());
-                auto &next_stop_position = _core->registry.get<Vector3>(path->checkpoints.front());
-                auto &next_stop_name = _core->registry.get<components::Name>(path->checkpoints.front());
+                const auto destination = path->checkpoints.back();
+                auto &destination_position = _core->registry.get<Vector3>(destination);
+                auto &destination_name = _core->registry.get<components::Name>(destination);
+                const auto *destination_color = _core->registry.try_get<components::Star>(destination);
+
+                const auto next_stop = path->checkpoints.front();
+                auto &next_stop_position = _core->registry.get<Vector3>(next_stop);
+                auto &next_stop_name = _core->registry.get<components::Name>(next_stop);
+                const auto *next_stop_color = _core->registry.try_get<components::Star>(next_stop);
                 ImGui::Text("Heading towards");
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", destination_name.name.c_str());
-                ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", destination_position.x, destination_position.y, destination_position.z);
+                if (destination_color) {
+                    ImGui::TextColored(ImVec4(static_cast<float>(destination_color->r) / 255.0f, static_cast<float>(destination_color->g) / 255.0f, static_cast<float>(destination_color->b) / 255.0f, 1.0f), "%s", destination_name.name.c_str());
+                } else {
+                    ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_16.r) / 255.0f, static_cast<float>(Colors::col_16.g) / 255.0f, static_cast<float>(Colors::col_16.b) / 255.0f, 1), "%s", destination_name.name.c_str());
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%.0f, %.0f, %0.f", destination_position.x, destination_position.y, destination_position.z);
                 ImGui::Text(" -> next stop");
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", next_stop_name.name.c_str());
-                ImGui::SameLine();
-                ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "%.0f, %.0f, %0.f", next_stop_position.x, next_stop_position.y, next_stop_position.z);
+                if (destination_color) {
+                    ImGui::TextColored(ImVec4(static_cast<float>(next_stop_color->r) / 255.0f, static_cast<float>(next_stop_color->g) / 255.0f, static_cast<float>(next_stop_color->b) / 255.0f, 1.0f), "%s", next_stop_name.name.c_str());
+                } else {
+                    ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_16.r) / 255.0f, static_cast<float>(Colors::col_16.g) / 255.0f, static_cast<float>(Colors::col_16.b) / 255.0f, 1), "%s", next_stop_name.name.c_str());
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%.0f, %.0f, %0.f", next_stop_position.x, next_stop_position.y, next_stop_position.z);
             }
             if (!_ui_wants_to_set_course && ImGui::Button("Travel to")) {
                 _ui_wants_to_set_course = true;
@@ -316,16 +339,16 @@ void Galaxy::_draw_ui_fleet_window() {
             if (ImGui::TreeNode((void *) (intptr_t) i, "Ship %d", ship)) {
                 ImGui::Text("%s", engine.name.c_str());
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.d/%.d", engine.power, engine.weight);
+                ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%.d/%.d", engine.power, engine.weight);
                 ImGui::Text("%s", hull.name.c_str());
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.1f/%.1f", hull.health, hull.max_health);
+                ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%.1f/%.1f", hull.health, hull.max_health);
                 ImGui::Text("%s", shield.name.c_str());
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%.1d", shield.defense);
+                ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%.1d", shield.defense);
                 ImGui::Text("%s", weapon.name.c_str());
                 ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%dd%d", weapon.damage.amount, weapon.damage.sides);
+                ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%dd%d", weapon.damage.amount, weapon.damage.sides);
                 ImGui::TreePop();
                 ImGui::Separator();
             }
@@ -356,6 +379,30 @@ void Galaxy::_draw_ui_tab_debug() {
         }
         ImGui::EndTabItem();
     }
+}
+
+void Galaxy::_draw_ui_tab_camera() {
+    static constexpr auto rotate_horizontal = [](auto &camera, auto &camera_settings) {
+        UpdateCamera(&camera);
+    };
+    ImGui::PushButtonRepeat(true);
+    if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
+        _camera_settings.angle.x -= 1.0f;
+        rotate_horizontal(_camera, _camera_settings);
+    }
+    ImGui::SameLine();
+    /*if (ImGui::ArrowButton("##right", ImGuiDir_Right)) {
+            _camera_settings.angle.x += 1.0f;
+            rotate_horizontal(_camera, _camera_settings);
+        }*/
+    if (!_camera_settings.focus_on_clicked && ImGui::Button("Focus camera on selection")) {
+        _camera_settings.focus_on_clicked = true;
+    }
+    if (_camera_settings.focus_on_clicked && ImGui::Button("Reset camera")) {
+        _camera_settings.focus_on_clicked = false;
+        focus_camera(_camera, Vector3{0.0f, 0.0f, 0.0f}, 45.0f);
+    }
+    ImGui::PopButtonRepeat();
 }
 
 void Galaxy::update() {
@@ -389,6 +436,7 @@ void Galaxy::_tick() {
     auto fleets = _core->registry.view<components::Fleet, Vector3, components::Path>();
     fleets.each([this](const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Path &path) {
         FleetEntity::update(_core, entity, fleet, position, path);
+
     });
 
     _update_vicinities();
@@ -556,12 +604,13 @@ entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_p
         registry.emplace<components::Name>(_entity, components::Name{core->name_generator.get_random_name<components::Star>(pcg)});
         if (pcg(_exploding_chance.upper_bound) < _exploding_chance.occurs_if_less_then) {
             const auto explosion_counter = pcg(15) + 1;
-            registry.emplace<components::Star>(_entity, components::Star{255, 255, 255, 255});
+            registry.emplace<components::Star>(_entity, components::Star{Colors::col_3.r, Colors::col_3.g, Colors::col_3.b, Colors::col_3.a / 2});
 
             registry.emplace<components::Exploding>(_entity, static_cast<uint8_t>(explosion_counter));
             registry.emplace<components::Size>(_entity, static_cast<float>(explosion_counter));
         } else {
-            registry.emplace<components::Star>(_entity, components::Star{static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), static_cast<uint8_t>(pcg(255)), 255});
+            auto star_color = Colors::star_colors[pcg(Colors::star_colors.size())];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a});
             registry.emplace<components::Size>(_entity, 1.0f);
 
             if (pcg(_nova_seeker_chance.upper_bound) < _nova_seeker_chance.occurs_if_less_then) {
@@ -577,22 +626,20 @@ bool StarEntity::is_created() {
     return _entity != entt::null;
 }
 
-void StarEntity::render(const entt::registry &registry, const Camera &camera, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, const bool is_selected) {
+void StarEntity::render(const std::shared_ptr<Core> &core, const Camera &camera, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, const bool is_selected) {
     Vector3 star_coords = local_to_global_coords(coords, visible_size);
     DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
     if (is_selected) {
-        DrawSphereWires(star_coords, size.size + 1, 6, 6, GREEN);
+        DrawSphereWires(star_coords, size.size + 2, 6, 6, Colors::col_16);
     }
-    if (registry.any_of<components::Nova>(entity)) {
-        DrawSphereWires(star_coords, 5, 6, 6, VIOLET);
-    }
+
     EndMode3D();
 
-    auto *name = registry.try_get<components::Name>(entity);
+    auto *name = core->registry.try_get<components::Name>(entity);
     if (name) {
         auto name_pos = GetWorldToScreenEx(star_coords, camera, 1280, 720);
-        DrawRectangle(static_cast<int>(name_pos.x - 22), static_cast<int>(name_pos.y - 22), name->name.length() * 8, 12, BLACK);
-        DrawText(name->name.c_str(), static_cast<int>(name_pos.x - 20), static_cast<int>(name_pos.y - 20), 10, WHITE);
+        DrawRectangle(static_cast<int>(name_pos.x - 22), static_cast<int>(name_pos.y - 22), name->name.length() * 8, 12, Colors::col_0);
+        DrawText(name->name.c_str(), static_cast<int>(name_pos.x - 20), static_cast<int>(name_pos.y - 20), 10, Colors::col_16);
     }
 
     BeginMode3D(camera);
