@@ -199,7 +199,7 @@ Module['FS_createPath']("/assets", "json", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "8250f35a-b298-4259-b0d6-b7b98dfe2b60"});
+    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "c3c1145e-9bc4-4fda-8c47-388c65b18fa8"});
 
   })();
 
