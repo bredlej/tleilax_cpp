@@ -172,7 +172,7 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
     fleet.react_to_nova(_core, _core->pcg, ev, _ship_components, stars_graph);
-
+    _core->game_log.debug("A scavenger fleet from %s is heading towards the remnants of %s.\n", _core->registry.get<components::Name>(ev.source).name.c_str(), _core->registry.get<components::Name>(ev.destination).name.c_str());
     add_vicinity(_core, fleet.get_entity(), ev.source);
 }
 
@@ -182,7 +182,7 @@ void Galaxy::_fleet_arrived_at_star(const ArrivalEvent &ev) {
     auto is_tleilaxian = _core->registry.try_get<components::Tleilaxian>(ev.what);
     auto is_infectable = _core->registry.try_get<components::Infectable>(ev.where);
     if (is_tleilaxian && is_infectable) {
-        auto counter = static_cast<uint8_t>(_core->pcg(10) + 1);
+        auto counter = static_cast<uint8_t>(_core->pcg(40) + 1);
         _core->registry.emplace<components::Exploding>(ev.where, counter);
         auto &size = _core->registry.get<components::Size>(ev.where);
         size.size = counter;
@@ -191,7 +191,7 @@ void Galaxy::_fleet_arrived_at_star(const ArrivalEvent &ev) {
         star.g = Colors::col_3.g;
         star.b = Colors::col_3.b;
         star.a = Colors::col_3.a / 2;
-        _core->game_log.debug("The tleilaxian fleet fired a bomb into %s!\n", _core->registry.get<components::Name>(ev.where).name.c_str());
+        _core->game_log.debug("The tleilaxian fleet fired a bomb into %s! The star will explode in %d days!\n", _core->registry.get<components::Name>(ev.where).name.c_str(), counter);
     }
 }
 
@@ -234,13 +234,17 @@ static constexpr auto get_calculated_distance = [](entt::registry &registry, std
     return calculated_distance;
 };
 void Galaxy::_on_star_selected(const StarSelectedEvent &ev) {
+    _selected_star = ev.entity;
     if (_core->registry.valid(ev.entity)) {
-        if (_ui_wants_to_set_course && _core->registry.try_get<components::Fleet>(_selected_fleet)) {
-            _path.from = _selected_fleet;
-            _path.to = ev.entity;
-            _ui_wants_to_set_course = false;
+        if (_ui_wants_to_set_course) {
+            auto selected_star = _core->registry.try_get<components::Fleet>(_selected_fleet);
+            if (selected_star) {
+                _path.from = _selected_fleet;
+                _path.to = _selected_star;
+                _ui_wants_to_set_course = false;
 
-            _set_course_for_fleet(_path.from, _path.to);
+                _set_course_for_fleet(_path.from, _path.to);
+            }
         }
     }
 }
