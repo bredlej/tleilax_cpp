@@ -76,7 +76,7 @@ public:
 
     entt::entity create_at(entt::registry &, const std::shared_ptr<Core> &, Vector3 position);
     bool is_created();
-    static void render(const std::shared_ptr<Core> &, const Camera &, const Vector3 &, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
+    static void render(const std::shared_ptr<Core> &, const Camera &, const Vector3 &, entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, bool is_selected);
     static void on_click(const entt::registry &, entt::entity);
 
 private:
@@ -116,7 +116,7 @@ private:
     bool _rotate = false;
     std::vector<entt::entity> _get_nearest_stars(const entt::entity of_entity);
     void _initialize();
-    Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
+    static Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
                               float horizontalDistance, float horizontalAngle,
                               float verticalAngle);
 

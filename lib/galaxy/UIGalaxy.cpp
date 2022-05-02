@@ -11,12 +11,8 @@ void Galaxy::_draw_ui() {
         ImGui::ShowDemoWindow(&open_demo);
     } else {
         bool open = true;
-        static bool use_work_area = true;
         static ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
-        //const ImGuiViewport *viewport = ImGui::GetMainViewport();
 
-        //ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
-        //ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
         if (ImGui::Begin("Tleilax control", &open, flags)) {
             ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
             if (ImGui::IsMousePosValid())
@@ -190,7 +186,7 @@ void Galaxy::_draw_ui_tab_debug() {
     if (ImGui::BeginTabItem("Debug")) {
         float dist_from = 1.0f;
         float dist_to = 50.0f;
-        ImGui::DragScalar("Scroll distance between stars", ImGuiDataType_Float, &distance_between_stars, 0.5f, &dist_from, &dist_to, "%f");
+        ImGui::DragScalar("Distance between stars (scroll value)", ImGuiDataType_Float, &distance_between_stars, 0.5f, &dist_from, &dist_to, "%f");
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             _recalculate_graph();
         }
@@ -213,6 +209,9 @@ void Galaxy::_draw_ui_tab_camera() {
     ImGui::SameLine();
     if (!_camera_settings.focus_on_clicked && ImGui::Button("Focus camera on selection")) {
         _camera_settings.focus_on_clicked = true;
+        if (_selected_entity != entt::null) {
+            focus_camera(_camera, local_to_global_coords(_core->registry.get<Vector3>(_selected_entity), _visible_size), 15.0f);
+        }
     }
     if (_camera_settings.focus_on_clicked && ImGui::Button("Reset camera")) {
         _camera_settings.focus_on_clicked = false;
