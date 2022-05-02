@@ -199,7 +199,7 @@ Module['FS_createPath']("/assets", "json", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "8adb42a2-a8a3-4e35-8e38-035fdfd03a31"});
+    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "c423ead4-543f-4984-96dd-023f2224e34b"});
 
   })();
 
@@ -1913,7 +1913,7 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  178136: function() {if (document.fullscreenElement) document.exitFullscreen(); else Module.requestFullscreen(false, true);}
+  178152: function() {if (document.fullscreenElement) document.exitFullscreen(); else Module.requestFullscreen(false, true);}
 };
 function GetCanvasHeight(){ return canvas.clientHeight; }
 function GetCanvasWidth(){ return canvas.clientWidth; }
@@ -10257,6 +10257,9 @@ var dynCall_v = Module["dynCall_v"] = createExportWrapper("dynCall_v");
 var dynCall_iiii = Module["dynCall_iiii"] = createExportWrapper("dynCall_iiii");
 
 /** @type {function(...*):?} */
+var dynCall_i = Module["dynCall_i"] = createExportWrapper("dynCall_i");
+
+/** @type {function(...*):?} */
 var dynCall_dii = Module["dynCall_dii"] = createExportWrapper("dynCall_dii");
 
 /** @type {function(...*):?} */
@@ -10282,9 +10285,6 @@ var dynCall_viiiiiiii = Module["dynCall_viiiiiiii"] = createExportWrapper("dynCa
 
 /** @type {function(...*):?} */
 var dynCall_viiiiiiiii = Module["dynCall_viiiiiiiii"] = createExportWrapper("dynCall_viiiiiiiii");
-
-/** @type {function(...*):?} */
-var dynCall_i = Module["dynCall_i"] = createExportWrapper("dynCall_i");
 
 /** @type {function(...*):?} */
 var dynCall_vff = Module["dynCall_vff"] = createExportWrapper("dynCall_vff");
