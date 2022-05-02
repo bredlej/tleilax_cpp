@@ -199,7 +199,7 @@ Module['FS_createPath']("/assets", "json", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "c423ead4-543f-4984-96dd-023f2224e34b"});
+    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "5e581017-6a96-4f5f-afe6-15f6aa2e2925"});
 
   })();
 
@@ -1913,7 +1913,7 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  178152: function() {if (document.fullscreenElement) document.exitFullscreen(); else Module.requestFullscreen(false, true);}
+  179528: function() {if (document.fullscreenElement) document.exitFullscreen(); else Module.requestFullscreen(false, true);}
 };
 function GetCanvasHeight(){ return canvas.clientHeight; }
 function GetCanvasWidth(){ return canvas.clientWidth; }
