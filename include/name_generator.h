@@ -16,13 +16,13 @@ enum class NameType : uint8_t {
 };
 
 const std::vector<std::string> star_suffixes {
-        " I ",
-        " II ",
-        " III ",
-        " IV ",
-        " X ",
-        " Polaris ",
-        " Prime "
+        "I",
+        "II",
+        "III",
+        "IV",
+        "X",
+        "Polaris",
+        "Prime"
 };
 inline std::vector<std::string> load_from_file(const std::string &file_name) {
     std::vector<std::string> names;

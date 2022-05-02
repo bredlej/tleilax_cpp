@@ -40,7 +40,7 @@ void Galaxy::_recalculate_graph() {
                             if (entity != _entity) {
                                 GraphNode next{_entity, false};
                                 const auto distance = Vector3Distance(coords, _coords);
-                                if (distance < distance_between_stars) {
+                                if (distance < _distance_between_stars) {
                                     stars_graph.add_edge(starNode, next, distance, false);
                                     stars_paths.emplace_back(std::make_pair(coords, _coords));
                                 }
@@ -62,8 +62,20 @@ void Galaxy::populate() {
     auto before = std::chrono::high_resolution_clock::now();
     _core->registry.clear();
     selected_paths.clear();
-    _selected_entity = entt::null;
+    _selected_fleet = entt::null;
+    _core->game_log.clear();
 
+    _generate_stars();
+    _recalculate_graph();
+    _generate_player_entity();
+    _generate_fleets();
+
+    auto after = std::chrono::high_resolution_clock::now() - before;
+    std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
+}
+
+void Galaxy::_generate_stars() {
+    _core->debug_log.debug("Generating stars\n");
     for (int32_t z = 0; z < static_cast<int32_t>(_visible_size.z); z++) {
         for (int32_t y = 0; y < static_cast<int32_t>(_visible_size.y); y++) {
             for (int32_t x = 0; x < static_cast<int32_t>(_visible_size.x); x++) {
@@ -73,15 +85,28 @@ void Galaxy::populate() {
             }
         }
     }
-
-    _generate_player_entity();
-    _recalculate_graph();
-
-    auto after = std::chrono::high_resolution_clock::now() - before;
-    std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }
 
-
+void Galaxy::_generate_fleets() {
+    std::vector<entt::entity> stars;
+    auto all_stars_view = _core->registry.view<components::Star, components::Name>();
+    for (auto [entity, star, name] : all_stars_view.each()) {
+        stars.emplace_back(entity);
+    }
+    auto spawn_star = stars[_core->pcg(stars.size())];
+    auto spawn_star_name = _core->registry.get<components::Name>(spawn_star).name.c_str();
+    entt::entity fleet_entity = FleetEntity::create(_core, _core->pcg, _core->registry.get<Vector3>(spawn_star), _ship_components);
+    _core->game_log.debug("A tleilaxian fleet has arrived at %s!\n", spawn_star_name);
+    _core->registry.emplace<components::Tleilaxian>(fleet_entity);
+    for (auto [entity, infectable, name] : _core->registry.view<components::Infectable, components::Name>().each()) {
+        auto path = calculate_path<Vector3, DistanceFunction, components::Star>(stars_graph, _core->registry, spawn_star, entity);
+        if (!path.empty()) {
+            _core->game_log.debug("The tleilaxian fleet is heading towards %s!\n", name.name.c_str());
+            _core->registry.emplace<components::Path>(fleet_entity, path);
+            break;
+        }
+    }
+}
 
 void Galaxy::update() {
     if (IsKeyDown(KEY_A)) {
@@ -94,7 +119,7 @@ void Galaxy::update() {
         populate();
     }
     if (IsKeyPressed(KEY_D)) {
-        open_demo = !open_demo;
+        _open_demo = !_open_demo;
     }
     _core->dispatcher.update();
 }
@@ -114,7 +139,6 @@ void Galaxy::_tick() {
     auto fleets = _core->registry.view<components::Fleet, Vector3, components::Path>();
     fleets.each([this](const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Path &path) {
         FleetEntity::update(_core, entity, fleet, position, path);
-
     });
 
     _update_vicinities();
@@ -149,13 +173,27 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
     fleet.react_to_nova(_core, _core->pcg, ev, _ship_components, stars_graph);
-
+    _core->game_log.debug("A scavenger fleet from %s is heading towards the remnants of %s.\n", _core->registry.get<components::Name>(ev.source).name.c_str(), _core->registry.get<components::Name>(ev.destination).name.c_str());
     add_vicinity(_core, fleet.get_entity(), ev.source);
 }
 
 void Galaxy::_fleet_arrived_at_star(const ArrivalEvent &ev) {
     add_vicinity(_core, ev.what, ev.where);
     add_vicinity(_core, ev.where, ev.what);
+    auto is_tleilaxian = _core->registry.try_get<components::Tleilaxian>(ev.what);
+    auto is_infectable = _core->registry.try_get<components::Infectable>(ev.where);
+    if (is_tleilaxian && is_infectable) {
+        auto counter = static_cast<uint8_t>(_core->pcg(40) + 1);
+        _core->registry.emplace<components::Exploding>(ev.where, counter);
+        auto &size = _core->registry.get<components::Size>(ev.where);
+        size.size = counter;
+        auto &star = _core->registry.get<components::Star>(ev.where);
+        star.r = Colors::col_3.r;
+        star.g = Colors::col_3.g;
+        star.b = Colors::col_3.b;
+        star.a = Colors::col_3.a / 2;
+        _core->game_log.debug("The tleilaxian fleet fired a bomb into %s! The star will explode in %d days!\n", _core->registry.get<components::Name>(ev.where).name.c_str(), counter);
+    }
 }
 
 void Galaxy::_entity_left_vicinity(const LeaveEvent &ev) {
@@ -197,13 +235,16 @@ static constexpr auto get_calculated_distance = [](entt::registry &registry, std
     return calculated_distance;
 };
 void Galaxy::_on_star_selected(const StarSelectedEvent &ev) {
-    if (_core->registry.valid(ev.entity)) {
-        if (_ui_wants_to_set_course && _core->registry.try_get<components::Fleet>(_selected_entity)) {
-            _path.from = _selected_entity;
-            _path.to = ev.entity;
-            _ui_wants_to_set_course = false;
+    if (_core->registry.valid(ev.entity) && _core->registry.valid(_selected_star)) {
+        if (_ui_wants_to_set_course) {
+            auto fleet = _core->registry.try_get<components::Fleet>(_selected_fleet);
+            if (fleet) {
+                _path.from = _selected_fleet;
+                _path.to = _selected_star;
+                _ui_wants_to_set_course = false;
 
-            _set_course_for_fleet(_path.from, _path.to);
+                _set_course_for_fleet(_path.from, _path.to);
+            }
         }
     }
 }
@@ -246,7 +287,8 @@ void Galaxy::_generate_player_entity() {
         all_stars.emplace_back(entity);
     });
     entt::entity random_star = all_stars[_core->pcg(all_stars.size())];
-
+    auto star_name = _core->registry.get<components::Name>(random_star);
+    _core->game_log.debug("You arrived at %s\n", star_name.name.c_str());
     entt::entity player_fleet = FleetEntity::create(_core, _core->pcg, _core->registry.get<Vector3>(random_star), _ship_components);
     _core->registry.emplace<components::PlayerControlled>(player_fleet);
     add_vicinity(_core, player_fleet, random_star);
@@ -266,34 +308,33 @@ void Galaxy::_set_course_for_fleet(const entt::entity from, const entt::entity t
         }
     });
     auto path = components::Path{courses[star_with_shortest_path]};
-    auto current_fleet_path = _core->registry.try_get<components::Path>(_selected_entity);
+    auto current_fleet_path = _core->registry.try_get<components::Path>(_selected_fleet);
     if (current_fleet_path) {
         current_fleet_path->checkpoints = courses[star_with_shortest_path];
     } else {
-        _core->registry.emplace<components::Path>(_selected_entity, path);
+        _core->registry.emplace<components::Path>(_selected_fleet, path);
     }
 }
 
 entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_ptr<Core> &core, Vector3 position) {
     auto &pcg = core->pcg;
+    static auto star_is_infectable = [&pcg](entt::entity) { return pcg(100) <= 10; };
     if (pcg(_occurence_chance) == 0) {
         _entity = registry.create();
         registry.emplace<Vector3>(_entity, position);
-        registry.emplace<components::Name>(_entity, components::Name{core->name_generator.get_random_name<components::Star>(pcg)});
-        if (pcg(_exploding_chance.upper_bound) < _exploding_chance.occurs_if_less_then) {
-            const auto explosion_counter = pcg(15) + 1;
-            registry.emplace<components::Star>(_entity, components::Star{Colors::col_3.r, Colors::col_3.g, Colors::col_3.b, Colors::col_3.a / 2});
+        components::Name star_name{core->name_generator.get_random_name<components::Star>(pcg)};
+        registry.emplace<components::Name>(_entity, star_name);
+        core->debug_log.debug("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
 
-            registry.emplace<components::Exploding>(_entity, static_cast<uint8_t>(explosion_counter));
-            registry.emplace<components::Size>(_entity, static_cast<float>(explosion_counter));
-        } else {
-            auto star_color = Colors::star_colors[pcg(Colors::star_colors.size())];
-            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a});
-            registry.emplace<components::Size>(_entity, 1.0f);
-
-            if (pcg(_nova_seeker_chance.upper_bound) < _nova_seeker_chance.occurs_if_less_then) {
-                registry.emplace<components::NovaSeeker>(_entity, pcg(5) + 1);
-            }
+        auto star_color = Colors::star_colors[pcg(Colors::star_colors.size())];
+        registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a});
+        registry.emplace<components::Size>(_entity, 1.0f);
+        if (star_is_infectable(_entity)) {
+            registry.emplace<components::Infectable>(_entity);
+            core->debug_log.debug("  - Marking this star as infectable\n");
+        }
+        if (pcg(_nova_seeker_chance.upper_bound) < _nova_seeker_chance.occurs_if_less_then) {
+            registry.emplace<components::NovaSeeker>(_entity, pcg(5) + 1);
         }
     }
 

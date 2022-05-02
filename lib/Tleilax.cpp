@@ -5,9 +5,8 @@
 
 void tleilax::Application::run(const Config &config) {
 
-
+    _core->game_log.debug("Welcome commander!\n");
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
-
     SetTargetFPS(144);
     _setup_imgui();
     auto g = std::make_shared<Galaxy>(_core, _assets);
@@ -16,7 +15,7 @@ void tleilax::Application::run(const Config &config) {
     _ui_view = g;
 
     while (!WindowShouldClose()) {
-        toggle_fullscreen();
+        _toggle_fullscreen();
         _ui_view->update();
         _ui_view->render();
     }
@@ -24,6 +23,21 @@ void tleilax::Application::run(const Config &config) {
     CloseWindow();
 }
 
+void tleilax::Application::_toggle_fullscreen() {
+    if (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)))
+    {
+        if (IsWindowFullscreen())
+        {
+            ToggleFullscreen();
+            SetWindowSize(tleilax::Config::window.width, tleilax::Config::window.height);
+        }
+        else
+        {
+            SetWindowSize(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()));
+            ToggleFullscreen();
+        }
+    }
+}
 
 void tleilax::Application::_setup_imgui() {
     rlImGuiSetup(true);
