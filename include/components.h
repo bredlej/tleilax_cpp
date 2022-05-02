@@ -37,7 +37,7 @@ namespace components {
         uint8_t counter;
     };
     struct Nova {};
-    struct Infectable {};
+    struct Infectable { int i; };
     struct NovaSeeker {
         uint32_t capacity;
     };
@@ -45,7 +45,7 @@ namespace components {
     struct Fleet {
         std::vector<entt::entity> ships;
     };
-    struct Tleilaxian {};
+    struct Tleilaxian { int i; };
     struct Coordinates {
         int32_t x, y, z;
     };

@@ -27,7 +27,7 @@ void Galaxy::_render_visible() {
 void Galaxy::_render_fleets() {
     _core->registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
-        fleet_coords.y += 2;
+        fleet_coords.y += 1;
         const auto fleet_size_top = size.size / 2;
         const auto fleet_size_bottom = size.size / 4;
         BoundingBox fleet_bounds{};
@@ -49,7 +49,17 @@ void Galaxy::_render_fleets() {
             }
         } else {
             const auto is_player_fleet = _core->registry.try_get<components::PlayerControlled>(entity);
-            DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, is_player_fleet ? Colors::col_16 : Colors::col_9);
+            if (is_player_fleet) {
+                DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_16);
+            } else {
+                const auto is_tleilaxian = _core->registry.try_get<components::Tleilaxian>(entity);
+                if (!is_tleilaxian) {
+                    DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_9);
+                }
+                else {
+                    DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_11);
+                }
+            }
         }
     });
 }
