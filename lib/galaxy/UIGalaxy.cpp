@@ -157,6 +157,7 @@ void Galaxy::_draw_ui_fleet_window() {
         ImGui::Separator();
         if (ImGui::Button("Exit")) {
             _selected_fleet = entt::null;
+            _ui_wants_to_set_course = false;
         }
         ImGui::End();
     }

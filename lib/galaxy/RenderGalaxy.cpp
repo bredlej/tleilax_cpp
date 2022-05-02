@@ -55,8 +55,7 @@ void Galaxy::_render_fleets() {
                 const auto is_tleilaxian = _core->registry.try_get<components::Tleilaxian>(entity);
                 if (!is_tleilaxian) {
                     DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_9);
-                }
-                else {
+                } else {
                     DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_11);
                 }
             }
@@ -77,10 +76,13 @@ void Galaxy::_render_stars() {
         StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, star_is_selected);
         if (star_is_selected) {
             _entities_under_cursor.emplace_back(entity);
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && _camera_settings.focus_on_clicked) {
-                focus_camera(_camera, star_coords, _camera.fovy);
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                if (_camera_settings.focus_on_clicked) {
+                    focus_camera(_camera, star_coords, _camera.fovy);
+                }
+                _core->dispatcher.enqueue<StarSelectedEvent>(entity);
             }
-            _core->dispatcher.enqueue<StarSelectedEvent>(entity);
+            _selected_star = entity;
         }
     });
 }

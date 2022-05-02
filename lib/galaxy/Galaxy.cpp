@@ -63,6 +63,7 @@ void Galaxy::populate() {
     _core->registry.clear();
     selected_paths.clear();
     _selected_fleet = entt::null;
+    _core->game_log.clear();
 
     _generate_stars();
     _recalculate_graph();
@@ -234,11 +235,10 @@ static constexpr auto get_calculated_distance = [](entt::registry &registry, std
     return calculated_distance;
 };
 void Galaxy::_on_star_selected(const StarSelectedEvent &ev) {
-    _selected_star = ev.entity;
-    if (_core->registry.valid(ev.entity)) {
+    if (_core->registry.valid(ev.entity) && _core->registry.valid(_selected_star)) {
         if (_ui_wants_to_set_course) {
-            auto selected_star = _core->registry.try_get<components::Fleet>(_selected_fleet);
-            if (selected_star) {
+            auto fleet = _core->registry.try_get<components::Fleet>(_selected_fleet);
+            if (fleet) {
                 _path.from = _selected_fleet;
                 _path.to = _selected_star;
                 _ui_wants_to_set_course = false;
