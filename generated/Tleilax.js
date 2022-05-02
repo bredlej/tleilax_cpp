@@ -199,7 +199,7 @@ Module['FS_createPath']("/assets", "json", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "c3c1145e-9bc4-4fda-8c47-388c65b18fa8"});
+    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/shaders/lighting.fs", "start": 725, "end": 2737}, {"filename": "/assets/shaders/base.fs", "start": 2737, "end": 3223}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 3223, "end": 4053}, {"filename": "/assets/json/ship_components.json", "start": 4053, "end": 5437}, {"filename": "/assets/json/ships.json", "start": 5437, "end": 5987}], "remote_package_size": 5987, "package_uuid": "8adb42a2-a8a3-4e35-8e38-035fdfd03a31"});
 
   })();
 
@@ -1913,7 +1913,7 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  
+  178136: function() {if (document.fullscreenElement) document.exitFullscreen(); else Module.requestFullscreen(false, true);}
 };
 function GetCanvasHeight(){ return canvas.clientHeight; }
 function GetCanvasWidth(){ return canvas.clientWidth; }
@@ -4591,6 +4591,35 @@ function GetCanvasWidth(){ return canvas.clientWidth; }
 
   function _abort() {
       abort('native code called abort()');
+    }
+
+  var readAsmConstArgsArray = [];
+  function readAsmConstArgs(sigPtr, buf) {
+      ;
+      // Nobody should have mutated _readAsmConstArgsArray underneath us to be something else than an array.
+      assert(Array.isArray(readAsmConstArgsArray));
+      // The input buffer is allocated on the stack, so it must be stack-aligned.
+      assert(buf % 16 == 0);
+      readAsmConstArgsArray.length = 0;
+      var ch;
+      // Most arguments are i32s, so shift the buffer pointer so it is a plain
+      // index into HEAP32.
+      buf >>= 2;
+      while (ch = HEAPU8[sigPtr++]) {
+        assert(ch === 100/*'d'*/ || ch === 102/*'f'*/ || ch === 105 /*'i'*/, 'Invalid character ' + ch + '("' + String.fromCharCode(ch) + '") in readAsmConstArgs! Use only "d", "f" or "i", and do not specify "v" for void return argument.');
+        // A double takes two 32-bit slots, and must also be aligned - the backend
+        // will emit padding to avoid that.
+        var readAsmConstArgsDouble = ch < 105;
+        if (readAsmConstArgsDouble && (buf & 1)) buf++;
+        readAsmConstArgsArray.push(readAsmConstArgsDouble ? HEAPF64[buf++ >> 1] : HEAP32[buf]);
+        ++buf;
+      }
+      return readAsmConstArgsArray;
+    }
+  function _emscripten_asm_const_int(code, sigPtr, argbuf) {
+      var args = readAsmConstArgs(sigPtr, argbuf);
+      if (!ASM_CONSTS.hasOwnProperty(code)) abort('No EM_ASM constant found at address ' + code);
+      return ASM_CONSTS[code].apply(null, args);
     }
 
   var JSEvents = {inEventHandler:0,removeAllEventListeners:function() {
@@ -8957,6 +8986,10 @@ function GetCanvasWidth(){ return canvas.clientWidth; }
       win.shouldClose = value;
     }
 
+  function _glfwSetWindowSize(winid, width, height) {
+      GLFW.setWindowSize(winid, width, height);
+    }
+
   function _glfwSetWindowSizeCallback(winid, cbfun) {
       return GLFW.setWindowSizeCallback(winid, cbfun);
     }
@@ -9872,6 +9905,7 @@ var asmLibraryArg = {
   "_emscripten_date_now": __emscripten_date_now,
   "_emscripten_get_now_is_monotonic": __emscripten_get_now_is_monotonic,
   "abort": _abort,
+  "emscripten_asm_const_int": _emscripten_asm_const_int,
   "emscripten_exit_pointerlock": _emscripten_exit_pointerlock,
   "emscripten_get_element_css_size": _emscripten_get_element_css_size,
   "emscripten_get_gamepad_status": _emscripten_get_gamepad_status,
@@ -10132,6 +10166,7 @@ var asmLibraryArg = {
   "glfwSetWindowFocusCallback": _glfwSetWindowFocusCallback,
   "glfwSetWindowIconifyCallback": _glfwSetWindowIconifyCallback,
   "glfwSetWindowShouldClose": _glfwSetWindowShouldClose,
+  "glfwSetWindowSize": _glfwSetWindowSize,
   "glfwSetWindowSizeCallback": _glfwSetWindowSizeCallback,
   "glfwSwapBuffers": _glfwSwapBuffers,
   "glfwSwapInterval": _glfwSwapInterval,
