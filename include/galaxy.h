@@ -22,8 +22,6 @@
 #include <utility>
 #include <variant>
 
-static float distance_between_stars = 20.0f;
-static bool open_demo = false;
 constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
     return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
 };
@@ -114,6 +112,8 @@ private:
     bool _ui_wants_to_set_course = false;
     bool _ui_show_log = false;
     bool _rotate = false;
+    float _distance_between_stars = 20.0f;
+    bool  _open_demo = false;
     std::vector<entt::entity> _get_nearest_stars(const entt::entity of_entity);
     void _initialize();
     static Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
@@ -147,7 +147,8 @@ private:
     void _draw_ui_tab_camera();
     void _draw_ui_main_entity_selection();
     void _draw_ui_fleet_window();
-    void _draw_ui_log_window();
+    void _draw_ui_debug_log_window();
+    void _draw_ui_game_log_window();
     void _register_path_selection(const std::vector<entt::entity> &calculated_path);
 };
 

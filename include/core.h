@@ -24,6 +24,7 @@ public:
     NameGenerator name_generator{};
     constexpr static Colors colors;
     struct {int width; int height;} window;
-    TleilaxAppLog log;
+    TleilaxAppLog debug_log;
+    TleilaxAppLog game_log;
 };
 #endif//TLEILAX_CORE_H

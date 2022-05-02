@@ -35,23 +35,8 @@ namespace tleilax {
     private:
         Assets _assets;
         void _setup_imgui();
+        void _toggle_fullscreen();
     };
 }// namespace tleilax
-
-static void toggle_fullscreen() {
-    if (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)))
-    {
-        if (IsWindowFullscreen())
-        {
-            ToggleFullscreen();
-            SetWindowSize(tleilax::Config::window.width, tleilax::Config::window.height);
-        }
-        else
-        {
-            SetWindowSize(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()));
-            ToggleFullscreen();
-        }
-    }
-}
 
 #endif//TLEILAX_CPP_TLEILAX_H

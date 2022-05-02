@@ -40,7 +40,7 @@ void Galaxy::_recalculate_graph() {
                             if (entity != _entity) {
                                 GraphNode next{_entity, false};
                                 const auto distance = Vector3Distance(coords, _coords);
-                                if (distance < distance_between_stars) {
+                                if (distance < _distance_between_stars) {
                                     stars_graph.add_edge(starNode, next, distance, false);
                                     stars_paths.emplace_back(std::make_pair(coords, _coords));
                                 }
@@ -74,7 +74,7 @@ void Galaxy::populate() {
 }
 
 void Galaxy::_generate_stars() {
-    _core->log.debug("Generating stars\n");
+    _core->debug_log.debug("Generating stars\n");
     for (int32_t z = 0; z < static_cast<int32_t>(_visible_size.z); z++) {
         for (int32_t y = 0; y < static_cast<int32_t>(_visible_size.y); y++) {
             for (int32_t x = 0; x < static_cast<int32_t>(_visible_size.x); x++) {
@@ -84,13 +84,6 @@ void Galaxy::_generate_stars() {
             }
         }
     }
-
-    _core->registry.view<components::Star>().each([this](const entt::entity entity) {
-        static auto star_is_infectable = [this](entt::entity){ return _core->pcg(100) <= 10; };
-        if (star_is_infectable(entity)) {
-            _core->registry.emplace<components::Infectable>(entity);
-        }
-    });
 }
 
 void Galaxy::_generate_fleets() {
@@ -108,7 +101,7 @@ void Galaxy::update() {
         populate();
     }
     if (IsKeyPressed(KEY_D)) {
-        open_demo = !open_demo;
+        _open_demo = !_open_demo;
     }
     _core->dispatcher.update();
 }
@@ -290,12 +283,13 @@ void Galaxy::_set_course_for_fleet(const entt::entity from, const entt::entity t
 
 entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_ptr<Core> &core, Vector3 position) {
     auto &pcg = core->pcg;
+    static auto star_is_infectable = [&pcg](entt::entity){ return pcg(100) <= 10; };
     if (pcg(_occurence_chance) == 0) {
         _entity = registry.create();
         registry.emplace<Vector3>(_entity, position);
         components::Name star_name{core->name_generator.get_random_name<components::Star>(pcg)};
         registry.emplace<components::Name>(_entity, star_name);
-        core->log.debug("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
+        core->debug_log.debug("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
         if (pcg(_exploding_chance.upper_bound) < _exploding_chance.occurs_if_less_then) {
             const auto explosion_counter = pcg(15) + 1;
             registry.emplace<components::Star>(_entity, components::Star{Colors::col_3.r, Colors::col_3.g, Colors::col_3.b, Colors::col_3.a / 2});
@@ -306,7 +300,10 @@ entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_p
             auto star_color = Colors::star_colors[pcg(Colors::star_colors.size())];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a});
             registry.emplace<components::Size>(_entity, 1.0f);
-
+            if (star_is_infectable(_entity)) {
+                registry.emplace<components::Infectable>(_entity);
+                core->debug_log.debug("  - Marking this star as infectable\n");
+            }
             if (pcg(_nova_seeker_chance.upper_bound) < _nova_seeker_chance.occurs_if_less_then) {
                 registry.emplace<components::NovaSeeker>(_entity, pcg(5) + 1);
             }

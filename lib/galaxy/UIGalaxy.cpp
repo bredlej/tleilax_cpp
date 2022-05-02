@@ -5,10 +5,9 @@
 
 void Galaxy::_draw_ui() {
     rlImGuiBegin();
-    ImGuiStyle *style = &ImGui::GetStyle();
 
-    if (open_demo) {
-        ImGui::ShowDemoWindow(&open_demo);
+    if (_open_demo) {
+        ImGui::ShowDemoWindow(&_open_demo);
     } else {
         bool open = true;
         static ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -22,9 +21,11 @@ void Galaxy::_draw_ui() {
                     ImGui::EndTabBar();
                 }
         }
-        _draw_ui_main_entity_selection();
-        _draw_ui_log_window();
+
         ImGui::End();
+        _draw_ui_main_entity_selection();
+        _draw_ui_debug_log_window();
+        _draw_ui_game_log_window();
     }
 
     rlImGuiEnd();
@@ -168,9 +169,13 @@ void Galaxy::_draw_ui_main_entity_selection() {
 }
 void Galaxy::_draw_ui_tab_debug() {
     if (ImGui::BeginTabItem("Debug")) {
+        auto work_pos = ImGui::GetMainViewport()->WorkPos;
+        ImGui::Text("Work pos: %.1f, %.1f", work_pos.x, work_pos.y);
+        auto work_size = ImGui::GetMainViewport()->WorkSize;
+        ImGui::Text("Work size: %.1f, %.1f", work_size.x, work_size.y);
         float dist_from = 1.0f;
         float dist_to = 50.0f;
-        ImGui::DragScalar("Distance between stars (scroll value)", ImGuiDataType_Float, &distance_between_stars, 0.5f, &dist_from, &dist_to, "%f");
+        ImGui::DragScalar("Distance between stars (scroll value)", ImGuiDataType_Float, &_distance_between_stars, 0.5f, &dist_from, &dist_to, "%f");
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             _recalculate_graph();
         }
@@ -210,8 +215,13 @@ void Galaxy::_draw_ui_tab_camera() {
     ImGui::PopButtonRepeat();
 }
 
-void Galaxy::_draw_ui_log_window() {
+void Galaxy::_draw_ui_debug_log_window() {
     if (_ui_show_log) {
-        _core->log.render("Tleilax log");
+        _core->debug_log.render("Tleilax log");
     }
+}
+
+void Galaxy::_draw_ui_game_log_window() {
+    bool open = true;
+    _core->game_log.render_no_border("Messages", &open);
 }

@@ -66,6 +66,7 @@ void Galaxy::_render_stars() {
         bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
         StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, star_is_selected);
         if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            _core->game_log.debug("CLICK !!!\n");
             if (_camera_settings.focus_on_clicked) {
                 focus_camera(_camera, star_coords, 15.0f);
             }
