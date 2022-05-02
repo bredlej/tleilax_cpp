@@ -16,10 +16,12 @@ struct UIView {
 
 class Core {
 public:
+    explicit Core(int width, int height) : window{width, height} {};
     entt::dispatcher dispatcher{};
     entt::registry registry{};
     pcg32 pcg;
     NameGenerator name_generator{};
     constexpr static Colors colors;
+    struct {int width; int height;} window;
 };
 #endif//TLEILAX_CORE_H

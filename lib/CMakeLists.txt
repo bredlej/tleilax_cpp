@@ -1,7 +1,9 @@
 set(SOURCES
         Tleilax.cpp
         Fleet.cpp
-        Galaxy.cpp
+        galaxy/Galaxy.cpp
+        galaxy/UIGalaxy.cpp
+        galaxy/RenderGalaxy.cpp
         Assets.cpp
         )
 set(INCLUDE_DIRS

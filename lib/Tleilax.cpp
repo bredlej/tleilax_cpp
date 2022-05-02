@@ -5,6 +5,7 @@
 
 void tleilax::Application::run(const Config &config) {
 
+
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
 
     SetTargetFPS(144);
@@ -15,12 +16,14 @@ void tleilax::Application::run(const Config &config) {
     _ui_view = g;
 
     while (!WindowShouldClose()) {
+        toggle_fullscreen();
         _ui_view->update();
         _ui_view->render();
     }
     rlImGuiShutdown();
     CloseWindow();
 }
+
 
 void tleilax::Application::_setup_imgui() {
     rlImGuiSetup(true);

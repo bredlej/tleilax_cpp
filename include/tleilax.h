@@ -28,7 +28,7 @@ namespace tleilax {
     };
     struct Application {
     public:
-        Application() : _assets{files::ship_components, files::ships}, _core(std::make_shared<Core>()) {};
+        Application() : _assets{files::ship_components, files::ships}, _core(std::make_shared<Core>(Config::window.width, Config::window.height)) {};
         void run(const Config &);
         std::shared_ptr<Core> _core;
         std::shared_ptr<UIView> _ui_view;
@@ -37,5 +37,21 @@ namespace tleilax {
         void _setup_imgui();
     };
 }// namespace tleilax
+
+static void toggle_fullscreen() {
+    if (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)))
+    {
+        if (IsWindowFullscreen())
+        {
+            ToggleFullscreen();
+            SetWindowSize(tleilax::Config::window.width, tleilax::Config::window.height);
+        }
+        else
+        {
+            SetWindowSize(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()));
+            ToggleFullscreen();
+        }
+    }
+}
 
 #endif//TLEILAX_CPP_TLEILAX_H

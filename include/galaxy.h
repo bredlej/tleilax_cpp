@@ -24,6 +24,29 @@
 #include <utility>
 #include <variant>
 
+static float distance_between_stars = 20.0f;
+static bool open_demo = false;
+constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
+    return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
+};
+
+struct DistanceFunction;
+constexpr auto local_to_global_coords = [](const auto coordinates, const auto visible_size) -> Vector3 {
+    return {coordinates.x - static_cast<float>(visible_size.x / 2), coordinates.y - static_cast<float>(visible_size.y / 2), coordinates.z - static_cast<float>(visible_size.z / 2)};
+};
+
+static void add_vicinity(std::shared_ptr<Core> &core, entt::entity what, entt::entity where) {
+    auto *vicinity = core->registry.try_get<components::Vicinity>(what);
+    if (vicinity) {
+        if (std::find(vicinity->objects.begin(), vicinity->objects.end(), where) != where) {
+            vicinity->objects.emplace_back(where);
+        }
+    } else {
+        std::vector<entt::entity> vicinity{where};
+        core->registry.emplace<components::Vicinity>(what, vicinity);
+    }
+}
+
 static void focus_camera(Camera &camera, Vector3 target, float fov) {
     camera.target = target;
     camera.fovy = fov;
