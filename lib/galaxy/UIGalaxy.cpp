@@ -23,6 +23,7 @@ void Galaxy::_draw_ui() {
                 }
         }
         _draw_ui_main_entity_selection();
+        _draw_ui_log_window();
         ImGui::End();
     }
 
@@ -36,28 +37,11 @@ void Galaxy::_draw_ui_tab_main() {
         }
         ImGui::PopButtonRepeat();
         _draw_ui_tab_camera();
-        //_draw_ui_main_path_selection();
 
         ImGui::EndTabItem();
     }
 }
-void Galaxy::_draw_ui_main_path_selection() {
-    if (_path.from == entt::null) {
-        ImGui::Text("No paths selected - click on two stars to establish a path between them");
-    } else {
-        Vector3 from = _core->registry.get<Vector3>(_path.from);
-        ImGui::Text("Establishing path from (%.0f, %.0f, %.0f) ", from.x, from.y, from.z);
-        if (_path.to != entt::null) {
-            ImGui::SameLine();
-            Vector3 to = _core->registry.get<Vector3>(_path.to);
-            ImGui::Text("to (%.0f, %.0f, %.0f) ", to.x, to.y, to.z);
-            ImGui::SameLine();
-            if (ImGui::Button("Clear")) {
-                _clear_paths();
-            }
-        }
-    }
-}
+
 void Galaxy::_draw_ui_fleet_window() {
     auto *fleet = _core->registry.try_get<components::Fleet>(_selected_entity);
     if (fleet) {
@@ -68,7 +52,7 @@ void Galaxy::_draw_ui_fleet_window() {
         static int corner = 1;
         ImGuiIO &io = ImGui::GetIO();
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
-        ImVec2 work_pos = ImGui::GetMainViewport()->WorkPos;                                    // Use work area to avoid menu-bar/task-bar, if any!
+        ImVec2 work_pos = ImGui::GetMainViewport()->WorkPos;// Use work area to avoid menu-bar/task-bar, if any!
         ImVec2 work_size = ImGui::GetMainViewport()->WorkSize;
         ImVec2 window_pos, window_pos_pivot;
         if (corner != -1) {
@@ -193,6 +177,12 @@ void Galaxy::_draw_ui_tab_debug() {
         if (ImGui::Button("Generate new world")) {
             populate();
         }
+        if (!_ui_show_log && ImGui::Button("Show log")) {
+            _ui_show_log = true;
+        }
+        if (_ui_show_log && ImGui::Button("Hide log")) {
+            _ui_show_log = false;
+        }
         ImGui::EndTabItem();
     }
 }
@@ -218,4 +208,10 @@ void Galaxy::_draw_ui_tab_camera() {
         focus_camera(_camera, Vector3{0.0f, 0.0f, 0.0f}, 45.0f);
     }
     ImGui::PopButtonRepeat();
+}
+
+void Galaxy::_draw_ui_log_window() {
+    if (_ui_show_log) {
+        _core->log.render("Tleilax log");
+    }
 }

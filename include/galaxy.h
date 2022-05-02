@@ -14,13 +14,11 @@
 #include <fleet.h>
 #include <functional>
 #include <graph.h>
-#include <imgui/imgui.h>
-#include <imgui/rlImGui.h>
 #include <memory>
 #include <path.h>
 #include <queue>
-#include <raylib.h>
-#include <raymath.h>
+#include <graphics_base.h>
+
 #include <utility>
 #include <variant>
 
@@ -64,6 +62,8 @@ struct CameraSettings {
     Vector3 target = {0.0f, 0.0f, 0.0f};
     Vector2 angle = {45.0f, 45.0f};
     bool focus_on_clicked = false;
+    float camera_focused_angle = 30.0f;
+    float camera_unfocused_angle = 45.0f;
 };
 class StarEntity {
 public:
@@ -112,7 +112,7 @@ private:
     Vector3 _offset{0., 0., 0.};
     entt::entity _selected_entity{entt::null};
     bool _ui_wants_to_set_course = false;
-
+    bool _ui_show_log = false;
     bool _rotate = false;
     std::vector<entt::entity> _get_nearest_stars(const entt::entity of_entity);
     void _initialize();
@@ -134,6 +134,8 @@ private:
     void _generate_player_entity();
     void _recalculate_graph();
     void _clear_paths();
+    void _generate_stars();
+    void _generate_fleets();
 
     void _render_stars();
     void _render_paths();
@@ -143,9 +145,9 @@ private:
     void _draw_ui_tab_main();
     void _draw_ui_tab_debug();
     void _draw_ui_tab_camera();
-    void _draw_ui_main_path_selection();
     void _draw_ui_main_entity_selection();
     void _draw_ui_fleet_window();
+    void _draw_ui_log_window();
     void _register_path_selection(const std::vector<entt::entity> &calculated_path);
 };
 

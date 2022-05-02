@@ -64,6 +64,17 @@ void Galaxy::populate() {
     selected_paths.clear();
     _selected_entity = entt::null;
 
+    _generate_stars();
+    _generate_player_entity();
+    _generate_fleets();
+    _recalculate_graph();
+
+    auto after = std::chrono::high_resolution_clock::now() - before;
+    std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
+}
+
+void Galaxy::_generate_stars() {
+    _core->log.debug("Generating stars\n");
     for (int32_t z = 0; z < static_cast<int32_t>(_visible_size.z); z++) {
         for (int32_t y = 0; y < static_cast<int32_t>(_visible_size.y); y++) {
             for (int32_t x = 0; x < static_cast<int32_t>(_visible_size.x); x++) {
@@ -74,14 +85,17 @@ void Galaxy::populate() {
         }
     }
 
-    _generate_player_entity();
-    _recalculate_graph();
-
-    auto after = std::chrono::high_resolution_clock::now() - before;
-    std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
+    _core->registry.view<components::Star>().each([this](const entt::entity entity) {
+        static auto star_is_infectable = [this](entt::entity){ return _core->pcg(100) <= 10; };
+        if (star_is_infectable(entity)) {
+            _core->registry.emplace<components::Infectable>(entity);
+        }
+    });
 }
 
+void Galaxy::_generate_fleets() {
 
+}
 
 void Galaxy::update() {
     if (IsKeyDown(KEY_A)) {
@@ -279,7 +293,9 @@ entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_p
     if (pcg(_occurence_chance) == 0) {
         _entity = registry.create();
         registry.emplace<Vector3>(_entity, position);
-        registry.emplace<components::Name>(_entity, components::Name{core->name_generator.get_random_name<components::Star>(pcg)});
+        components::Name star_name{core->name_generator.get_random_name<components::Star>(pcg)};
+        registry.emplace<components::Name>(_entity, star_name);
+        core->log.debug("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
         if (pcg(_exploding_chance.upper_bound) < _exploding_chance.occurs_if_less_then) {
             const auto explosion_counter = pcg(15) + 1;
             registry.emplace<components::Star>(_entity, components::Star{Colors::col_3.r, Colors::col_3.g, Colors::col_3.b, Colors::col_3.a / 2});
