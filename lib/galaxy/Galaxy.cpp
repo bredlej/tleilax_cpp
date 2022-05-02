@@ -62,7 +62,7 @@ void Galaxy::populate() {
     auto before = std::chrono::high_resolution_clock::now();
     _core->registry.clear();
     selected_paths.clear();
-    _selected_entity = entt::null;
+    _selected_fleet = entt::null;
 
     _generate_stars();
     _generate_player_entity();
@@ -205,8 +205,8 @@ static constexpr auto get_calculated_distance = [](entt::registry &registry, std
 };
 void Galaxy::_on_star_selected(const StarSelectedEvent &ev) {
     if (_core->registry.valid(ev.entity)) {
-        if (_ui_wants_to_set_course && _core->registry.try_get<components::Fleet>(_selected_entity)) {
-            _path.from = _selected_entity;
+        if (_ui_wants_to_set_course && _core->registry.try_get<components::Fleet>(_selected_fleet)) {
+            _path.from = _selected_fleet;
             _path.to = ev.entity;
             _ui_wants_to_set_course = false;
 
@@ -253,7 +253,8 @@ void Galaxy::_generate_player_entity() {
         all_stars.emplace_back(entity);
     });
     entt::entity random_star = all_stars[_core->pcg(all_stars.size())];
-
+    auto star_name = _core->registry.get<components::Name>(random_star);
+    _core->game_log.debug("You arrived at %s\n", star_name.name.c_str());
     entt::entity player_fleet = FleetEntity::create(_core, _core->pcg, _core->registry.get<Vector3>(random_star), _ship_components);
     _core->registry.emplace<components::PlayerControlled>(player_fleet);
     add_vicinity(_core, player_fleet, random_star);
@@ -273,11 +274,11 @@ void Galaxy::_set_course_for_fleet(const entt::entity from, const entt::entity t
         }
     });
     auto path = components::Path{courses[star_with_shortest_path]};
-    auto current_fleet_path = _core->registry.try_get<components::Path>(_selected_entity);
+    auto current_fleet_path = _core->registry.try_get<components::Path>(_selected_fleet);
     if (current_fleet_path) {
         current_fleet_path->checkpoints = courses[star_with_shortest_path];
     } else {
-        _core->registry.emplace<components::Path>(_selected_entity, path);
+        _core->registry.emplace<components::Path>(_selected_fleet, path);
     }
 }
 

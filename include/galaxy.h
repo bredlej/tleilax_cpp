@@ -43,7 +43,7 @@ static void add_vicinity(std::shared_ptr<Core> &core, entt::entity what, entt::e
     }
 }
 
-static void focus_camera(Camera &camera, Vector3 target, float fov) {
+static void focus_camera(Camera &camera, Vector3 target, float fov = 45.0f) {
     camera.target = target;
     camera.fovy = fov;
     UpdateCamera(&camera);
@@ -62,6 +62,7 @@ struct CameraSettings {
     bool focus_on_clicked = false;
     float camera_focused_angle = 30.0f;
     float camera_unfocused_angle = 45.0f;
+    float zoom_angle = camera_focused_angle;
 };
 class StarEntity {
 public:
@@ -102,13 +103,15 @@ private:
     Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> stars_graph;
     std::vector<std::pair<Vector3, Vector3>> stars_paths;
     std::vector<std::pair<Vector3, Vector3>> selected_paths;
+    std::vector<entt::entity> _entities_under_cursor;
     ShipComponentRepository _ship_components;
     Camera _camera;
     CameraSettings _camera_settings;
     Path _path;
     std::shared_ptr<Core> _core;
     Vector3 _offset{0., 0., 0.};
-    entt::entity _selected_entity{entt::null};
+    entt::entity _selected_fleet{entt::null};
+    entt::entity _selected_star{entt::null};
     bool _ui_wants_to_set_course = false;
     bool _ui_show_log = false;
     bool _rotate = false;
@@ -140,6 +143,7 @@ private:
     void _render_stars();
     void _render_paths();
     void _render_fleets();
+    void _render_mouse_selection();
 
     void _draw_ui();
     void _draw_ui_tab_main();

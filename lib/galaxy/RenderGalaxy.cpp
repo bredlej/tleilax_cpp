@@ -16,28 +16,32 @@ void Galaxy::render() {
 void Galaxy::_render_visible() {
 
     BeginMode3D(_camera);
-
+    _entities_under_cursor.clear();
     _render_stars();
     _render_paths();
     _render_fleets();
-
+    _render_mouse_selection();
     EndMode3D();
 }
 
 void Galaxy::_render_fleets() {
     _core->registry.view<components::Fleet, Vector3, components::Size>().each([&](const entt::entity entity, const components::Fleet &fleet, const Vector3 pos, const components::Size size) {
         Vector3 fleet_coords = local_to_global_coords(pos, _visible_size);
+        fleet_coords.y += 2;
         const auto fleet_size_top = size.size / 2;
         const auto fleet_size_bottom = size.size / 4;
-        if (GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), fleet_coords, 3).hit) {
+        BoundingBox fleet_bounds{};
+        fleet_bounds.min = {fleet_coords.x - fleet_size_bottom, fleet_coords.y - (size.size) + (size.size), fleet_coords.z - fleet_size_bottom};
+        fleet_bounds.max = {fleet_coords.x + fleet_size_bottom, fleet_coords.y + (size.size) + (size.size), fleet_coords.z + fleet_size_bottom};
+        if (GetRayCollisionBox(GetMouseRay(GetMousePosition(), _camera), fleet_bounds).hit) {
             DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_15);
-
+            _entities_under_cursor.emplace_back(entity);
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (_camera_settings.focus_on_clicked) {
                     focus_camera(_camera, fleet_coords, 15.0f);
                 }
                 FleetEntity::on_click(_core->registry, entity);
-                _selected_entity = entity;
+                _selected_fleet = entity;
                 auto *fleet_path = _core->registry.try_get<components::Path>(entity);
                 if (fleet_path && !fleet_path->checkpoints.empty()) {
                     _register_path_selection(fleet_path->checkpoints);
@@ -45,11 +49,7 @@ void Galaxy::_render_fleets() {
             }
         } else {
             const auto is_player_fleet = _core->registry.try_get<components::PlayerControlled>(entity);
-            if (is_player_fleet) {
-                DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_16);
-            } else {
-                DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, Colors::col_9);
-            }
+            DrawCylinder(fleet_coords, fleet_size_top, fleet_size_bottom, 3, 4, is_player_fleet ? Colors::col_16 : Colors::col_9);
         }
     });
 }
@@ -65,10 +65,10 @@ void Galaxy::_render_stars() {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
         StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, star_is_selected);
-        if (star_is_selected && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            _core->game_log.debug("CLICK !!!\n");
-            if (_camera_settings.focus_on_clicked) {
-                focus_camera(_camera, star_coords, 15.0f);
+        if (star_is_selected) {
+            _entities_under_cursor.emplace_back(entity);
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && _camera_settings.focus_on_clicked) {
+                focus_camera(_camera, star_coords, _camera.fovy);
             }
             _core->dispatcher.enqueue<StarSelectedEvent>(entity);
         }
@@ -78,10 +78,6 @@ void Galaxy::_render_stars() {
 void StarEntity::render(const std::shared_ptr<Core> &core, const Camera &camera, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, const bool is_selected) {
     Vector3 star_coords = local_to_global_coords(coords, visible_size);
     DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
-    if (is_selected) {
-        DrawSphereWires(star_coords, size.size + 2, 6, 6, Colors::col_16);
-    }
-
     EndMode3D();
 
     auto *name = core->registry.try_get<components::Name>(entity);
@@ -92,4 +88,15 @@ void StarEntity::render(const std::shared_ptr<Core> &core, const Camera &camera,
     }
 
     BeginMode3D(camera);
+}
+
+void Galaxy::_render_mouse_selection() {
+    if (!_entities_under_cursor.empty()) {
+        auto front_entity = _entities_under_cursor.back();
+        auto size = _core->registry.get<components::Size>(front_entity);
+        auto position = local_to_global_coords(_core->registry.get<Vector3>(front_entity), _visible_size);
+        if (_core->registry.try_get<components::Star>(front_entity)) {
+            DrawSphereWires(position, size.size + 2, 6, 6, Colors::col_16);
+        }
+    }
 }

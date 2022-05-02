@@ -44,12 +44,12 @@ void Galaxy::_draw_ui_tab_main() {
 }
 
 void Galaxy::_draw_ui_fleet_window() {
-    auto *fleet = _core->registry.try_get<components::Fleet>(_selected_entity);
+    auto *fleet = _core->registry.try_get<components::Fleet>(_selected_fleet);
     if (fleet) {
         bool open = true;
-        auto *path = _core->registry.try_get<components::Path>(_selected_entity);
-        components::PlayerControlled *player_controlled = _core->registry.try_get<components::PlayerControlled>(_selected_entity);
-        auto position = _core->registry.get<Vector3>(_selected_entity);
+        auto *path = _core->registry.try_get<components::Path>(_selected_fleet);
+        components::PlayerControlled *player_controlled = _core->registry.try_get<components::PlayerControlled>(_selected_fleet);
+        auto position = _core->registry.get<Vector3>(_selected_fleet);
         static int corner = 1;
         ImGuiIO &io = ImGui::GetIO();
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -74,9 +74,9 @@ void Galaxy::_draw_ui_fleet_window() {
                 ImGui::Text("Selected fleet");
             }
             ImGui::SameLine();
-            ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%d", _selected_entity);
+            ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%d", _selected_fleet);
 
-            auto *vicinity = _core->registry.try_get<components::Vicinity>(_selected_entity);
+            auto *vicinity = _core->registry.try_get<components::Vicinity>(_selected_fleet);
             if (vicinity && !vicinity->objects.empty()) {
                 ImGui::Text("Is near of");
                 std::for_each(vicinity->objects.begin(), vicinity->objects.end(), [&](entt::entity object) {
@@ -156,14 +156,14 @@ void Galaxy::_draw_ui_fleet_window() {
         }
         ImGui::Separator();
         if (ImGui::Button("Exit")) {
-            _selected_entity = entt::null;
+            _selected_fleet = entt::null;
         }
         ImGui::End();
     }
 }
 
 void Galaxy::_draw_ui_main_entity_selection() {
-    if (_selected_entity != entt::null) {
+    if (_selected_fleet != entt::null) {
         _draw_ui_fleet_window();
     }
 }
@@ -198,19 +198,28 @@ void Galaxy::_draw_ui_tab_camera() {
     };
     ImGui::PushButtonRepeat(true);
     if (ImGui::ArrowButton("##left", ImGuiDir_Left)) {
-        _camera_settings.angle.x -= 1.0f;
+        _camera_settings.angle.x -= GetFrameTime() * 20.0f;
         rotate_horizontal(_camera, _camera_settings);
     }
     ImGui::SameLine();
     if (!_camera_settings.focus_on_clicked && ImGui::Button("Focus camera on selection")) {
         _camera_settings.focus_on_clicked = true;
-        if (_selected_entity != entt::null) {
-            focus_camera(_camera, local_to_global_coords(_core->registry.get<Vector3>(_selected_entity), _visible_size), 15.0f);
+        if (_selected_fleet != entt::null) {
+            focus_camera(_camera, local_to_global_coords(_core->registry.get<Vector3>(_selected_fleet), _visible_size), _camera.fovy);
         }
     }
+
+    float dist_from = 5.0f;
+    float dist_to = 45.0f;
+    ImGui::DragScalar("Zoom (scroll value)", ImGuiDataType_Float, &_camera.fovy, 0.25f, &dist_from, &dist_to, "< %.0f >");
+
     if (_camera_settings.focus_on_clicked && ImGui::Button("Reset camera")) {
+        ImGui::SameLine();
+        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            _recalculate_graph();
+        }
         _camera_settings.focus_on_clicked = false;
-        focus_camera(_camera, Vector3{0.0f, 0.0f, 0.0f}, 45.0f);
+        focus_camera(_camera, Vector3{0.0f, 0.0f, 0.0f});
     }
     ImGui::PopButtonRepeat();
 }

@@ -5,14 +5,13 @@
 
 void tleilax::Application::run(const Config &config) {
 
-
+    _core->game_log.debug("Welcome commander!\n");
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
-
     SetTargetFPS(144);
     _setup_imgui();
     auto g = std::make_shared<Galaxy>(_core, _assets);
     g->populate();
-    _core->game_log.debug("Welcome to Tleilax!\n");
+
     _ui_view = g;
 
     while (!WindowShouldClose()) {
@@ -31,13 +30,11 @@ void tleilax::Application::_toggle_fullscreen() {
         {
             ToggleFullscreen();
             SetWindowSize(tleilax::Config::window.width, tleilax::Config::window.height);
-            _setup_imgui();
         }
         else
         {
             SetWindowSize(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor()));
             ToggleFullscreen();
-            _setup_imgui();
         }
     }
 }
