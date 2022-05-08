@@ -8,6 +8,16 @@
 #include <imgui/rlImGui.h>
 #include <raylib.h>
 #include <raymath.h>
+#include <raylib_extension.h>
+#include <vector>
+
+struct RenderInstance {
+    Model model;
+    Shader shader;
+    std::vector<Matrix> matrices;
+    std::vector<Color> colors;
+    int count {0};
+};
 
 struct TleilaxAppLog {
     ImGuiTextBuffer Buf;

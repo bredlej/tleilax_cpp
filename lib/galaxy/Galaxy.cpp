@@ -50,6 +50,7 @@ void Galaxy::_recalculate_graph() {
 }
 
 void Galaxy::_initialize() {
+    _init_star_render_instance();
     _path = Path{};
     _core->dispatcher.sink<ExplosionEvent>().connect<&Galaxy::_explode_stars>(this);
     _core->dispatcher.sink<NovaSeekEvent>().connect<&Galaxy::_send_fleet_to_nova>(this);
@@ -70,6 +71,14 @@ void Galaxy::populate() {
     _generate_player_entity();
     _generate_fleets();
 
+    _star_render_instance.matrices.clear();
+    _star_render_instance.colors.clear();
+    _star_render_instance.count = 0;
+    _core->registry.view<components::Star, Vector3>()
+            .each([&](entt::entity, components::Star star, Vector3 position) {
+                Color c{star.r, star.g, star.b, star.a};
+                _place_star_instance_at(position.x, position.y, position.z, c,_visible_size);
+            });
     auto after = std::chrono::high_resolution_clock::now() - before;
     std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
 }

@@ -6,6 +6,7 @@
 void tleilax::Application::run(const Config &config) {
 
     _core->game_log.debug("Welcome commander!\n");
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
     SetTargetFPS(144);
     _setup_imgui();
