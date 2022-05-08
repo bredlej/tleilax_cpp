@@ -129,20 +129,21 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
     // Enable mesh VAO to attach new buffer
     rlEnableVertexArray(mesh.vaoId);
 
-    // This could alternatively use a static VBO and either glMapBuffer() or glBufferSubData().
-    // It isn't clear which would be reliably faster in all cases and on all platforms,
-    // anecdotally glMapBuffer() seems very slow (syncs) while glBufferSubData() seems
-    // no faster, since we're transferring all the transform matrices anyway
-    instancesVboId = rlLoadVertexBuffer(instanceTransforms, (instances * sizeof(float16)) + (instances * sizeof(Color)), false);
 
-    // Instances transformation matrices are send to shader attribute location: SHADER_LOC_MATRIX_MODEL
+    instancesVboId = rlLoadVertexBuffer(instanceTransforms, (instances * sizeof(float16)), false);
     for (unsigned int i = 0; i < 4; i++) {
         rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_MATRIX_MODEL] + i);
         rlSetVertexAttribute(material.shader.locs[SHADER_LOC_MATRIX_MODEL] + i, 4, RL_FLOAT, 0, sizeof(Matrix), (void *) (i * sizeof(Vector4)));
         rlSetVertexAttributeDivisor(material.shader.locs[SHADER_LOC_MATRIX_MODEL] + i, 1);
     }
-
     rlDisableVertexBuffer();
+
+    auto colorVboId = rlLoadVertexBuffer(colors.data(), colors.size() * sizeof(Color), false);
+    rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR]);
+    rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR], 4, RL_UNSIGNED_BYTE, 0, sizeof(Color), (void *) 0);
+    rlSetVertexAttributeDivisor(material.shader.locs[SHADER_LOC_VERTEX_COLOR], 1);
+    rlDisableVertexBuffer();
+
     rlDisableVertexArray();
 
     // Accumulate internal matrix transform (push/pop) and view matrix
@@ -169,7 +170,6 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
             rlSetUniform(material.shader.locs[SHADER_LOC_MAP_DIFFUSE + i], &i, SHADER_UNIFORM_INT, 1);
         }
     }
-
     // Try binding vertex array objects (VAO)
     // or use VBOs if not possible
     if (!rlEnableVertexArray(mesh.vaoId)) {
@@ -192,19 +192,17 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
 
         // Bind mesh VBO data: vertex colors (shader-location = 3, if available)
         if (material.shader.locs[SHADER_LOC_VERTEX_COLOR] != -1) {
-            /*if (mesh.vboId[3] != 0) {
+            if (mesh.vboId[3] != 0) {
                 rlEnableVertexBuffer(mesh.vboId[3]);
                 rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR], 4, RL_UNSIGNED_BYTE, 1, 0, 0);
                 rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR]);
             } else {
                 // Set default value for unused attribute
                 // NOTE: Required when using default shader and no VAO support
-                float value[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+                float value[4] = {1.0f, 0.0f, 1.0f, 1.0f};
                 rlSetVertexAttributeDefault(material.shader.locs[SHADER_LOC_VERTEX_COLOR], value, SHADER_ATTRIB_VEC2, 4);
                 rlDisableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR]);
-            }*/
-            rlEnableVertexBuffer(mesh.vboId[3]);
-            rlLoadVertexBuffer(colors.data(), colors.size() * sizeof(Color), false);
+            }
         }
 
         // Bind mesh VBO data: vertex tangents (shader-location = 4, if available)
@@ -269,6 +267,7 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
 
     // Remove instance transforms buffer
     rlUnloadVertexBuffer(instancesVboId);
+    rlUnloadVertexBuffer(colorVboId);
     RL_FREE(instanceTransforms);
 #endif
 }
