@@ -70,11 +70,17 @@ void Galaxy::_render_paths() {
     });
 }
 
+struct StarRenderData {
+    float16 transform;
+    Color color;
+};
+
 // Draw multiple mesh instances with material and different transforms
 static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matrix> &transforms, std::vector<Color> &colors, int instances) {
 #if defined(GRAPHICS_API_OPENGL_33) || defined(GRAPHICS_API_OPENGL_ES2)
     // Instancing required variables
-    float16 *instanceTransforms = NULL;
+    //float16 *instanceTransforms = NULL;
+    StarRenderData *instanceStars = NULL;
 
     unsigned int instancesVboId = 0;
 
@@ -105,11 +111,6 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
         rlSetUniform(material.shader.locs[SHADER_LOC_COLOR_SPECULAR], values, SHADER_UNIFORM_VEC4, 1);
     }
 
-    // Get a copy of current matrices to work with,
-    // just in case stereo render is required and we need to modify them
-    // NOTE: At this point the modelview matrix just contains the view matrix (camera)
-    // That's because BeginMode3D() sets it and there is no model-drawing function
-    // that modifies it, all use rlPushMatrix() and rlPopMatrix()
     Matrix matModel = MatrixIdentity();
     Matrix matView = rlGetMatrixModelview();
     Matrix matModelView = MatrixIdentity();
@@ -120,29 +121,27 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
     if (material.shader.locs[SHADER_LOC_MATRIX_PROJECTION] != -1) rlSetUniformMatrix(material.shader.locs[SHADER_LOC_MATRIX_PROJECTION], matProjection);
 
     // Create instances buffer
-    instanceTransforms = (float16 *) RL_MALLOC(instances * sizeof(float16));
+    //instanceTransforms = (float16 *) RL_MALLOC(instances * sizeof(float16));
+    instanceStars = (StarRenderData *) RL_MALLOC(instances * sizeof(StarRenderData));
     // Fill buffer with instances transformations as float16 arrays
     for (int i = 0; i < instances; i++) {
-        instanceTransforms[i] = MatrixToFloatV(transforms[i]);
+        instanceStars[i].transform = MatrixToFloatV(transforms[i]);
+        instanceStars[i].color = colors[i];
     }
 
     // Enable mesh VAO to attach new buffer
     rlEnableVertexArray(mesh.vaoId);
 
-
-    instancesVboId = rlLoadVertexBuffer(instanceTransforms, (instances * sizeof(float16)), false);
+    instancesVboId = rlLoadVertexBuffer(instanceStars, (instances * sizeof(StarRenderData)), true);
     for (unsigned int i = 0; i < 4; i++) {
         rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_MATRIX_MODEL] + i);
-        rlSetVertexAttribute(material.shader.locs[SHADER_LOC_MATRIX_MODEL] + i, 4, RL_FLOAT, 0, sizeof(Matrix), (void *) (i * sizeof(Vector4)));
+        rlSetVertexAttribute(material.shader.locs[SHADER_LOC_MATRIX_MODEL] + i, 4, RL_FLOAT, 0, sizeof(StarRenderData), (void *) (i * sizeof(Vector4)));
         rlSetVertexAttributeDivisor(material.shader.locs[SHADER_LOC_MATRIX_MODEL] + i, 1);
     }
-    rlDisableVertexBuffer();
 
-    auto colorVboId = rlLoadVertexBuffer(colors.data(), colors.size() * sizeof(Color), false);
     rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR]);
-    rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR], 4, RL_UNSIGNED_BYTE, 0, sizeof(Color), (void *) 0);
+    rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR], 4, RL_UNSIGNED_BYTE, true, sizeof(StarRenderData), (void *) offsetof(StarRenderData, color));
     rlSetVertexAttributeDivisor(material.shader.locs[SHADER_LOC_VERTEX_COLOR], 1);
-    rlDisableVertexBuffer();
 
     rlDisableVertexArray();
 
@@ -172,55 +171,7 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
     }
     // Try binding vertex array objects (VAO)
     // or use VBOs if not possible
-    if (!rlEnableVertexArray(mesh.vaoId)) {
-        // Bind mesh VBO data: vertex position (shader-location = 0)
-        rlEnableVertexBuffer(mesh.vboId[0]);
-        rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_POSITION], 3, RL_FLOAT, 0, 0, 0);
-        rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_POSITION]);
-
-        // Bind mesh VBO data: vertex texcoords (shader-location = 1)
-        rlEnableVertexBuffer(mesh.vboId[1]);
-        rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_TEXCOORD01], 2, RL_FLOAT, 0, 0, 0);
-        rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_TEXCOORD01]);
-
-        if (material.shader.locs[SHADER_LOC_VERTEX_NORMAL] != -1) {
-            // Bind mesh VBO data: vertex normals (shader-location = 2)
-            rlEnableVertexBuffer(mesh.vboId[2]);
-            rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_NORMAL], 3, RL_FLOAT, 0, 0, 0);
-            rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_NORMAL]);
-        }
-
-        // Bind mesh VBO data: vertex colors (shader-location = 3, if available)
-        if (material.shader.locs[SHADER_LOC_VERTEX_COLOR] != -1) {
-            if (mesh.vboId[3] != 0) {
-                rlEnableVertexBuffer(mesh.vboId[3]);
-                rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR], 4, RL_UNSIGNED_BYTE, 1, 0, 0);
-                rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR]);
-            } else {
-                // Set default value for unused attribute
-                // NOTE: Required when using default shader and no VAO support
-                float value[4] = {1.0f, 0.0f, 1.0f, 1.0f};
-                rlSetVertexAttributeDefault(material.shader.locs[SHADER_LOC_VERTEX_COLOR], value, SHADER_ATTRIB_VEC2, 4);
-                rlDisableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_COLOR]);
-            }
-        }
-
-        // Bind mesh VBO data: vertex tangents (shader-location = 4, if available)
-        if (material.shader.locs[SHADER_LOC_VERTEX_TANGENT] != -1) {
-            rlEnableVertexBuffer(mesh.vboId[4]);
-            rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_TANGENT], 4, RL_FLOAT, 0, 0, 0);
-            rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_TANGENT]);
-        }
-
-        // Bind mesh VBO data: vertex texcoords2 (shader-location = 5, if available)
-        if (material.shader.locs[SHADER_LOC_VERTEX_TEXCOORD02] != -1) {
-            rlEnableVertexBuffer(mesh.vboId[5]);
-            rlSetVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_TEXCOORD02], 2, RL_FLOAT, 0, 0, 0);
-            rlEnableVertexAttribute(material.shader.locs[SHADER_LOC_VERTEX_TEXCOORD02]);
-        }
-
-        if (mesh.indices != NULL) rlEnableVertexBufferElement(mesh.vboId[6]);
-    }
+    rlEnableVertexArray(mesh.vaoId);
 
     int eyeCount = 1;
     if (rlIsStereoRenderEnabled()) eyeCount = 2;
@@ -267,8 +218,9 @@ static void RenderInstanced(Mesh mesh, Material material, const std::vector<Matr
 
     // Remove instance transforms buffer
     rlUnloadVertexBuffer(instancesVboId);
-    rlUnloadVertexBuffer(colorVboId);
-    RL_FREE(instanceTransforms);
+    //rlUnloadVertexBuffer(colorVboId);
+    //RL_FREE(instanceTransforms);
+    RL_FREE(instanceStars);
 #endif
 }
 
