@@ -8,7 +8,8 @@
 #include <imgui/rlImGui.h>
 #include <raylib.h>
 #include <raymath.h>
-#include <raylib_extension.h>
+#include <config.h>
+#include <rlgl.h>
 #include <vector>
 
 struct RenderInstance {
