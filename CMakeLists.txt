@@ -50,7 +50,7 @@ set(IMGUI_SOURCES
         extern/imgui/imgui_internal.h
         extern/imgui/misc/cpp/imgui_stdlib.cpp
         extern/imgui/misc/cpp/imgui_stdlib.h
-        )
+        include/rlights.h )
 add_library(imgui ${IMGUI_SOURCES})
 target_include_directories(imgui PUBLIC extern/imgui)
 

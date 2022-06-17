@@ -22,6 +22,7 @@
 #include <utility>
 #include <variant>
 
+
 constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
     return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
 };
@@ -85,6 +86,11 @@ private:
     Chance _nova_seeker_chance;
 };
 
+struct StarInstance {
+    Vector3 position;
+    Color color;
+};
+
 class Galaxy : public UIView {
 public:
     explicit Galaxy(std::shared_ptr<Core> core, Assets &assets)
@@ -98,7 +104,8 @@ public:
     void populate();
     uint32_t next_random_number(const uint32_t max) { return max > 0 ? _core->pcg(max) : 0; };
 private:
-    static constexpr uint32_t _star_occurence_chance = 7000;
+    RenderInstance _star_render_instance;
+    static constexpr uint32_t _star_occurence_chance = 2000;
     const Vector3 _visible_size{75, 50, 75};
     Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> stars_graph;
     std::vector<std::pair<Vector3, Vector3>> stars_paths;
@@ -124,6 +131,8 @@ private:
                               float verticalAngle);
 
     CameraSettings _cameraSettings;
+    void _init_star_render_instance();
+    void _place_star_instance_at(float x, float y, float z, Color c, const Vector3 size);
     void _render_visible();
     void _tick();
     void _explode_stars(const ExplosionEvent &);

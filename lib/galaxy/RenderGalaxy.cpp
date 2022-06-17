@@ -2,13 +2,14 @@
 // Created by geoco on 02.05.2022.
 //
 #include <galaxy.h>
+#include <raylib_extension.h>
 
 void Galaxy::render() {
     BeginDrawing();
 
     ClearBackground(_core->colors.col_0);
     _render_visible();
-    DrawFPS(1240, 10);
+    DrawFPS(1200, 10);
     _draw_ui();
     EndDrawing();
 }
@@ -70,6 +71,7 @@ void Galaxy::_render_paths() {
 }
 
 void Galaxy::_render_stars() {
+    raylib_ext::RenderInstanced(_star_render_instance.model.meshes[0], _star_render_instance.model.materials[0], _star_render_instance.matrices, _star_render_instance.colors,_star_render_instance.count);
     _core->registry.view<Vector3, components::Star, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
         bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
@@ -89,7 +91,7 @@ void Galaxy::_render_stars() {
 
 void StarEntity::render(const std::shared_ptr<Core> &core, const Camera &camera, const Vector3 &visible_size, const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size, const bool is_selected) {
     Vector3 star_coords = local_to_global_coords(coords, visible_size);
-    DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
+    //DrawSphere(star_coords, size.size, {color.r, color.g, color.b, color.a});
     EndMode3D();
 
     auto *name = core->registry.try_get<components::Name>(entity);
@@ -111,4 +113,48 @@ void Galaxy::_render_mouse_selection() {
             DrawSphereWires(position, size.size + 2, 6, 6, Colors::col_16);
         }
     }
+}
+
+void Galaxy::_init_star_render_instance() {
+    Model m = LoadModelFromMesh(GenMeshSphere(1.0f, 6, 6));
+    Shader shader = LoadShader("assets/shaders/base_lightning_instanced.vs", "assets/shaders/lighting.fs");
+
+    _star_render_instance.shader = shader;
+    // Get some shader loactions
+    shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(_star_render_instance.shader, "mvp");
+    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(_star_render_instance.shader, "viewPos");
+    shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(_star_render_instance.shader, "instanceTransform");
+    shader.locs[SHADER_LOC_VERTEX_COLOR] = GetShaderLocationAttrib(_star_render_instance.shader, "vertexColor");
+
+    // Ambient light level
+    int ambientLoc = GetShaderLocation(_star_render_instance.shader, "ambient");
+    const float f[4]{
+            1.0f, 1.0f, 1.0f, 1.0f};
+    SetShaderValue(_star_render_instance.shader, ambientLoc, f, SHADER_UNIFORM_VEC4);
+    Vector3 v{50, 50, 0};
+    CreateLight(LIGHT_DIRECTIONAL, v, Vector3Zero(), WHITE, _star_render_instance.shader);
+
+    // NOTE: We are assigning the intancing shader to material.shader
+    // to be used on mesh drawing with DrawMeshInstanced()
+    Material material = LoadMaterialDefault();
+    material.shader = _star_render_instance.shader;
+    //material.maps[MATERIAL_MAP_DIFFUSE].color = YELLOW;
+    m.materials[0] = material;
+
+    _star_render_instance.model = m;
+}
+void Galaxy::_place_star_instance_at(float x, float y, float z, Color c, const Vector3 size) {
+    Matrix m = MatrixIdentity();
+    Vector3 v = local_to_global_coords(Vector3{x, y, z}, size);
+    auto translation = MatrixTranslate(v.x, v.y, v.z);
+    auto rotation = MatrixRotate({1,0,0}, 0);
+    auto scale = MatrixScale(1.0f, 1.0f, 1.0f);
+
+    m = MatrixMultiply(m, translation);
+    m = MatrixMultiply(m, rotation);
+    m = MatrixMultiply(m, scale);
+
+    _star_render_instance.matrices.emplace_back(m);
+    _star_render_instance.colors.emplace_back(c);
+    _star_render_instance.count += 1;
 }

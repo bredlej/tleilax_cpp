@@ -21,7 +21,6 @@ void Galaxy::_draw_ui() {
                     ImGui::EndTabBar();
                 }
         }
-
         ImGui::End();
         _draw_ui_main_entity_selection();
         _draw_ui_debug_log_window();
@@ -176,6 +175,9 @@ void Galaxy::_draw_ui_tab_debug() {
         ImGui::Text("Work size: %.1f, %.1f", work_size.x, work_size.y);
         float dist_from = 1.0f;
         float dist_to = 50.0f;
+        if (_core->registry.valid(_selected_star)) {
+            ImGui::Text("Selected star: %s", _core->registry.get<components::Name>(_selected_star).name.c_str());
+        }
         ImGui::DragScalar("Distance between stars (scroll value)", ImGuiDataType_Float, &_distance_between_stars, 0.5f, &dist_from, &dist_to, "%f");
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             _recalculate_graph();
