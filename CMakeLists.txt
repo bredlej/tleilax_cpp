@@ -71,8 +71,8 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/assets)
 
 if (EMSCRIPTEN AND ${WASM})
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s TOTAL_MEMORY=32MB USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY ")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file assets -s TOTAL_MEMORY=32MB -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY ")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s TOTAL_MEMORY=32MB -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ASSERTIONS=1 -s WASM=1 -s  ASYNCIFY ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file assets -s TOTAL_MEMORY=32MB -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY ")
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so taht you can directly open it.
     add_custom_command(TARGET ${PROJECT_NAME}
             POST_BUILD
