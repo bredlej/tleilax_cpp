@@ -3,10 +3,13 @@
 //
 #include <galaxy.h>
 #include <raylib_extension.h>
-
+#if defined(PLATFORM_DESKTOP)
+#define GLSL_VERSION            330
+#else   // PLATFORM_RPI, PLATFORM_ANDROID, PLATFORM_WEB
+#define GLSL_VERSION            100
+#endif
 void Galaxy::render() {
     BeginDrawing();
-
     ClearBackground(_core->colors.col_0);
     _render_visible();
     DrawFPS(1200, 10);
@@ -117,7 +120,7 @@ void Galaxy::_render_mouse_selection() {
 
 void Galaxy::_init_star_render_instance() {
     Model m = LoadModelFromMesh(GenMeshSphere(1.0f, 6, 6));
-    Shader shader = LoadShader("assets/shaders/base_lightning_instanced.vs", "assets/shaders/lighting.fs");
+    Shader shader = LoadShader("assets/shaders/glsl100/base_lighting_instanced.vs", "assets/shaders/glsl100/lighting.fs");
 
     _star_render_instance.shader = shader;
     // Get some shader loactions

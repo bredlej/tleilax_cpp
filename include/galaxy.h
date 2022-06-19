@@ -105,7 +105,7 @@ public:
     uint32_t next_random_number(const uint32_t max) { return max > 0 ? _core->pcg(max) : 0; };
 private:
     RenderInstance _star_render_instance;
-    static constexpr uint32_t _star_occurence_chance = 2000;
+    static constexpr uint32_t _star_occurence_chance = 5000;
     const Vector3 _visible_size{75, 50, 75};
     Graph<GraphNode, float, GraphNodeHash, GraphNodeEqualFunc> stars_graph;
     std::vector<std::pair<Vector3, Vector3>> stars_paths;

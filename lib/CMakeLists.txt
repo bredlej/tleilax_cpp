@@ -3,10 +3,6 @@ set(INCLUDE_DIRS
         ${PROJECT_SOURCE_DIR}/extern
         )
 
-#add_library(raylib-extension RaylibExtension.cpp)
-#target_link_libraries(raylib-extension raylib)
-#target_include_directories(raylib-extension PUBLIC ${INCLUDE_DIRS})
-
 set(SOURCES
         Tleilax.cpp
         Fleet.cpp

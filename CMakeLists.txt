@@ -5,11 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 include(FetchContent)
 include(CTest)
 include(cmake/CPM.cmake)
+include(cmake/fetch-json.cmake)
+add_subdirectory(extern)
 include(cmake/fetch-googletest.cmake)
 include(cmake/fetch-entt.cmake)
-include(cmake/fetch-json.cmake)
-include(cmake/fetch-raylib.cmake)
-
 if(APPLE)
     find_library(GLFW glfw3 PATHS glfw)
     find_library(COCOA_LIBRARY Cocoa)
@@ -24,9 +23,7 @@ if(APPLE)
             ${GLFW}
             )
 endif(APPLE)
-
 if (DEFINED ENV{BUILD_WASM})
-    include(cmake/fetch-raylib.cmake)
     message("-- Building for WebAssembly")
     set(WASM ON)
 else ()
@@ -38,6 +35,7 @@ enable_testing()
 
 add_subdirectory(test)
 add_subdirectory(lib)
+
 add_executable(${PROJECT_NAME} main.cpp)
 
 set(IMGUI_SOURCES
@@ -71,8 +69,8 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/assets)
 
 if (EMSCRIPTEN AND ${WASM})
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s TOTAL_MEMORY=32MB -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ASSERTIONS=1 -s WASM=1 -s  ASYNCIFY ")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file assets -s TOTAL_MEMORY=32MB -s USE_GLFW=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY ")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLATFORM_WEB -DGRAPHICS_API_OPENGL_ES2 -s USE_GLFW=3 -s TOTAL_MEMORY=64MB -s ASSERTIONS=1 -s WASM=1 -s  ASYNCIFY ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -DPLATFORM_WEB -DGRAPHICS_API_OPENGL_ES2 -s USE_GLFW=3 --preload-file assets -s TOTAL_MEMORY=32MB -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY ")
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # This line is used to set your executable to build with the emscripten html template so taht you can directly open it.
     add_custom_command(TARGET ${PROJECT_NAME}
             POST_BUILD
