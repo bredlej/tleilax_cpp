@@ -118,46 +118,53 @@ void Galaxy::_render_mouse_selection() {
     }
 }
 
-void Galaxy::_init_star_render_instance() {
-    Model m = LoadModelFromMesh(GenMeshSphere(1.0f, 6, 6));
-    Shader shader = LoadShader("assets/shaders/glsl100/base_lighting_instanced.vs", "assets/shaders/glsl100/lighting.fs");
-
-    _star_render_instance.shader = shader;
-    // Get some shader loactions
-    shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(_star_render_instance.shader, "mvp");
-    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(_star_render_instance.shader, "viewPos");
-    shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(_star_render_instance.shader, "instanceTransform");
-    shader.locs[SHADER_LOC_VERTEX_COLOR] = GetShaderLocationAttrib(_star_render_instance.shader, "vertexColor");
+static void _init_render_instance(Model &model, Shader &shader, EntityRenderInstance& render_instance) {
+    render_instance.shader = shader;
+    shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(render_instance.shader, "mvp");
+    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(render_instance.shader, "viewPos");
+    shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(render_instance.shader, "instanceTransform");
+    shader.locs[SHADER_LOC_VERTEX_COLOR] = GetShaderLocationAttrib(render_instance.shader, "vertexColor");
 
     // Ambient light level
-    int ambientLoc = GetShaderLocation(_star_render_instance.shader, "ambient");
-    const float f[4]{
-            1.0f, 1.0f, 1.0f, 1.0f};
-    SetShaderValue(_star_render_instance.shader, ambientLoc, f, SHADER_UNIFORM_VEC4);
+    int ambientLoc = GetShaderLocation(render_instance.shader, "ambient");
+    const float f[4] {1.0f, 1.0f, 1.0f, 1.0f};
+    SetShaderValue(render_instance.shader, ambientLoc, f, SHADER_UNIFORM_VEC4);
     Vector3 v{50, 50, 0};
-    CreateLight(LIGHT_DIRECTIONAL, v, Vector3Zero(), WHITE, _star_render_instance.shader);
+    CreateLight(LIGHT_DIRECTIONAL, v, Vector3Zero(), WHITE, render_instance.shader);
 
     // NOTE: We are assigning the intancing shader to material.shader
     // to be used on mesh drawing with DrawMeshInstanced()
     Material material = LoadMaterialDefault();
-    material.shader = _star_render_instance.shader;
+    material.shader = render_instance.shader;
     //material.maps[MATERIAL_MAP_DIFFUSE].color = YELLOW;
-    m.materials[0] = material;
+    model.materials[0] = material;
 
-    _star_render_instance.model = m;
+    render_instance.model = model;
 }
-void Galaxy::_place_star_instance_at(float x, float y, float z, Color c, const Vector3 size) {
+
+void Galaxy::_init_star_render_instance() {
+    Model m = LoadModelFromMesh(GenMeshSphere(1.0f, 12, 12));
+    Shader shader = LoadShader("assets/shaders/glsl100/base_lighting_instanced.vs", "assets/shaders/glsl100/lighting.fs");
+    _init_render_instance(m, shader, _star_render_instance);
+}
+
+static void _place_render_instance_at(EntityRenderInstance &render_instance, entt::entity entity, float x, float y, float z, Color c, const Vector3 visible_size, const Vector3 scale) {
     Matrix m = MatrixIdentity();
-    Vector3 v = local_to_global_coords(Vector3{x, y, z}, size);
+    Vector3 v = local_to_global_coords(Vector3{x, y, z}, visible_size);
     auto translation = MatrixTranslate(v.x, v.y, v.z);
     auto rotation = MatrixRotate({1,0,0}, 0);
-    auto scale = MatrixScale(1.0f, 1.0f, 1.0f);
+    auto scaling = MatrixScale(scale.x, scale.y, scale.z);
 
     m = MatrixMultiply(m, translation);
     m = MatrixMultiply(m, rotation);
-    m = MatrixMultiply(m, scale);
+    m = MatrixMultiply(m, scaling);
 
-    _star_render_instance.matrices.emplace_back(m);
-    _star_render_instance.colors.emplace_back(c);
-    _star_render_instance.count += 1;
+    render_instance.matrices.emplace_back(m);
+    render_instance.colors.emplace_back(c);
+    render_instance.count += 1;
+    render_instance.entities.emplace_back(entity);
+}
+
+void Galaxy::_place_star_instance_at(entt::entity entity, float x, float y, float z, Color c, const Vector3 visible_size) {
+    _place_render_instance_at(_star_render_instance, entity, x, y, z, c, visible_size, Vector3{1.0f, 1.0f, 1.0f});
 }

@@ -73,11 +73,12 @@ void Galaxy::populate() {
 
     _star_render_instance.matrices.clear();
     _star_render_instance.colors.clear();
+    _star_render_instance.entities.clear();
     _star_render_instance.count = 0;
     _core->registry.view<components::Star, Vector3>()
-            .each([&](entt::entity, components::Star star, Vector3 position) {
+            .each([&](entt::entity entity, components::Star star, Vector3 position) {
                 Color c{star.r, star.g, star.b, star.a};
-                _place_star_instance_at(position.x, position.y, position.z, c,_visible_size);
+                _place_star_instance_at(entity, position.x, position.y, position.z, c, _visible_size);
             });
     auto after = std::chrono::high_resolution_clock::now() - before;
     std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
@@ -144,6 +145,27 @@ void Galaxy::_tick() {
             _core->dispatcher.enqueue<ExplosionEvent>(entity);
         }
     });
+
+    auto &entities = _star_render_instance.entities;
+    for (size_t i = 0; i < entities.size(); i++) {
+        if (_core->registry.valid(entities[i]) && _core->registry.try_get<components::Exploding>(entities[i])) {
+            auto size = _core->registry.get<components::Size>(entities[i]);
+            auto position = _core->registry.get<Vector3>(entities[i]);
+            auto &matrix = _star_render_instance.matrices[i];
+
+            Matrix m = MatrixIdentity();
+            Vector3 v = local_to_global_coords(position, _visible_size);
+            auto translation = MatrixTranslate(v.x, v.y, v.z);
+            auto rotation = MatrixRotate({1,0,0}, 0);
+            auto scaling = MatrixScale(size.size, size.size, size.size);
+
+            m = MatrixMultiply(m, scaling);
+            m = MatrixMultiply(m, translation);
+            m = MatrixMultiply(m, rotation);
+
+            matrix = m;
+        }
+    }
 
     auto fleets = _core->registry.view<components::Fleet, Vector3, components::Path>();
     fleets.each([this](const entt::entity entity, components::Fleet &fleet, Vector3 &position, components::Path &path) {
