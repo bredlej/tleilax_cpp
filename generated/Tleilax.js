@@ -17,6 +17,8 @@ var Module = typeof Module != 'undefined' ? Module : {};
 
 // See https://caniuse.com/mdn-javascript_builtins_object_assign
 
+// See https://caniuse.com/mdn-javascript_builtins_bigint64array
+
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
 
@@ -45,9 +47,7 @@ var Module = typeof Module != 'undefined' ? Module : {};
         err('warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)');
       }
       var REMOTE_PACKAGE_NAME = Module['locateFile'] ? Module['locateFile'](REMOTE_PACKAGE_BASE, '') : REMOTE_PACKAGE_BASE;
-
-      var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
-      var PACKAGE_UUID = metadata['package_uuid'];
+var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
 
       function fetchRemotePackage(packageName, packageSize, callback, errback) {
         if (typeof process === 'object' && typeof process.versions === 'object' && typeof process.versions.node === 'string') {
@@ -200,7 +200,7 @@ Module['FS_createPath']("/assets/shaders", "glsl100", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/json/ships.json", "start": 725, "end": 1275}, {"filename": "/assets/json/ship_components.json", "start": 1275, "end": 2659}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 2659, "end": 3492}, {"filename": "/assets/shaders/lighting.fs", "start": 3492, "end": 5586}, {"filename": "/assets/shaders/base.fs", "start": 5586, "end": 6075}, {"filename": "/assets/shaders/glsl100/grayscale.fs", "start": 6075, "end": 6708}, {"filename": "/assets/shaders/glsl100/blur.fs", "start": 6708, "end": 7735}, {"filename": "/assets/shaders/glsl100/fisheye.fs", "start": 7735, "end": 8618}, {"filename": "/assets/shaders/glsl100/color_mix.fs", "start": 8618, "end": 9228}, {"filename": "/assets/shaders/glsl100/julia_set.fs", "start": 9228, "end": 12547}, {"filename": "/assets/shaders/glsl100/cubes_panning.fs", "start": 12547, "end": 14141}, {"filename": "/assets/shaders/glsl100/outline.fs", "start": 14141, "end": 15293}, {"filename": "/assets/shaders/glsl100/lighting.fs", "start": 15293, "end": 17279}, {"filename": "/assets/shaders/glsl100/fog.fs", "start": 17279, "end": 19767}, {"filename": "/assets/shaders/glsl100/raymarching.fs", "start": 19767, "end": 32733}, {"filename": "/assets/shaders/glsl100/cross_stitching.fs", "start": 32733, "end": 34086}, {"filename": "/assets/shaders/glsl100/distortion.fs", "start": 34086, "end": 36213}, {"filename": "/assets/shaders/glsl100/reload.fs", "start": 36213, "end": 37370}, {"filename": "/assets/shaders/glsl100/posterization.fs", "start": 37370, "end": 37961}, {"filename": "/assets/shaders/glsl100/base_lighting.vs", "start": 37961, "end": 39539}, {"filename": "/assets/shaders/glsl100/pixelizer.fs", "start": 39539, "end": 40240}, {"filename": "/assets/shaders/glsl100/predator.fs", "start": 40240, "end": 40943}, {"filename": "/assets/shaders/glsl100/spotlight.fs", "start": 40943, "end": 42997}, {"filename": "/assets/shaders/glsl100/palette_switch.fs", "start": 42997, "end": 44375}, {"filename": "/assets/shaders/glsl100/eratosthenes.fs", "start": 44375, "end": 46689}, {"filename": "/assets/shaders/glsl100/mask.fs", "start": 46689, "end": 47330}, {"filename": "/assets/shaders/glsl100/sobel.fs", "start": 47330, "end": 48974}, {"filename": "/assets/shaders/glsl100/base.vs", "start": 48974, "end": 49537}, {"filename": "/assets/shaders/glsl100/base.fs", "start": 49537, "end": 50015}, {"filename": "/assets/shaders/glsl100/swirl.fs", "start": 50015, "end": 51003}, {"filename": "/assets/shaders/glsl100/depth.fs", "start": 51003, "end": 51616}, {"filename": "/assets/shaders/glsl100/cross_hatching.fs", "start": 51616, "end": 52727}, {"filename": "/assets/shaders/glsl100/scanlines.fs", "start": 52727, "end": 53800}, {"filename": "/assets/shaders/glsl100/base_lighting_instanced.vs", "start": 53800, "end": 54682}, {"filename": "/assets/shaders/glsl100/wave.fs", "start": 54682, "end": 55596}, {"filename": "/assets/shaders/glsl100/dream_vision.fs", "start": 55596, "end": 56716}, {"filename": "/assets/shaders/glsl100/bloom.fs", "start": 56716, "end": 57761}], "remote_package_size": 57761, "package_uuid": "4b815392-27d0-4731-a2d0-f8c57fcf4f0b"});
+    loadPackage({"files": [{"filename": "/assets/names/indian", "start": 0, "end": 330}, {"filename": "/assets/names/greek", "start": 330, "end": 725}, {"filename": "/assets/json/ship_components.json", "start": 725, "end": 2109}, {"filename": "/assets/json/ships.json", "start": 2109, "end": 2659}, {"filename": "/assets/shaders/base_lightning_instanced.vs", "start": 2659, "end": 3492}, {"filename": "/assets/shaders/base.fs", "start": 3492, "end": 3981}, {"filename": "/assets/shaders/lighting.fs", "start": 3981, "end": 6075}, {"filename": "/assets/shaders/glsl100/fog.fs", "start": 6075, "end": 8563}, {"filename": "/assets/shaders/glsl100/color_mix.fs", "start": 8563, "end": 9173}, {"filename": "/assets/shaders/glsl100/reload.fs", "start": 9173, "end": 10330}, {"filename": "/assets/shaders/glsl100/grayscale.fs", "start": 10330, "end": 10963}, {"filename": "/assets/shaders/glsl100/spotlight.fs", "start": 10963, "end": 13017}, {"filename": "/assets/shaders/glsl100/outline.fs", "start": 13017, "end": 14169}, {"filename": "/assets/shaders/glsl100/raymarching.fs", "start": 14169, "end": 27135}, {"filename": "/assets/shaders/glsl100/cross_stitching.fs", "start": 27135, "end": 28488}, {"filename": "/assets/shaders/glsl100/pixelizer.fs", "start": 28488, "end": 29189}, {"filename": "/assets/shaders/glsl100/depth.fs", "start": 29189, "end": 29802}, {"filename": "/assets/shaders/glsl100/base_lighting_instanced.vs", "start": 29802, "end": 30684}, {"filename": "/assets/shaders/glsl100/cubes_panning.fs", "start": 30684, "end": 32278}, {"filename": "/assets/shaders/glsl100/wave.fs", "start": 32278, "end": 33192}, {"filename": "/assets/shaders/glsl100/posterization.fs", "start": 33192, "end": 33783}, {"filename": "/assets/shaders/glsl100/fisheye.fs", "start": 33783, "end": 34666}, {"filename": "/assets/shaders/glsl100/distortion.fs", "start": 34666, "end": 36793}, {"filename": "/assets/shaders/glsl100/base.fs", "start": 36793, "end": 37271}, {"filename": "/assets/shaders/glsl100/predator.fs", "start": 37271, "end": 37974}, {"filename": "/assets/shaders/glsl100/scanlines.fs", "start": 37974, "end": 39047}, {"filename": "/assets/shaders/glsl100/blur.fs", "start": 39047, "end": 40074}, {"filename": "/assets/shaders/glsl100/dream_vision.fs", "start": 40074, "end": 41194}, {"filename": "/assets/shaders/glsl100/swirl.fs", "start": 41194, "end": 42182}, {"filename": "/assets/shaders/glsl100/julia_set.fs", "start": 42182, "end": 45501}, {"filename": "/assets/shaders/glsl100/palette_switch.fs", "start": 45501, "end": 46879}, {"filename": "/assets/shaders/glsl100/mask.fs", "start": 46879, "end": 47520}, {"filename": "/assets/shaders/glsl100/sobel.fs", "start": 47520, "end": 49164}, {"filename": "/assets/shaders/glsl100/base.vs", "start": 49164, "end": 49727}, {"filename": "/assets/shaders/glsl100/lighting.fs", "start": 49727, "end": 51713}, {"filename": "/assets/shaders/glsl100/bloom.fs", "start": 51713, "end": 52759}, {"filename": "/assets/shaders/glsl100/eratosthenes.fs", "start": 52759, "end": 55073}, {"filename": "/assets/shaders/glsl100/base_lighting.vs", "start": 55073, "end": 56651}, {"filename": "/assets/shaders/glsl100/cross_hatching.fs", "start": 56651, "end": 57762}], "remote_package_size": 57762});
 
   })();
 
@@ -1435,7 +1435,7 @@ function checkStackCookie() {
   var cookie1 = HEAPU32[((max)>>2)];
   var cookie2 = HEAPU32[(((max)+(4))>>2)];
   if (cookie1 != 0x2135467 || cookie2 != 0x89BACDFE) {
-    abort('Stack overflow! Stack cookie has been overwritten, expected hex dwords 0x89BACDFE and 0x2135467, but received 0x' + cookie2.toString(16) + ' 0x' + cookie1.toString(16));
+    abort('Stack overflow! Stack cookie has been overwritten at 0x' + max.toString(16) + ', expected hex dwords 0x89BACDFE and 0x2135467, but received 0x' + cookie2.toString(16) + ' 0x' + cookie1.toString(16));
   }
   // Also test the global address 0 for integrity.
   if (HEAPU32[0] !== 0x63736d65 /* 'emsc' */) abort('Runtime error: The application has corrupted its heap memory area (address zero)!');
@@ -1897,8 +1897,8 @@ var tempI64;
 var ASM_CONSTS = {
   181416: () => { if (document.fullscreenElement) document.exitFullscreen(); else Module.requestFullscreen(false, true); }
 };
-function GetCanvasHeight() { return canvas.clientHeight; }
 function GetCanvasWidth() { return canvas.clientWidth; }
+function GetCanvasHeight() { return canvas.clientHeight; }
 
 
 
@@ -1906,26 +1906,8 @@ function GetCanvasWidth() { return canvas.clientWidth; }
 
   function callRuntimeCallbacks(callbacks) {
       while (callbacks.length > 0) {
-        var callback = callbacks.shift();
-        if (typeof callback == 'function') {
-          callback(Module); // Pass the module as the first argument.
-          continue;
-        }
-        var func = callback.func;
-        if (typeof func == 'number') {
-          if (callback.arg === undefined) {
-            // Run the wasm function ptr with signature 'v'. If no function
-            // with such signature was exported, this call does not need
-            // to be emitted (and would confuse Closure)
-            (function() {  dynCall_v.call(null, func); })();
-          } else {
-            // If any function with signature 'vi' was exported, run
-            // the callback with that signature.
-            (function(a1) {  dynCall_vi.apply(null, [func, a1]); })(callback.arg);
-          }
-        } else {
-          func(callback.arg === undefined ? null : callback.arg);
-        }
+        // Pass the module as the first argument.
+        callbacks.shift()(Module);
       }
     }
 
@@ -1956,7 +1938,7 @@ function GetCanvasWidth() { return canvas.clientWidth; }
      * @param {string} type
      */
   function getValue(ptr, type = 'i8') {
-      if (type.endsWith('*')) type = 'i32';
+      if (type.endsWith('*')) type = '*';
       switch (type) {
         case 'i1': return HEAP8[((ptr)>>0)];
         case 'i8': return HEAP8[((ptr)>>0)];
@@ -1964,7 +1946,8 @@ function GetCanvasWidth() { return canvas.clientWidth; }
         case 'i32': return HEAP32[((ptr)>>2)];
         case 'i64': return HEAP32[((ptr)>>2)];
         case 'float': return HEAPF32[((ptr)>>2)];
-        case 'double': return Number(HEAPF64[((ptr)>>3)]);
+        case 'double': return HEAPF64[((ptr)>>3)];
+        case '*': return HEAPU32[((ptr)>>2)];
         default: abort('invalid type for getValue: ' + type);
       }
       return null;
@@ -2017,7 +2000,7 @@ function GetCanvasWidth() { return canvas.clientWidth; }
      * @param {string} type
      */
   function setValue(ptr, value, type = 'i8') {
-      if (type.endsWith('*')) type = 'i32';
+      if (type.endsWith('*')) type = '*';
       switch (type) {
         case 'i1': HEAP8[((ptr)>>0)] = value; break;
         case 'i8': HEAP8[((ptr)>>0)] = value; break;
@@ -2026,6 +2009,7 @@ function GetCanvasWidth() { return canvas.clientWidth; }
         case 'i64': (tempI64 = [value>>>0,(tempDouble=value,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? ((Math.min((+(Math.floor((tempDouble)/4294967296.0))), 4294967295.0))|0)>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)],HEAP32[((ptr)>>2)] = tempI64[0],HEAP32[(((ptr)+(4))>>2)] = tempI64[1]); break;
         case 'float': HEAPF32[((ptr)>>2)] = value; break;
         case 'double': HEAPF64[((ptr)>>3)] = value; break;
+        case '*': HEAPU32[((ptr)>>2)] = value; break;
         default: abort('invalid type for setValue: ' + type);
       }
     }
@@ -3000,29 +2984,39 @@ function GetCanvasWidth() { return canvas.clientWidth; }
           FS.FSStream = /** @constructor */ function() {
             this.shared = { };
           };
-          FS.FSStream.prototype = {
+          FS.FSStream.prototype = {};
+          Object.defineProperties(FS.FSStream.prototype, {
             object: {
+              /** @this {FS.FSStream} */
               get: function() { return this.node; },
+              /** @this {FS.FSStream} */
               set: function(val) { this.node = val; }
             },
             isRead: {
+              /** @this {FS.FSStream} */
               get: function() { return (this.flags & 2097155) !== 1; }
             },
             isWrite: {
+              /** @this {FS.FSStream} */
               get: function() { return (this.flags & 2097155) !== 0; }
             },
             isAppend: {
+              /** @this {FS.FSStream} */
               get: function() { return (this.flags & 1024); }
             },
             flags: {
+              /** @this {FS.FSStream} */
               get: function() { return this.shared.flags; },
+              /** @this {FS.FSStream} */
               set: function(val) { this.shared.flags = val; },
             },
             position : {
-              get function() { return this.shared.position; },
+              /** @this {FS.FSStream} */
+              get: function() { return this.shared.position; },
+              /** @this {FS.FSStream} */
               set: function(val) { this.shared.position = val; },
             },
-          };
+          });
         }
         // clone it, so we can return an instance of FSStream
         stream = Object.assign(new FS.FSStream(), stream);
@@ -6751,6 +6745,10 @@ function GetCanvasWidth() { return canvas.clientWidth; }
       }, timeout);
     }
   function _emscripten_sleep(ms) {
+      // emscripten_sleep() does not return a value, but we still need a |return|
+      // here for stack switching support (ASYNCIFY=2). In that mode this function
+      // returns a Promise instead of nothing, and that Promise is what tells the
+      // wasm VM to pause the stack.
       return Asyncify.handleSleep((wakeUp) => safeSetTimeout(wakeUp, ms));
     }
 
