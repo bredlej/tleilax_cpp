@@ -9,6 +9,8 @@ set(SOURCES
         galaxy/Galaxy.cpp
         galaxy/UIGalaxy.cpp
         galaxy/RenderGalaxy.cpp
+        starsystem/StarSystem.cpp
+        starsystem/RenderStarSystem.cpp
         Assets.cpp
         )
 

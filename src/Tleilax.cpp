@@ -5,14 +5,13 @@
 
 void tleilax::Application::run(const Config &config) {
 
-    _core->game_log.debug("Welcome commander!\n");
+    _core->game_log.message("Welcome commander!\n");
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
     SetTargetFPS(144);
     _setup_imgui();
     auto g = std::make_shared<Galaxy>(_core, _assets);
     g->populate();
-
     _ui_view = g;
 
     while (!WindowShouldClose()) {

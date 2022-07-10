@@ -37,7 +37,7 @@ struct TleilaxAppLog {
         LineOffsets.push_back(0);
     }
 
-    void debug(const char *fmt, ...) IM_FMTARGS(2) {
+    void message(const char *fmt, ...) IM_FMTARGS(2) {
         int old_size = Buf.size();
         va_list args;
         va_start(args, fmt);
