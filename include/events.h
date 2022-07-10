@@ -35,5 +35,11 @@ struct NovaSeekEvent {
 };
 struct StarSelectedEvent {
     entt::entity entity;
+    uint32_t seed;
+};
+struct StarScanEvent {
+    entt::entity scanner;
+    entt::entity star;
+    uint32_t seed;
 };
 #endif//TLEILAX_EVENTS_H

@@ -77,17 +77,17 @@ void Galaxy::_render_stars() {
     raylib_ext::RenderInstanced(_star_render_instance.model.meshes[0], _star_render_instance.model.materials[0], _star_render_instance.matrices, _star_render_instance.colors,_star_render_instance.count);
     _core->registry.view<Vector3, components::Star, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
-        bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
-        StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, star_is_selected);
-        if (star_is_selected) {
+        bool is_mouse_over_star = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
+        StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, is_mouse_over_star);
+        if (is_mouse_over_star) {
             _entities_under_cursor.emplace_back(entity);
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (_camera_settings.focus_on_clicked) {
                     focus_camera(_camera, star_coords, _camera.fovy);
                 }
-                _core->dispatcher.enqueue<StarSelectedEvent>(entity);
+                _core->dispatcher.enqueue<StarSelectedEvent>(entity, seed_function(static_cast<uint32_t>(coords.x), static_cast<uint32_t>(coords.y), static_cast<uint32_t>(coords.z)));
             }
-            _selected_star = entity;
+            _star_mouse_over = entity;
         }
     });
 }

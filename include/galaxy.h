@@ -26,10 +26,6 @@ struct EntityRenderInstance: public RenderInstance {
     std::vector<entt::entity> entities;
 };
 
-constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
-    return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
-};
-
 struct DistanceFunction;
 constexpr auto local_to_global_coords = [](const auto coordinates, const auto visible_size) -> Vector3 {
     return {coordinates.x - static_cast<float>(visible_size.x / 2), coordinates.y - static_cast<float>(visible_size.y / 2), coordinates.z - static_cast<float>(visible_size.z / 2)};
@@ -68,6 +64,7 @@ struct CameraSettings {
     float camera_unfocused_angle = 45.0f;
     float zoom_angle = camera_focused_angle;
 };
+
 class StarEntity {
 public:
     StarEntity(const uint32_t occurence_chance, const Chance &&exploding_chance, const Chance &&nova_seeker_chance)
@@ -122,7 +119,8 @@ private:
     std::shared_ptr<Core> _core;
     Vector3 _offset{0., 0., 0.};
     entt::entity _selected_fleet{entt::null};
-    entt::entity _selected_star{entt::null};
+    entt::entity _star_mouse_over{entt::null};
+    entt::entity _clicked_star{entt::null};
     bool _ui_wants_to_set_course = false;
     bool _ui_show_log = false;
     bool _rotate = false;
@@ -165,6 +163,7 @@ private:
     void _draw_ui_tab_camera();
     void _draw_ui_main_entity_selection();
     void _draw_ui_fleet_window();
+    void _draw_ui_star_window();
     void _draw_ui_debug_log_window();
     void _draw_ui_game_log_window();
     void _register_path_selection(const std::vector<entt::entity> &calculated_path);

@@ -29,6 +29,7 @@ public:
         core->registry.emplace<Vector3>(entity, position);
         core->registry.emplace<components::Size>(entity, 1.5f);
         core->registry.emplace<components::Range>(entity, 20.0f);
+        core->registry.emplace<components::KnownStarSystems>(entity);
         populate_fleet_with_ships(core->registry, entity, pcg, ship_components);
         core->dispatcher.enqueue<FleetCreationEvent>(entity);
         return entity;

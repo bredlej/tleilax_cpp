@@ -64,6 +64,10 @@ namespace components {
         std::vector<entt::entity> objects;
     };
 
+    struct KnownStarSystems {
+        std::vector<uint32_t> seeds;
+    };
+
     // Ship Components
 
     struct Engine {

@@ -3,7 +3,6 @@
 //
 #include <fleet.h>
 
-
 void FleetEntity::update(const std::shared_ptr<Core>& core, const entt::entity entity, components::Fleet &fleet, Vector3 &pos, components::Path &path) {
     if (!path.checkpoints.empty()) {
         auto next_destination = core->registry.get<Vector3>(path.checkpoints.front());

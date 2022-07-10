@@ -85,7 +85,7 @@ void Galaxy::populate() {
 }
 
 void Galaxy::_generate_stars() {
-    _core->debug_log.debug("Generating stars\n");
+    _core->debug_log.message("Generating stars\n");
     for (int32_t z = 0; z < static_cast<int32_t>(_visible_size.z); z++) {
         for (int32_t y = 0; y < static_cast<int32_t>(_visible_size.y); y++) {
             for (int32_t x = 0; x < static_cast<int32_t>(_visible_size.x); x++) {
@@ -106,12 +106,12 @@ void Galaxy::_generate_fleets() {
     auto spawn_star = stars[_core->pcg(stars.size())];
     auto spawn_star_name = _core->registry.get<components::Name>(spawn_star).name.c_str();
     entt::entity fleet_entity = FleetEntity::create(_core, _core->pcg, _core->registry.get<Vector3>(spawn_star), _ship_components);
-    _core->game_log.debug("A tleilaxian fleet has arrived at %s!\n", spawn_star_name);
+    _core->game_log.message("A tleilaxian fleet has arrived at %s!\n", spawn_star_name);
     _core->registry.emplace<components::Tleilaxian>(fleet_entity);
     for (auto [entity, infectable, name] : _core->registry.view<components::Infectable, components::Name>().each()) {
         auto path = calculate_path<Vector3, DistanceFunction, components::Star>(stars_graph, _core->registry, spawn_star, entity);
         if (!path.empty()) {
-            _core->game_log.debug("The tleilaxian fleet is heading towards %s!\n", name.name.c_str());
+            _core->game_log.message("The tleilaxian fleet is heading towards %s!\n", name.name.c_str());
             _core->registry.emplace<components::Path>(fleet_entity, path);
             break;
         }
@@ -156,7 +156,7 @@ void Galaxy::_tick() {
             Matrix m = MatrixIdentity();
             Vector3 v = local_to_global_coords(position, _visible_size);
             auto translation = MatrixTranslate(v.x, v.y, v.z);
-            auto rotation = MatrixRotate({1,0,0}, 0);
+            auto rotation = MatrixRotate({1, 0, 0}, 0);
             auto scaling = MatrixScale(size.size, size.size, size.size);
 
             m = MatrixMultiply(m, scaling);
@@ -204,7 +204,7 @@ void Galaxy::_explode_stars(const ExplosionEvent &ev) {
 void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
     FleetEntity fleet;
     fleet.react_to_nova(_core, _core->pcg, ev, _ship_components, stars_graph);
-    _core->game_log.debug("A scavenger fleet from %s is heading towards the remnants of %s.\n", _core->registry.get<components::Name>(ev.source).name.c_str(), _core->registry.get<components::Name>(ev.destination).name.c_str());
+    _core->game_log.message("A scavenger fleet from %s is heading towards the remnants of %s.\n", _core->registry.get<components::Name>(ev.source).name.c_str(), _core->registry.get<components::Name>(ev.destination).name.c_str());
     add_vicinity(_core, fleet.get_entity(), ev.source);
 }
 
@@ -223,7 +223,7 @@ void Galaxy::_fleet_arrived_at_star(const ArrivalEvent &ev) {
         star.g = Colors::col_3.g;
         star.b = Colors::col_3.b;
         star.a = Colors::col_3.a / 2;
-        _core->game_log.debug("The tleilaxian fleet fired a bomb into %s! The star will explode in %d days!\n", _core->registry.get<components::Name>(ev.where).name.c_str(), counter);
+        _core->game_log.message("The tleilaxian fleet fired a bomb into %s! The star will explode in %d days!\n", _core->registry.get<components::Name>(ev.where).name.c_str(), counter);
     }
 }
 
@@ -266,12 +266,15 @@ static constexpr auto get_calculated_distance = [](entt::registry &registry, std
     return calculated_distance;
 };
 void Galaxy::_on_star_selected(const StarSelectedEvent &ev) {
-    if (_core->registry.valid(ev.entity) && _core->registry.valid(_selected_star)) {
-        if (_ui_wants_to_set_course) {
+    _core->debug_log.message("OnStarSelected\n");
+    if (!_ui_wants_to_set_course) {
+        _clicked_star = ev.entity;
+    } else {
+        if (_core->registry.valid(ev.entity) && _core->registry.valid(_star_mouse_over)) {
             auto fleet = _core->registry.try_get<components::Fleet>(_selected_fleet);
             if (fleet) {
                 _path.from = _selected_fleet;
-                _path.to = _selected_star;
+                _path.to = _star_mouse_over;
                 _ui_wants_to_set_course = false;
 
                 _set_course_for_fleet(_path.from, _path.to);
@@ -319,7 +322,7 @@ void Galaxy::_generate_player_entity() {
     });
     entt::entity random_star = all_stars[_core->pcg(all_stars.size())];
     auto star_name = _core->registry.get<components::Name>(random_star);
-    _core->game_log.debug("You arrived at %s\n", star_name.name.c_str());
+    _core->game_log.message("You arrived at %s\n", star_name.name.c_str());
     entt::entity player_fleet = FleetEntity::create(_core, _core->pcg, _core->registry.get<Vector3>(random_star), _ship_components);
     _core->registry.emplace<components::PlayerControlled>(player_fleet);
     add_vicinity(_core, player_fleet, random_star);
@@ -355,14 +358,14 @@ entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_p
         registry.emplace<Vector3>(_entity, position);
         components::Name star_name{core->name_generator.get_random_name<components::Star>(pcg)};
         registry.emplace<components::Name>(_entity, star_name);
-        core->debug_log.debug("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
+        core->debug_log.message("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
 
         auto star_color = Colors::star_colors[pcg(Colors::star_colors.size())];
         registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a});
         registry.emplace<components::Size>(_entity, 1.0f);
         if (star_is_infectable(_entity)) {
             registry.emplace<components::Infectable>(_entity);
-            core->debug_log.debug("  - Marking this star as infectable\n");
+            core->debug_log.message("  - Marking this star as infectable\n");
         }
         if (pcg(_nova_seeker_chance.upper_bound) < _nova_seeker_chance.occurs_if_less_then) {
             registry.emplace<components::NovaSeeker>(_entity, pcg(5) + 1);

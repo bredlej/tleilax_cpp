@@ -10,6 +10,18 @@
 #include <name_generator.h>
 #include <colors.h>
 #include <graphics_base.h>
+#include <memory>
+#include <unordered_map>
+
+enum class UIState {
+    GalaxyView,
+    StarSystemView
+};
+
+constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
+    return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
+};
+
 struct UIView {
     virtual void render() = 0;
     virtual void update() = 0;

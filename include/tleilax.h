@@ -11,6 +11,7 @@
 #include <fleet.h>
 #include <functional>
 #include <galaxy.h>
+#include <star_system.h>
 #include <imgui/rlImGui.h>
 #include <memory>
 #include <raylib.h>
@@ -30,10 +31,13 @@ namespace tleilax {
     public:
         Application() : _assets{files::ship_components, files::ships}, _core(std::make_shared<Core>(Config::window.width, Config::window.height)) {};
         void run(const Config &);
-        std::shared_ptr<Core> _core;
-        std::shared_ptr<UIView> _ui_view;
     private:
         Assets _assets;
+        std::shared_ptr<Core> _core;
+        std::shared_ptr<UIView> _ui_view;
+        std::unordered_map<uint32_t, std::unique_ptr<StarSystem>> _star_systems;
+        void add_star_system(uint32_t seed);
+        std::shared_ptr<entt::registry> get_star_system_registry(uint32_t seed);
         void _setup_imgui();
         void _toggle_fullscreen();
     };
