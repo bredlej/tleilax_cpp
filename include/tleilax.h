@@ -11,11 +11,11 @@
 #include <fleet.h>
 #include <functional>
 #include <galaxy.h>
-#include <star_system.h>
 #include <imgui/rlImGui.h>
 #include <memory>
 #include <raylib.h>
 #include <ship.h>
+#include <star_system.h>
 #include <string_view>
 #include <utility>
 
@@ -25,12 +25,21 @@ namespace tleilax {
         static constexpr struct {
             uint32_t width;
             uint32_t height;
-        } window {1280, 720};
+        } window{1280, 720};
     };
-    struct Application {
+    class Application {
     public:
-        Application() : _assets{files::ship_components, files::ships}, _core(std::make_shared<Core>(Config::window.width, Config::window.height)) {};
+        explicit Application() noexcept
+            : _assets{files::ship_components, files::ships},
+              _core(std::make_shared<Core>(Config::window.width, Config::window.height)){};
+        Application(const Application &) noexcept = delete;
+        Application(Application &) noexcept = delete;
+        Application(Application &&) noexcept = delete;
+        Application &operator=(const Application &) noexcept = delete;
+        Application &operator=(const Application &&) noexcept = delete;
+
         void run(const Config &);
+
     private:
         Assets _assets;
         std::shared_ptr<Core> _core;

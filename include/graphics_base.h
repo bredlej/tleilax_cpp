@@ -20,16 +20,24 @@ struct RenderInstance {
     int count {0};
 };
 
-struct TleilaxAppLog {
-    ImGuiTextBuffer Buf;
-    ImGuiTextFilter Filter;
-    ImVector<int> LineOffsets;// Index to lines offset. We maintain this with AddLog() calls.
-    bool AutoScroll;          // Keep scrolling if already at the bottom.
-
-    TleilaxAppLog() {
+class TleilaxAppLog {
+public:
+    explicit TleilaxAppLog() noexcept {
         AutoScroll = true;
         clear();
     }
+    TleilaxAppLog(const TleilaxAppLog&) noexcept = delete;
+    TleilaxAppLog(TleilaxAppLog&) noexcept = delete;
+    TleilaxAppLog(TleilaxAppLog&&) noexcept = delete;
+    TleilaxAppLog& operator=(const TleilaxAppLog&) noexcept = delete;
+    TleilaxAppLog& operator=(TleilaxAppLog&&) noexcept = delete;
+    ~TleilaxAppLog() noexcept = default;
+
+    ImGuiTextBuffer Buf;
+    ImGuiTextFilter Filter;
+    ImVector<int> LineOffsets;// Index to lines offset. We maintain this with AddLog() calls.
+
+    bool AutoScroll;          // Keep scrolling if already at the bottom.
 
     void clear() {
         Buf.clear();

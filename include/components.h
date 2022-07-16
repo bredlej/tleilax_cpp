@@ -143,8 +143,6 @@ static std::vector<ComponentT> json_to_component_converter(const nlohmann::json 
 template<typename T, assets::types A, T (*json_parse_func)(const nlohmann::json &)>
 struct RepositoryT {
     using Type = T;
-
-public:
     std::function<T(const nlohmann::json &)> converter_func = json_parse_func;
     const static assets::types Asset = A;
 };
@@ -158,15 +156,22 @@ template<typename T>
 constexpr auto instance_of_T = []() { T t; return t; };
 
 template<typename T, typename... Ts>
-struct ComponentRepository {
-    explicit ComponentRepository() {
+class ComponentRepository {
+public:
+    explicit ComponentRepository() noexcept {
         components = std::make_tuple(std::vector<typename T::Type>(), std::vector<typename Ts::Type>()...);
     }
-    explicit ComponentRepository(const nlohmann::json &json_data) {
+    explicit ComponentRepository(const nlohmann::json &json_data) noexcept {
         components = std::make_tuple(
                 json_to_component_converter<typename T::Type, T::Asset>(json_data, instance_of_T<T>().converter_func),
                 json_to_component_converter<typename Ts::Type, Ts::Asset>(json_data, instance_of_T<Ts>().converter_func)...);
     }
+    ComponentRepository(const ComponentRepository&) noexcept = delete;
+    ComponentRepository(ComponentRepository&&) noexcept = delete;
+    ComponentRepository& operator=(const ComponentRepository&) noexcept = delete;
+    ComponentRepository& operator=(ComponentRepository&&) noexcept = delete;
+    ~ComponentRepository() noexcept = default;
+
     std::tuple<std::vector<typename T::Type>, std::vector<typename Ts::Type>...> components;
 };
 

@@ -6,6 +6,7 @@
 #define TLEILAX_ASSETS_H
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <string>
 
 namespace assets {
     enum class types {
@@ -21,17 +22,25 @@ namespace assets {
             {types::shield, "shields"},
             {types::hull, "hulls"},
             {types::cargo, "cargo"}};
-}// namespace ship_component
+} // namespace assets
 
 struct files {
     static constexpr const char *ship_components = "assets/json/ship_components.json";
     static constexpr const char *ships = "assets/json/ships.json";
 };
 
-struct Assets {
+class Assets {
 public:
-    explicit Assets(const std::string &ship_components_path, const std::string &ships_path) : ship_components{Assets::load_from_file(ship_components_path)},
-                                                                                              ships{Assets::load_from_file(ships_path)} {};
+    explicit Assets(const std::string &ship_components_path, const std::string &ships_path) noexcept
+        : ship_components{Assets::load_from_file(ship_components_path)},
+          ships{Assets::load_from_file(ships_path)} {};
+    Assets() noexcept = delete;
+    Assets(const Assets&) noexcept = delete;
+    Assets(Assets&&) noexcept = delete;
+    Assets& operator=(const Assets&) noexcept = delete;
+    Assets& operator=(Assets&&) noexcept = delete;
+    ~Assets() noexcept = default;
+
     static nlohmann::json load_from_file(const std::string &file_name);
 
     [[nodiscard]] nlohmann::json get_ship_components() const;

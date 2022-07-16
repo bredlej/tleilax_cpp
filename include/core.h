@@ -25,11 +25,18 @@ constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint
 struct UIView {
     virtual void render() = 0;
     virtual void update() = 0;
+    virtual ~UIView() = default;
 };
 
 class Core {
 public:
-    explicit Core(int width, int height) : window{width, height} {};
+    explicit Core(int width, int height) noexcept : window{width, height} {};
+    Core() noexcept = delete;
+    Core(const Core&) noexcept = delete;
+    Core(Core&&) noexcept = delete;
+    Core& operator=(const Core&) noexcept = delete;
+    Core& operator=(Core&&) noexcept = delete;
+
     entt::dispatcher dispatcher{};
     entt::registry registry{};
     pcg32 pcg;

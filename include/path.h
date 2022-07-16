@@ -6,6 +6,7 @@
 #define TLEILAX_PATH_H
 
 #include <entt/entt.hpp>
+#include <vector>
 
 struct Node {
     entt::entity entity;
@@ -18,7 +19,7 @@ struct Node {
 
 struct Path {
 public:
-    explicit Path() : from{entt::null}, to{entt::null} {};
+    explicit Path() noexcept : from{entt::null}, to{entt::null} {};
     std::vector<Node> checkpoints;
     entt::entity from;
     entt::entity to;

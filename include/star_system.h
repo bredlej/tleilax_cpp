@@ -11,10 +11,17 @@
 
 class StarSystem : public UIView {
 public:
-    explicit StarSystem(uint32_t seed) {
+    explicit StarSystem(uint32_t seed) noexcept {
         _registry = std::make_shared<entt::registry>();
         _populate(seed);
     }
+    StarSystem() noexcept = delete;
+    StarSystem(const StarSystem&) noexcept = delete;
+    StarSystem(StarSystem&&) noexcept = delete;
+    StarSystem& operator=(const StarSystem&) noexcept = delete;
+    StarSystem& operator=(StarSystem&&) noexcept = delete;
+    ~StarSystem() noexcept = default;
+
     void render() override;
     void update() override;
     std::shared_ptr<entt::registry> get_registry() { return _registry; }

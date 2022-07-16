@@ -10,9 +10,15 @@
 #include <components.h>
 
 template <typename Component, typename ... Components>
-struct Ship {
+class Ship {
 public:
-    explicit Ship() : _entity{entt::null} {};
+    explicit Ship() noexcept : _entity{entt::null} {};
+    Ship(const Ship&) noexcept = delete;
+    Ship(Ship&&) noexcept = delete;
+    Ship& operator=(const Ship&) noexcept = delete;
+    Ship& operator=(Ship&&) noexcept = delete;
+    ~Ship() noexcept = default;
+
     static entt::entity create_with_components(entt::registry &, Component, Components...);
     explicit Ship(entt::registry &registry, Component c, Components ... cs) : _entity{ Ship<Component, Components...>::create_with_components(registry, c, cs...) } {};
     entt::entity get();

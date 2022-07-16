@@ -23,7 +23,13 @@ struct DistanceFunction {
 
 class FleetEntity {
 public:
-    FleetEntity() : _entity{ entt::null } {};
+    explicit FleetEntity() noexcept : _entity{ entt::null } {};
+    FleetEntity(const FleetEntity&) noexcept = delete;
+    FleetEntity(FleetEntity&&) noexcept = delete;
+    FleetEntity& operator=(const FleetEntity&) noexcept = delete;
+    FleetEntity& operator=(FleetEntity&&) noexcept = delete;
+    ~FleetEntity() noexcept = default;
+
     static entt::entity create(const std::shared_ptr<Core> &core, pcg32 &pcg, Vector3 position, const ShipComponentRepository &ship_components) {
         auto entity = core->registry.create();
         core->registry.emplace<Vector3>(entity, position);

@@ -93,11 +93,16 @@ struct StarInstance {
 
 class Galaxy : public UIView {
 public:
-    explicit Galaxy(std::shared_ptr<Core> core, Assets &assets)
+    explicit Galaxy(std::shared_ptr<Core> core, const Assets &assets) noexcept
         : _core {std::move(core)},
           _camera(_initialize_camera({0., 0., 0.}, 101., 10., 90., 90.)),
           _ship_components{assets.get_ship_components()} {_initialize();};
+    Galaxy(const Galaxy&) noexcept = delete;
+    Galaxy(Galaxy&&) noexcept = delete;
+    Galaxy& operator=(const Galaxy&) noexcept = delete;
+    Galaxy& operator=(Galaxy&&) noexcept = delete;
     ~Galaxy() = default;
+
 
     void render() override;
     void update() override;
