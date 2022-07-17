@@ -2,8 +2,8 @@
 // Created by geoco on 13.03.2022.
 //
 
-#ifndef TLEILAX_PATH_H
-#define TLEILAX_PATH_H
+#ifndef TLEILAX_PATH_HPP
+#define TLEILAX_PATH_HPP
 
 #include <entt/entt.hpp>
 #include <vector>
@@ -25,4 +25,4 @@ public:
     entt::entity to;
 };
 
-#endif//TLEILAX_PATH_H
+#endif//TLEILAX_PATH_HPP

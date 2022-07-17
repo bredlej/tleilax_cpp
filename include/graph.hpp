@@ -2,8 +2,8 @@
 // Created by geoco on 19.03.2022.
 //
 
-#ifndef TLEILAX_GRAPH_H
-#define TLEILAX_GRAPH_H
+#ifndef TLEILAX_GRAPH_HPP
+#define TLEILAX_GRAPH_HPP
 
 #include <unordered_map>
 #include <vector>
@@ -131,4 +131,4 @@ static std::vector<entt::entity> calculate_path(const Graph<GraphNode, float, Gr
     }
     return calculated_path;
 }
-#endif//TLEILAX_GRAPH_H
+#endif//TLEILAX_GRAPH_HPP

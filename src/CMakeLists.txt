@@ -12,6 +12,7 @@ set(SOURCES
         starsystem/StarSystem.cpp
         starsystem/RenderStarSystem.cpp
         Assets.cpp
+        Core.cpp
         )
 
 add_library(tleilax-lib ${SOURCES})

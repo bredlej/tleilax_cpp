@@ -2,8 +2,8 @@
 // Created by geoco on 19.02.2022.
 //
 
-#ifndef TLEILAX_ASSETS_H
-#define TLEILAX_ASSETS_H
+#ifndef TLEILAX_ASSETS_HPP
+#define TLEILAX_ASSETS_HPP
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -34,7 +34,7 @@ public:
     explicit Assets(const std::string &ship_components_path, const std::string &ships_path) noexcept
         : ship_components{Assets::load_from_file(ship_components_path)},
           ships{Assets::load_from_file(ships_path)} {};
-    Assets() noexcept = delete;
+    Assets() noexcept = default;
     Assets(const Assets&) noexcept = delete;
     Assets(Assets&&) noexcept = delete;
     Assets& operator=(const Assets&) noexcept = delete;
@@ -47,8 +47,8 @@ public:
     [[nodiscard]] nlohmann::json get_ships() const;
 
 private:
-    nlohmann::json ship_components;
-    nlohmann::json ships;
+    nlohmann::json ship_components{nullptr};
+    nlohmann::json ships{nullptr};
 };
 
-#endif//TLEILAX_ASSETS_H
+#endif//TLEILAX_ASSETS_HPP

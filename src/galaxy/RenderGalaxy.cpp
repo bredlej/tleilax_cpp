@@ -1,7 +1,7 @@
 //
 // Created by geoco on 02.05.2022.
 //
-#include <galaxy.h>
+#include <galaxy.hpp>
 #include <raylib_extension.h>
 #if defined(PLATFORM_DESKTOP)
 #define GLSL_VERSION            330

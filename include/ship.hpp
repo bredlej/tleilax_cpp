@@ -2,12 +2,12 @@
 // Created by geoco on 20.02.2022.
 //
 
-#ifndef TLEILAX_SHIP_H
-#define TLEILAX_SHIP_H
+#ifndef TLEILAX_SHIP_HPP
+#define TLEILAX_SHIP_HPP
 
+#include <components.hpp>
 #include <entt/entt.hpp>
 #include <pcg/pcg_random.hpp>
-#include <components.h>
 
 template <typename Component, typename ... Components>
 class Ship {
@@ -38,4 +38,4 @@ template<typename Component, typename... Components>
 entt::entity Ship<Component, Components...>::get() {
     return _entity;
 }
-#endif//TLEILAX_SHIP_H
+#endif//TLEILAX_SHIP_HPP

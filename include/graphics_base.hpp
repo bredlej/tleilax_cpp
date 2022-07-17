@@ -2,8 +2,8 @@
 // Created by geoco on 02.05.2022.
 //
 
-#ifndef TLEILAX_GRAPHICS_BASE_H
-#define TLEILAX_GRAPHICS_BASE_H
+#ifndef TLEILAX_GRAPHICS_BASE_HPP
+#define TLEILAX_GRAPHICS_BASE_HPP
 #include <imgui/imgui.h>
 #include <imgui/rlImGui.h>
 #include <raylib.h>
@@ -206,4 +206,4 @@ public:
         ImGui::End();
     }
 };
-#endif//TLEILAX_GRAPHICS_BASE_H
+#endif//TLEILAX_GRAPHICS_BASE_HPP

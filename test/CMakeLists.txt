@@ -1,6 +1,9 @@
 add_executable(test_tleilax-lib test_tleilax-lib.cpp)
 target_link_libraries(test_tleilax-lib tleilax-lib gtest)
 
+add_executable(test_galaxy test_galaxy.cpp)
+target_link_libraries(test_galaxy tleilax-lib gtest)
+
 add_executable(test_ships test_ships.cpp)
 target_link_libraries(test_ships tleilax-lib gtest)
 

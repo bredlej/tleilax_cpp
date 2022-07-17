@@ -1,7 +1,7 @@
 //
 // Created by geoco on 03.03.2022.
 //
-#include <fleet.h>
+#include <fleet.hpp>
 
 void FleetEntity::update(const std::shared_ptr<Core>& core, const entt::entity entity, components::Fleet &fleet, Vector3 &pos, components::Path &path) {
     if (!path.checkpoints.empty()) {

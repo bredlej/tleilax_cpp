@@ -2,8 +2,8 @@
 // Created by geoco on 03.03.2022.
 //
 
-#ifndef TLEILAX_EVENTS_H
-#define TLEILAX_EVENTS_H
+#ifndef TLEILAX_EVENTS_HPP
+#define TLEILAX_EVENTS_HPP
 #include <entt/entt.hpp>
 #include <raylib.h>
 
@@ -40,6 +40,5 @@ struct StarSelectedEvent {
 struct StarScanEvent {
     entt::entity scanner;
     entt::entity star;
-    uint32_t seed;
 };
-#endif//TLEILAX_EVENTS_H
+#endif//TLEILAX_EVENTS_HPP

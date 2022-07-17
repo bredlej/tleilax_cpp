@@ -1,9 +1,9 @@
 //
 // Created by geoco on 08.03.2022.
 //
-#include <tleilax.h>
-#include <gtest/gtest.h>
 #include <cstdio>
+#include <gtest/gtest.h>
+#include <tleilax.hpp>
 
 class TleilaxComponentTest : public testing::Test {
 protected:

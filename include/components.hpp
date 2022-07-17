@@ -2,15 +2,15 @@
 // Created by geoco on 19.12.2021.
 //
 
-#ifndef TLEILAX_COMPONENTS_H
-#define TLEILAX_COMPONENTS_H
-#include <assets.h>
+#ifndef TLEILAX_COMPONENTS_HPP
+#define TLEILAX_COMPONENTS_HPP
+#include <assets.hpp>
 #include <cstdint>
 #include <entt/entt.hpp>
 #include <functional>
+#include <string>
 #include <tuple>
 #include <vector>
-#include <string>
 
 namespace components {
     struct dice_roll {
@@ -30,8 +30,12 @@ namespace components {
     struct Size {
         float size;
     };
+    enum class StarClassification : uint8_t {
+        M, K, G, F, A, B, O, Neutron, Black_Hole
+    };
     struct Star {
         uint8_t r, g, b, a;
+        StarClassification classification;
     };
     struct Exploding {
         uint8_t counter;
@@ -66,6 +70,16 @@ namespace components {
 
     struct KnownStarSystems {
         std::vector<uint32_t> seeds;
+    };
+
+    struct GravityCenter {
+        float mass;
+    };
+
+    struct Orbit {
+        entt::entity attached_to;
+        float size;
+        float degrees;
     };
 
     // Ship Components
@@ -187,4 +201,4 @@ using ShipComponentRepository = ComponentRepository<
         decltype(HullRepository)>;
 
 
-#endif//TLEILAX_COMPONENTS_H
+#endif//TLEILAX_COMPONENTS_HPP

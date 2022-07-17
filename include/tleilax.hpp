@@ -5,17 +5,17 @@
 #ifndef TLEILAX_CPP_TLEILAX_H
 #define TLEILAX_CPP_TLEILAX_H
 
-#include <assets.h>
+#include <assets.hpp>
 #include <concepts>
 #include <cstdint>
-#include <fleet.h>
+#include <fleet.hpp>
 #include <functional>
-#include <galaxy.h>
+#include <galaxy.hpp>
 #include <imgui/rlImGui.h>
 #include <memory>
 #include <raylib.h>
-#include <ship.h>
-#include <star_system.h>
+#include <ship.hpp>
+#include <star_system.hpp>
 #include <string_view>
 #include <utility>
 
@@ -44,9 +44,6 @@ namespace tleilax {
         Assets _assets;
         std::shared_ptr<Core> _core;
         std::shared_ptr<UIView> _ui_view;
-        std::unordered_map<uint32_t, std::unique_ptr<StarSystem>> _star_systems;
-        void add_star_system(uint32_t seed);
-        std::shared_ptr<entt::registry> get_star_system_registry(uint32_t seed);
         void _setup_imgui();
         void _toggle_fullscreen();
     };

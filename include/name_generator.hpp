@@ -2,8 +2,8 @@
 // Created by geoco on 24.04.2022.
 //
 
-#ifndef TLEILAX_NAME_GENERATOR_H
-#define TLEILAX_NAME_GENERATOR_H
+#ifndef TLEILAX_NAME_GENERATOR_HPP
+#define TLEILAX_NAME_GENERATOR_HPP
 #include <unordered_map>
 #include <fstream>
 #include <vector>
@@ -55,4 +55,4 @@ public:
 private:
     std::unordered_map<NameType, std::vector<std::string>> _names;
 };
-#endif//TLEILAX_NAME_GENERATOR_H
+#endif//TLEILAX_NAME_GENERATOR_HPP

@@ -2,18 +2,18 @@
 // Created by geoco on 03.03.2022.
 //
 
-#ifndef TLEILAX_FLEET_H
-#define TLEILAX_FLEET_H
+#ifndef TLEILAX_FLEET_HPP
+#define TLEILAX_FLEET_HPP
 
-#include <components.h>
+#include <components.hpp>
+#include <core.hpp>
 #include <entt/entt.hpp>
-#include <events.h>
-#include <graph.h>
+#include <events.hpp>
+#include <graph.hpp>
+#include <memory>
 #include <pcg/pcg_random.hpp>
 #include <raymath.h>
-#include <ship.h>
-#include <core.h>
-#include <memory>
+#include <ship.hpp>
 
 static constexpr uint32_t MAX_SHIPS_IN_FLEET = 10;
 
@@ -76,4 +76,4 @@ private:
 };
 
 
-#endif//TLEILAX_FLEET_H
+#endif//TLEILAX_FLEET_HPP

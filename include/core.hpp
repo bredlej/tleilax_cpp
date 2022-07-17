@@ -2,14 +2,14 @@
 // Created by geoco on 15.04.2022.
 //
 
-#ifndef TLEILAX_CORE_H
-#define TLEILAX_CORE_H
+#ifndef TLEILAX_CORE_HPP
+#define TLEILAX_CORE_HPP
 
-#include <entt/entt.hpp>
+#include <colors.hpp>
+#include <name_generator.hpp>
 #include <pcg/pcg_random.hpp>
-#include <name_generator.h>
-#include <colors.h>
-#include <graphics_base.h>
+#include <entt/entt.hpp>
+#include <graphics_base.hpp>
 #include <memory>
 #include <unordered_map>
 
@@ -30,13 +30,14 @@ struct UIView {
 
 class Core {
 public:
+    explicit Core() noexcept : window{1200, 760} {};
     explicit Core(int width, int height) noexcept : window{width, height} {};
-    Core() noexcept = delete;
     Core(const Core&) noexcept = delete;
     Core(Core&&) noexcept = delete;
     Core& operator=(const Core&) noexcept = delete;
     Core& operator=(Core&&) noexcept = delete;
 
+    uint32_t get_seed_of(const entt::entity) const ;
     entt::dispatcher dispatcher{};
     entt::registry registry{};
     pcg32 pcg;
@@ -46,4 +47,4 @@ public:
     TleilaxAppLog debug_log;
     TleilaxAppLog game_log;
 };
-#endif//TLEILAX_CORE_H
+#endif//TLEILAX_CORE_HPP

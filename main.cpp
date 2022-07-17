@@ -1,4 +1,4 @@
-#include <tleilax.h>
+#include <tleilax.hpp>
 
 int main() {
     tleilax::Application app;

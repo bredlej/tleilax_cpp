@@ -1,7 +1,7 @@
 //
 // Created by geoco on 02.05.2022.
 //
-#include <galaxy.h>
+#include <galaxy.hpp>
 
 void Galaxy::_draw_ui() {
     rlImGuiBegin();
@@ -87,12 +87,11 @@ void Galaxy::_draw_ui_fleet_window() {
                                 if (player_controlled) {
                                     const auto star_position = _core->registry.get<Vector3>(object);
                                     const auto seed = seed_function(static_cast<uint32_t>(star_position.x), static_cast<uint32_t>(star_position.y), static_cast<uint32_t>(star_position.z));
-                                    auto &known_systems = _core->registry.get<components::KnownStarSystems>(_selected_fleet);
+                                    const auto known_systems = _core->registry.get<components::KnownStarSystems>(_selected_fleet);
                                     if (std::find(known_systems.seeds.begin(), known_systems.seeds.end(), seed) == known_systems.seeds.end()) {
                                         if (ImGui::Button("Scan")) {
-                                            known_systems.seeds.emplace_back(seed);
                                             _core->game_log.message("Scanning %s [%d]\n", object_name->name.c_str(), seed);
-                                            _core->dispatcher.enqueue<StarScanEvent>(_selected_fleet, object, seed);
+                                            _core->dispatcher.enqueue<StarScanEvent>(_selected_fleet, object);
                                         }
                                     }
                                 }

@@ -1,7 +1,7 @@
 //
 // Created by geoco on 17.12.2021.
 //
-#include <tleilax.h>
+#include <tleilax.hpp>
 
 void tleilax::Application::run(const Config &config) {
 
@@ -96,19 +96,4 @@ void tleilax::Application::_setup_imgui() {
     colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-}
-
-void tleilax::Application::add_star_system(const uint32_t seed) {
-    if (!_star_systems.contains(seed)) {
-        _star_systems[seed] = std::make_unique<StarSystem>(seed);
-    }
-}
-
-std::shared_ptr<entt::registry> tleilax::Application::get_star_system_registry(uint32_t seed) {
-    if (_star_systems.contains(seed)) {
-        return _star_systems[seed]->get_registry();
-    }
-    else {
-        return nullptr;
-    }
 }

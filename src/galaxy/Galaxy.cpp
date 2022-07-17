@@ -2,8 +2,8 @@
 // Created by geoco on 19.12.2021.
 //
 
-#include "galaxy.h"
-#include <name_generator.h>
+#include "galaxy.hpp"
+#include <name_generator.hpp>
 
 template<>
 std::string NameGenerator::get_random_name<components::Star>(pcg32 &pcg) {
@@ -57,31 +57,38 @@ void Galaxy::_initialize() {
     _core->dispatcher.sink<ArrivalEvent>().connect<&Galaxy::_fleet_arrived_at_star>(this);
     _core->dispatcher.sink<LeaveEvent>().connect<&Galaxy::_entity_left_vicinity>(this);
     _core->dispatcher.sink<StarSelectedEvent>().connect<&Galaxy::_on_star_selected>(this);
+    _core->dispatcher.sink<StarScanEvent>().connect<&Galaxy::_on_star_scanned>(this);
 }
 
 void Galaxy::populate() {
     auto before = std::chrono::high_resolution_clock::now();
-    _core->registry.clear();
-    selected_paths.clear();
-    _selected_fleet = entt::null;
-    _core->game_log.clear();
-
+    _reset_all();
+    _generate_objects();
+    auto after = std::chrono::high_resolution_clock::now() - before;
+    std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
+}
+void Galaxy::_generate_objects() {
     _generate_stars();
     _recalculate_graph();
     _generate_player_entity();
     _generate_fleets();
 
-    _star_render_instance.matrices.clear();
-    _star_render_instance.colors.clear();
-    _star_render_instance.entities.clear();
-    _star_render_instance.count = 0;
     _core->registry.view<components::Star, Vector3>()
             .each([&](entt::entity entity, components::Star star, Vector3 position) {
                 Color c{star.r, star.g, star.b, star.a};
                 _place_star_instance_at(entity, position.x, position.y, position.z, c, _visible_size);
             });
-    auto after = std::chrono::high_resolution_clock::now() - before;
-    std::printf("Elapsed time: %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(after).count());
+}
+void Galaxy::_reset_all() {
+    _core->registry.clear();
+    selected_paths.clear();
+    _selected_fleet = entt::null;
+    _core->game_log.clear();
+    _star_systems.clear();
+    _star_render_instance.matrices.clear();
+    _star_render_instance.colors.clear();
+    _star_render_instance.entities.clear();
+    _star_render_instance.count = 0;
 }
 
 void Galaxy::_generate_stars() {
@@ -90,7 +97,7 @@ void Galaxy::_generate_stars() {
         for (int32_t y = 0; y < static_cast<int32_t>(_visible_size.y); y++) {
             for (int32_t x = 0; x < static_cast<int32_t>(_visible_size.x); x++) {
                 StarEntity star(_star_occurence_chance, {100, 5}, {100, 10});
-                next_random_number(seed_function(x, y, z));
+                _next_random_number(seed_function(x, y, z));
                 star.create_at(_core->registry, _core, Vector3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
             }
         }
@@ -283,6 +290,14 @@ void Galaxy::_on_star_selected(const StarSelectedEvent &ev) {
     }
 }
 
+void Galaxy::_on_star_scanned(const StarScanEvent &ev) {
+    if (_core->registry.valid(ev.scanner) && _core->registry.valid(ev.star)) {
+        auto &known_systems = _core->registry.get<components::KnownStarSystems>(ev.scanner);
+        known_systems.seeds.emplace_back(_core->get_seed_of(ev.star));
+        _add_star_system(ev.star);
+    }
+}
+
 void Galaxy::_register_path_selection(const std::vector<entt::entity> &calculated_path) {
     selected_paths.clear();
     for (size_t i = 0; i < calculated_path.size() - 1; i++) {
@@ -360,8 +375,38 @@ entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_p
         registry.emplace<components::Name>(_entity, star_name);
         core->debug_log.message("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
 
-        auto star_color = Colors::star_colors[pcg(Colors::star_colors.size())];
-        registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a});
+
+        const auto star_classification = pcg(10000);
+        if (star_classification <= 7600) {
+            // M
+            constexpr auto star_color = Colors::star_colors[0];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::M});
+        } else if (star_classification > 7600 && star_classification <= 8800) {
+            constexpr auto star_color = Colors::star_colors[1];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::K});
+            // K
+        } else if (star_classification > 8800 && star_classification <= 9550) {
+            // G
+            constexpr auto star_color = Colors::star_colors[2];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::G});
+        } else if (star_classification > 9550 && star_classification <= 9850) {
+            // F
+            constexpr auto star_color = Colors::star_colors[3];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::F});
+        } else if (star_classification > 9850 && star_classification <= 9950) {
+            // A
+            constexpr auto star_color = Colors::star_colors[4];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::A});
+        } else if (star_classification > 9950 && star_classification <= 9980) {
+            constexpr auto star_color = Colors::star_colors[5];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::B});
+            // B
+        } else {
+            constexpr auto star_color = Colors::star_colors[6];
+            registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::O});
+            // O
+        }
+
         registry.emplace<components::Size>(_entity, 1.0f);
         if (star_is_infectable(_entity)) {
             registry.emplace<components::Infectable>(_entity);
@@ -382,4 +427,11 @@ bool StarEntity::is_created() {
 void StarEntity::on_click(const entt::registry &registry, const entt::entity entity) {
     auto position = registry.get<Vector3>(entity);
     std::printf("Clicked star=[%.1f, %.1f, %.1f]\n", position.x, position.y, position.z);
+}
+
+void Galaxy::_add_star_system(const entt::entity entity) {
+    const auto seed = _core->get_seed_of(entity);
+    if (!_star_systems.contains(seed)) {
+        _star_systems[seed] = std::make_unique<StarSystem>(entity, _core);
+    }
 }
