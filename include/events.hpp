@@ -41,4 +41,6 @@ struct StarScanEvent {
     entt::entity scanner;
     entt::entity star;
 };
+struct PlayerBattleStartEvent {};
+struct PlayerBattleEndEvent{};
 #endif//TLEILAX_EVENTS_HPP

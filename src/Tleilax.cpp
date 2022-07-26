@@ -10,14 +10,20 @@ void tleilax::Application::run(const Config &config) {
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
     SetTargetFPS(144);
     _setup_imgui();
-    auto g = std::make_shared<Galaxy>(_core, _assets);
+    auto g = std::make_unique<Galaxy>(_core, _assets);
     g->populate();
-    _ui_view = g;
+    _views[ViewMode::Galaxy] = std::move(g);
 
     while (!WindowShouldClose()) {
         _toggle_fullscreen();
-        _ui_view->update();
-        _ui_view->render();
+        if (_views[_view_mode]) {
+            _views[_view_mode]->update();
+            _views[_view_mode]->render();
+        }
+        else {
+            std::printf("Error - Closing application because of missing render view.");
+            break;
+        }
     }
     rlImGuiShutdown();
     CloseWindow();

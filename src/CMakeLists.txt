@@ -13,6 +13,8 @@ set(SOURCES
         starsystem/RenderStarSystem.cpp
         Assets.cpp
         Core.cpp
+        battle/Battle.cpp
+        battle/RenderBattle.cpp
         )
 
 add_library(tleilax-lib ${SOURCES})

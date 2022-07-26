@@ -18,6 +18,8 @@
 #include <star_system.hpp>
 #include <string_view>
 #include <utility>
+#include <unordered_map>
+#include <battle.hpp>
 
 namespace tleilax {
     struct Config {
@@ -27,11 +29,15 @@ namespace tleilax {
             uint32_t height;
         } window{1280, 720};
     };
+    enum class ViewMode {
+        Galaxy, Battle
+    };
     class Application {
     public:
         explicit Application() noexcept
             : _assets{files::ship_components, files::ships},
-              _core(std::make_shared<Core>(Config::window.width, Config::window.height)){};
+              _core(std::make_shared<Core>(Config::window.width, Config::window.height)),
+              _view_mode{ViewMode::Galaxy} {};
         Application(const Application &) noexcept = delete;
         Application(Application &) noexcept = delete;
         Application(Application &&) noexcept = delete;
@@ -43,9 +49,13 @@ namespace tleilax {
     private:
         Assets _assets;
         std::shared_ptr<Core> _core;
-        std::shared_ptr<UIView> _ui_view;
+        ViewMode _view_mode;
+        std::unordered_map<ViewMode, std::unique_ptr<UIView>> _views;
         void _setup_imgui();
         void _toggle_fullscreen();
+
+        void _on_start_battle(const battle::Battle&);
+        void _on_end_battle();
     };
 }// namespace tleilax
 
