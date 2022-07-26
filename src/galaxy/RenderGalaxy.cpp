@@ -155,9 +155,9 @@ static void _place_render_instance_at(EntityRenderInstance &render_instance, ent
     auto rotation = MatrixRotate({1,0,0}, 0);
     auto scaling = MatrixScale(scale.x, scale.y, scale.z);
 
+    m = MatrixMultiply(m, scaling);
     m = MatrixMultiply(m, translation);
     m = MatrixMultiply(m, rotation);
-    m = MatrixMultiply(m, scaling);
 
     render_instance.matrices.emplace_back(m);
     render_instance.colors.emplace_back(c);
@@ -166,5 +166,6 @@ static void _place_render_instance_at(EntityRenderInstance &render_instance, ent
 }
 
 void Galaxy::_place_star_instance_at(entt::entity entity, float x, float y, float z, Color c, const Vector3 visible_size) {
-    _place_render_instance_at(_star_render_instance, entity, x, y, z, c, visible_size, Vector3{1.0f, 1.0f, 1.0f});
+    const components::Size *size = _core->registry.try_get<components::Size>(entity);
+    _place_render_instance_at(_star_render_instance, entity, x, y, z, c, visible_size, size ? Vector3{size->size, size->size, size->size} : Vector3{1.0f, 1.0f, 1.0f});
 }

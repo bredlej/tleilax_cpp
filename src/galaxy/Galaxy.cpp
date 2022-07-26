@@ -367,7 +367,7 @@ void Galaxy::_set_course_for_fleet(const entt::entity from, const entt::entity t
 
 entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_ptr<Core> &core, Vector3 position) {
     auto &pcg = core->pcg;
-    static auto star_is_infectable = [&pcg](entt::entity) { return pcg(100) <= 10; };
+    //static auto star_is_infectable = [&pcg](entt::entity) { return pcg(100) <= 10; };
     if (pcg(_occurence_chance) == 0) {
         _entity = registry.create();
         registry.emplace<Vector3>(_entity, position);
@@ -375,43 +375,52 @@ entt::entity StarEntity::create_at(entt::registry &registry, const std::shared_p
         registry.emplace<components::Name>(_entity, star_name);
         core->debug_log.message("Generating star [%s] at (%.0f, %.0f, %.0f)\n", star_name.name.c_str(), position.x, position.y, position.z);
 
-
         const auto star_classification = pcg(10000);
         if (star_classification <= 7600) {
             // M
             constexpr auto star_color = Colors::star_colors[0];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::M});
+            registry.emplace<components::Size>(_entity, 0.45f);
         } else if (star_classification > 7600 && star_classification <= 8800) {
+            // K
             constexpr auto star_color = Colors::star_colors[1];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::K});
-            // K
+            registry.emplace<components::Size>(_entity, 0.8f);
         } else if (star_classification > 8800 && star_classification <= 9550) {
             // G
             constexpr auto star_color = Colors::star_colors[2];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::G});
+            registry.emplace<components::Infectable>(_entity);
+            registry.emplace<components::Size>(_entity, 1.04f);
+            core->debug_log.message("  - Marking this star as infectable\n");
         } else if (star_classification > 9550 && star_classification <= 9850) {
             // F
             constexpr auto star_color = Colors::star_colors[3];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::F});
+            registry.emplace<components::Infectable>(_entity);
+            registry.emplace<components::Size>(_entity, 1.4f);
+            core->debug_log.message("  - Marking this star as infectable\n");
         } else if (star_classification > 9850 && star_classification <= 9950) {
             // A
             constexpr auto star_color = Colors::star_colors[4];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::A});
+            registry.emplace<components::Infectable>(_entity);
+            registry.emplace<components::Size>(_entity, 2.1f);
+            core->debug_log.message("  - Marking this star as infectable\n");
         } else if (star_classification > 9950 && star_classification <= 9980) {
             constexpr auto star_color = Colors::star_colors[5];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::B});
             // B
+            registry.emplace<components::Infectable>(_entity);
+            registry.emplace<components::Size>(_entity, 10.0f);
+            core->debug_log.message("  - Marking this star as infectable\n");
         } else {
             constexpr auto star_color = Colors::star_colors[6];
             registry.emplace<components::Star>(_entity, components::Star{star_color.r, star_color.g, star_color.b, star_color.a, components::StarClassification::O});
+            registry.emplace<components::Size>(_entity, 16.0f);
             // O
         }
 
-        registry.emplace<components::Size>(_entity, 1.0f);
-        if (star_is_infectable(_entity)) {
-            registry.emplace<components::Infectable>(_entity);
-            core->debug_log.message("  - Marking this star as infectable\n");
-        }
         if (pcg(_nova_seeker_chance.upper_bound) < _nova_seeker_chance.occurs_if_less_then) {
             registry.emplace<components::NovaSeeker>(_entity, pcg(5) + 1);
         }

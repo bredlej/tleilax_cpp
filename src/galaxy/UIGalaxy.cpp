@@ -208,6 +208,8 @@ void Galaxy::_draw_ui_star_window() {
                 });
                 if (player_knows_star) {
                     ImGui::Text("Star is known");
+                    const auto &star_registry = _star_systems[star_seed].get()->get_registry();
+                    ImGui::Text("%lu bodies here", star_registry.size());
                 }
                 ImGui::End();
             }

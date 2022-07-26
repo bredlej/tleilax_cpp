@@ -73,6 +73,7 @@ namespace components {
     };
 
     struct GravityCenter {
+        int index;
         float mass;
     };
 
@@ -82,6 +83,25 @@ namespace components {
         float degrees;
     };
 
+    struct Planet {
+        int i;
+    };
+
+    struct Moon {
+        int i;
+    };
+
+    struct SpaceStation {
+        int i;
+    };
+
+    struct AsteroidBelt {
+        int i;
+    };
+
+    struct Anomaly {
+        int i;
+    };
     // Ship Components
 
     struct Engine {

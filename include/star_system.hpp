@@ -38,5 +38,7 @@ private:
     void _populate(uint32_t seed, entt::entity);
     entt::registry _registry;
     std::shared_ptr<Core> _core;
+    void _populate_orbits_around_star(const entt::entity &main_star_entity);
+    void _populate_planets();
 };
 #endif//TLEILAX_STAR_SYSTEM_HPP
