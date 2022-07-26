@@ -2,8 +2,8 @@
 // Created by geoco on 24.04.2022.
 //
 
-#ifndef TLEILAX_NAME_GENERATOR_H
-#define TLEILAX_NAME_GENERATOR_H
+#ifndef TLEILAX_NAME_GENERATOR_HPP
+#define TLEILAX_NAME_GENERATOR_HPP
 #include <unordered_map>
 #include <fstream>
 #include <vector>
@@ -37,15 +37,22 @@ inline std::vector<std::string> load_from_file(const std::string &file_name) {
     }
     return names;
 }
+
 class NameGenerator {
 public:
-    NameGenerator() {
+    explicit NameGenerator() noexcept {
         _names[NameType::Greek] = load_from_file("assets/names/greek");
         _names[NameType::Indian] = load_from_file("assets/names/indian");
     }
+    NameGenerator(const NameGenerator&) noexcept = delete;
+    NameGenerator(NameGenerator&&) noexcept = delete;
+    NameGenerator& operator=(const NameGenerator&) noexcept = delete;
+    NameGenerator& operator=(NameGenerator&&) noexcept = delete;
+    ~NameGenerator() noexcept = default;
+
     template<typename T>
     std::string get_random_name(pcg32 &pcg);
 private:
     std::unordered_map<NameType, std::vector<std::string>> _names;
 };
-#endif//TLEILAX_NAME_GENERATOR_H
+#endif//TLEILAX_NAME_GENERATOR_HPP

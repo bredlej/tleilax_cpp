@@ -2,15 +2,15 @@
 // Created by geoco on 19.12.2021.
 //
 
-#ifndef TLEILAX_COMPONENTS_H
-#define TLEILAX_COMPONENTS_H
-#include <assets.h>
+#ifndef TLEILAX_COMPONENTS_HPP
+#define TLEILAX_COMPONENTS_HPP
+#include <assets.hpp>
 #include <cstdint>
 #include <entt/entt.hpp>
 #include <functional>
+#include <string>
 #include <tuple>
 #include <vector>
-#include <string>
 
 namespace components {
     struct dice_roll {
@@ -30,8 +30,12 @@ namespace components {
     struct Size {
         float size;
     };
+    enum class StarClassification : uint8_t {
+        M, K, G, F, A, B, O, Neutron, Black_Hole
+    };
     struct Star {
         uint8_t r, g, b, a;
+        StarClassification classification;
     };
     struct Exploding {
         uint8_t counter;
@@ -64,6 +68,40 @@ namespace components {
         std::vector<entt::entity> objects;
     };
 
+    struct KnownStarSystems {
+        std::vector<uint32_t> seeds;
+    };
+
+    struct GravityCenter {
+        int index;
+        float mass;
+    };
+
+    struct Orbit {
+        entt::entity attached_to;
+        float size;
+        float degrees;
+    };
+
+    struct Planet {
+        int i;
+    };
+
+    struct Moon {
+        int i;
+    };
+
+    struct SpaceStation {
+        int i;
+    };
+
+    struct AsteroidBelt {
+        int i;
+    };
+
+    struct Anomaly {
+        int i;
+    };
     // Ship Components
 
     struct Engine {
@@ -139,8 +177,6 @@ static std::vector<ComponentT> json_to_component_converter(const nlohmann::json 
 template<typename T, assets::types A, T (*json_parse_func)(const nlohmann::json &)>
 struct RepositoryT {
     using Type = T;
-
-public:
     std::function<T(const nlohmann::json &)> converter_func = json_parse_func;
     const static assets::types Asset = A;
 };
@@ -154,15 +190,22 @@ template<typename T>
 constexpr auto instance_of_T = []() { T t; return t; };
 
 template<typename T, typename... Ts>
-struct ComponentRepository {
-    explicit ComponentRepository() {
+class ComponentRepository {
+public:
+    explicit ComponentRepository() noexcept {
         components = std::make_tuple(std::vector<typename T::Type>(), std::vector<typename Ts::Type>()...);
     }
-    explicit ComponentRepository(const nlohmann::json &json_data) {
+    explicit ComponentRepository(const nlohmann::json &json_data) noexcept {
         components = std::make_tuple(
                 json_to_component_converter<typename T::Type, T::Asset>(json_data, instance_of_T<T>().converter_func),
                 json_to_component_converter<typename Ts::Type, Ts::Asset>(json_data, instance_of_T<Ts>().converter_func)...);
     }
+    ComponentRepository(const ComponentRepository&) noexcept = delete;
+    ComponentRepository(ComponentRepository&&) noexcept = delete;
+    ComponentRepository& operator=(const ComponentRepository&) noexcept = delete;
+    ComponentRepository& operator=(ComponentRepository&&) noexcept = delete;
+    ~ComponentRepository() noexcept = default;
+
     std::tuple<std::vector<typename T::Type>, std::vector<typename Ts::Type>...> components;
 };
 
@@ -178,4 +221,4 @@ using ShipComponentRepository = ComponentRepository<
         decltype(HullRepository)>;
 
 
-#endif//TLEILAX_COMPONENTS_H
+#endif//TLEILAX_COMPONENTS_HPP

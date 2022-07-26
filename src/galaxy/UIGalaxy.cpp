@@ -1,7 +1,7 @@
 //
 // Created by geoco on 02.05.2022.
 //
-#include <galaxy.h>
+#include <galaxy.hpp>
 
 void Galaxy::_draw_ui() {
     rlImGuiBegin();
@@ -82,8 +82,19 @@ void Galaxy::_draw_ui_fleet_window() {
                     components::Name *object_name = _core->registry.try_get<components::Name>(object);
                     if (object_name) {
                         const auto *star = _core->registry.try_get<components::Star>(object);
-                        if (star) {
                             ImGui::TextColored(ImVec4(static_cast<float>(star->r) / 255.0f, static_cast<float>(star->g) / 255.0f, static_cast<float>(star->b) / 255.0f, 1.0f), "%s", object_name->name.c_str());
+                            if (star) {
+                                if (player_controlled) {
+                                    const auto star_position = _core->registry.get<Vector3>(object);
+                                    const auto seed = seed_function(static_cast<uint32_t>(star_position.x), static_cast<uint32_t>(star_position.y), static_cast<uint32_t>(star_position.z));
+                                    const auto known_systems = _core->registry.get<components::KnownStarSystems>(_selected_fleet);
+                                    if (std::find(known_systems.seeds.begin(), known_systems.seeds.end(), seed) == known_systems.seeds.end()) {
+                                        if (ImGui::Button("Scan")) {
+                                            _core->game_log.message("Scanning %s [%d]\n", object_name->name.c_str(), seed);
+                                            _core->dispatcher.enqueue<StarScanEvent>(_selected_fleet, object);
+                                        }
+                                    }
+                                }
                         } else {
                             ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "%s", object_name->name.c_str());
                         }
@@ -162,9 +173,55 @@ void Galaxy::_draw_ui_fleet_window() {
     }
 }
 
+void Galaxy::_draw_ui_star_window() {
+    if (_core->registry.valid(_clicked_star)) {
+        auto *star = _core->registry.try_get<components::Star>(_clicked_star);
+        if (star) {
+            bool open = true;
+            static int corner = 1;
+            ImGuiIO &io = ImGui::GetIO();
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+            ImVec2 work_pos = ImGui::GetMainViewport()->WorkPos;// Use work area to avoid menu-bar/task-bar, if any!
+            ImVec2 work_size = ImGui::GetMainViewport()->WorkSize;
+            ImVec2 window_pos, window_pos_pivot;
+            if (corner != -1) {
+                const float PAD = 30.0f;
+
+                window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
+                window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+                window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
+                window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
+                ImGui::SetNextWindowPos(window_pos, ImGuiCond_Once, window_pos_pivot);
+            }
+            ImGui::SetNextWindowBgAlpha(0.85f);// Transparent background
+
+            auto star_name = _core->registry.get<components::Name>(_clicked_star);
+            Vector3 star_position = _core->registry.get<Vector3>(_clicked_star);
+            const uint32_t star_seed = seed_function(static_cast<uint32_t>(star_position.x), static_cast<uint32_t>(star_position.y), static_cast<uint32_t>(star_position.z));
+            if (ImGui::Begin("Star details", &open, window_flags)) {
+                ImGui::TextColored(ImVec4(static_cast<float>(star->r) / 255.0f, static_cast<float>(star->g) / 255.0f, static_cast<float>(star->b) / 255.0f, 1.0f), "%s", star_name.name.c_str());
+                bool player_knows_star = false;
+                _core->registry.view<components::PlayerControlled, components::KnownStarSystems>().each([&player_knows_star, star_seed] (const auto entity, const auto player, const components::KnownStarSystems known_stars) {
+                    if (std::find(known_stars.seeds.begin(), known_stars.seeds.end(), star_seed) != known_stars.seeds.end()) {
+                        player_knows_star = true;
+                    }
+                });
+                if (player_knows_star) {
+                    ImGui::Text("Star is known");
+                    const auto &star_registry = _star_systems[star_seed].get()->get_registry();
+                    ImGui::Text("%lu bodies here", star_registry.size());
+                }
+                ImGui::End();
+            }
+        }
+    }
+}
 void Galaxy::_draw_ui_main_entity_selection() {
     if (_selected_fleet != entt::null) {
         _draw_ui_fleet_window();
+    }
+    if (_clicked_star != entt::null) {
+        _draw_ui_star_window();
     }
 }
 void Galaxy::_draw_ui_tab_debug() {
@@ -175,8 +232,8 @@ void Galaxy::_draw_ui_tab_debug() {
         ImGui::Text("Work size: %.1f, %.1f", work_size.x, work_size.y);
         float dist_from = 1.0f;
         float dist_to = 50.0f;
-        if (_core->registry.valid(_selected_star)) {
-            ImGui::Text("Selected star: %s", _core->registry.get<components::Name>(_selected_star).name.c_str());
+        if (_core->registry.valid(_star_mouse_over)) {
+            ImGui::Text("Selected star: %s", _core->registry.get<components::Name>(_star_mouse_over).name.c_str());
         }
         ImGui::DragScalar("Distance between stars (scroll value)", ImGuiDataType_Float, &_distance_between_stars, 0.5f, &dist_from, &dist_to, "%f");
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {

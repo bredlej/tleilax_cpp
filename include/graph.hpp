@@ -2,8 +2,8 @@
 // Created by geoco on 19.03.2022.
 //
 
-#ifndef TLEILAX_GRAPH_H
-#define TLEILAX_GRAPH_H
+#ifndef TLEILAX_GRAPH_HPP
+#define TLEILAX_GRAPH_HPP
 
 #include <unordered_map>
 #include <vector>
@@ -13,8 +13,14 @@
 template<typename NodeT, typename DistanceT, typename HashFuncT, typename EqualFuncT>
 class Graph {
     using AdjacencyList = std::unordered_map<NodeT, std::vector<std::pair<NodeT, DistanceT>>, HashFuncT, EqualFuncT>;
-
 public:
+    explicit Graph() noexcept = default;
+    Graph(const Graph&) noexcept = delete;
+    Graph(Graph&&) noexcept = delete;
+    Graph& operator=(const Graph&) noexcept = delete;
+    Graph& operator=(Graph&&) noexcept = delete;
+    ~Graph() noexcept = default;
+
     void add_edge(NodeT source_node, NodeT target_node, DistanceT distance, bool is_bidirectional);
     void clear();
     [[nodiscard]] AdjacencyList get() const { return adjacency_list; } ;
@@ -125,4 +131,4 @@ static std::vector<entt::entity> calculate_path(const Graph<GraphNode, float, Gr
     }
     return calculated_path;
 }
-#endif//TLEILAX_GRAPH_H
+#endif//TLEILAX_GRAPH_HPP

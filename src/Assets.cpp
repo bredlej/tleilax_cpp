@@ -1,7 +1,7 @@
 //
 // Created by geoco on 19.02.2022.
 //
-#include <assets.h>
+#include <assets.hpp>
 
 nlohmann::json Assets::load_from_file(const std::string &file_name) {
     std::printf("LOADING ASSETS\n");

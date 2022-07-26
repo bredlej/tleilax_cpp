@@ -2,17 +2,23 @@
 // Created by geoco on 20.02.2022.
 //
 
-#ifndef TLEILAX_SHIP_H
-#define TLEILAX_SHIP_H
+#ifndef TLEILAX_SHIP_HPP
+#define TLEILAX_SHIP_HPP
 
+#include <components.hpp>
 #include <entt/entt.hpp>
 #include <pcg/pcg_random.hpp>
-#include <components.h>
 
 template <typename Component, typename ... Components>
-struct Ship {
+class Ship {
 public:
-    explicit Ship() : _entity{entt::null} {};
+    explicit Ship() noexcept : _entity{entt::null} {};
+    Ship(const Ship&) noexcept = delete;
+    Ship(Ship&&) noexcept = delete;
+    Ship& operator=(const Ship&) noexcept = delete;
+    Ship& operator=(Ship&&) noexcept = delete;
+    ~Ship() noexcept = default;
+
     static entt::entity create_with_components(entt::registry &, Component, Components...);
     explicit Ship(entt::registry &registry, Component c, Components ... cs) : _entity{ Ship<Component, Components...>::create_with_components(registry, c, cs...) } {};
     entt::entity get();
@@ -32,4 +38,4 @@ template<typename Component, typename... Components>
 entt::entity Ship<Component, Components...>::get() {
     return _entity;
 }
-#endif//TLEILAX_SHIP_H
+#endif//TLEILAX_SHIP_HPP

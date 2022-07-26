@@ -34,7 +34,7 @@ endif ()
 enable_testing()
 
 add_subdirectory(test)
-add_subdirectory(lib)
+add_subdirectory(src)
 
 add_executable(${PROJECT_NAME} main.cpp)
 

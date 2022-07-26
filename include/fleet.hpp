@@ -2,18 +2,18 @@
 // Created by geoco on 03.03.2022.
 //
 
-#ifndef TLEILAX_FLEET_H
-#define TLEILAX_FLEET_H
+#ifndef TLEILAX_FLEET_HPP
+#define TLEILAX_FLEET_HPP
 
-#include <components.h>
+#include <components.hpp>
+#include <core.hpp>
 #include <entt/entt.hpp>
-#include <events.h>
-#include <graph.h>
+#include <events.hpp>
+#include <graph.hpp>
+#include <memory>
 #include <pcg/pcg_random.hpp>
 #include <raymath.h>
-#include <ship.h>
-#include <core.h>
-#include <memory>
+#include <ship.hpp>
 
 static constexpr uint32_t MAX_SHIPS_IN_FLEET = 10;
 
@@ -23,12 +23,19 @@ struct DistanceFunction {
 
 class FleetEntity {
 public:
-    FleetEntity() : _entity{ entt::null } {};
+    explicit FleetEntity() noexcept : _entity{ entt::null } {};
+    FleetEntity(const FleetEntity&) noexcept = delete;
+    FleetEntity(FleetEntity&&) noexcept = delete;
+    FleetEntity& operator=(const FleetEntity&) noexcept = delete;
+    FleetEntity& operator=(FleetEntity&&) noexcept = delete;
+    ~FleetEntity() noexcept = default;
+
     static entt::entity create(const std::shared_ptr<Core> &core, pcg32 &pcg, Vector3 position, const ShipComponentRepository &ship_components) {
         auto entity = core->registry.create();
         core->registry.emplace<Vector3>(entity, position);
         core->registry.emplace<components::Size>(entity, 1.5f);
         core->registry.emplace<components::Range>(entity, 20.0f);
+        core->registry.emplace<components::KnownStarSystems>(entity);
         populate_fleet_with_ships(core->registry, entity, pcg, ship_components);
         core->dispatcher.enqueue<FleetCreationEvent>(entity);
         return entity;
@@ -69,4 +76,4 @@ private:
 };
 
 
-#endif//TLEILAX_FLEET_H
+#endif//TLEILAX_FLEET_HPP

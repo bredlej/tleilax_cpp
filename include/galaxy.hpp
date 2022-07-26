@@ -2,32 +2,29 @@
 // Created by geoco on 19.12.2021.
 //
 
-#ifndef TLEILAX_GALAXY_H
-#define TLEILAX_GALAXY_H
+#ifndef TLEILAX_GALAXY_HPP
+#define TLEILAX_GALAXY_HPP
 
+#include <components.hpp>
+#include <core.hpp>
+#include <events.hpp>
+#include <fleet.hpp>
+#include <graph.hpp>
+#include <graphics_base.hpp>
+#include <star_system.hpp>
 #include <chrono>
 #include <cmath>
-#include <components.h>
-#include <core.h>
 #include <cstdint>
-#include <events.h>
-#include <fleet.h>
 #include <functional>
-#include <graph.h>
 #include <memory>
-#include <path.h>
+#include <path.hpp>
 #include <queue>
-#include <graphics_base.h>
 
 #include <utility>
 #include <variant>
 
 struct EntityRenderInstance: public RenderInstance {
     std::vector<entt::entity> entities;
-};
-
-constexpr auto seed_function = [](const uint32_t x, const uint32_t y, const uint32_t z) {
-    return ((x + y) >> 1) * (x + y + 1) + y * ((x + z) >> 1) * (x + z + 1) + z;
 };
 
 struct DistanceFunction;
@@ -68,6 +65,7 @@ struct CameraSettings {
     float camera_unfocused_angle = 45.0f;
     float zoom_angle = camera_focused_angle;
 };
+
 class StarEntity {
 public:
     StarEntity(const uint32_t occurence_chance, const Chance &&exploding_chance, const Chance &&nova_seeker_chance)
@@ -96,17 +94,23 @@ struct StarInstance {
 
 class Galaxy : public UIView {
 public:
-    explicit Galaxy(std::shared_ptr<Core> core, Assets &assets)
+    explicit Galaxy() noexcept = delete;
+    explicit Galaxy(std::shared_ptr<Core> core, const Assets &assets) noexcept
         : _core {std::move(core)},
           _camera(_initialize_camera({0., 0., 0.}, 101., 10., 90., 90.)),
           _ship_components{assets.get_ship_components()} {_initialize();};
+    Galaxy(const Galaxy&) noexcept = delete;
+    Galaxy(Galaxy&&) noexcept = delete;
+    Galaxy& operator=(const Galaxy&) noexcept = delete;
+    Galaxy& operator=(Galaxy&&) noexcept = delete;
     ~Galaxy() = default;
 
     void render() override;
     void update() override;
     void populate();
-    uint32_t next_random_number(const uint32_t max) { return max > 0 ? _core->pcg(max) : 0; };
 private:
+    uint32_t _next_random_number(const uint32_t max) { return max > 0 ? _core->pcg(max) : 0; };
+    std::unordered_map<uint32_t, std::unique_ptr<StarSystem>> _star_systems;
     EntityRenderInstance _star_render_instance;
     RenderInstance _supernova_render_instance;
     static constexpr uint32_t _star_occurence_chance = 5000;
@@ -122,7 +126,8 @@ private:
     std::shared_ptr<Core> _core;
     Vector3 _offset{0., 0., 0.};
     entt::entity _selected_fleet{entt::null};
-    entt::entity _selected_star{entt::null};
+    entt::entity _star_mouse_over{entt::null};
+    entt::entity _clicked_star{entt::null};
     bool _ui_wants_to_set_course = false;
     bool _ui_show_log = false;
     bool _rotate = false;
@@ -133,11 +138,12 @@ private:
     static Camera _initialize_camera(const Vector3 &cameraInitialPosition, float cameraDistance,
                               float horizontalDistance, float horizontalAngle,
                               float verticalAngle);
-
     CameraSettings _cameraSettings;
-    void _init_star_render_instance();
 
+    void _init_star_render_instance();
     void _place_star_instance_at(entt::entity, float x, float y, float z, Color c, const Vector3 visible_size);
+
+    void _add_star_system(entt::entity);
     void _render_visible();
     void _tick();
     void _explode_stars(const ExplosionEvent &);
@@ -145,9 +151,13 @@ private:
     void _fleet_arrived_at_star(const ArrivalEvent &);
     void _entity_left_vicinity(const LeaveEvent &);
     void _on_star_selected(const StarSelectedEvent &);
+    void _on_star_scanned(const StarScanEvent &);
     void _update_vicinities();
 
+
     void _set_course_for_fleet(const entt::entity from, const entt::entity to);
+    void _reset_all();
+    void _generate_objects();
     void _generate_player_entity();
     void _recalculate_graph();
     void _clear_paths();
@@ -157,17 +167,18 @@ private:
     void _render_stars();
     void _render_paths();
     void _render_fleets();
-    void _render_mouse_selection();
 
+    void _render_mouse_selection();
     void _draw_ui();
     void _draw_ui_tab_main();
     void _draw_ui_tab_debug();
     void _draw_ui_tab_camera();
     void _draw_ui_main_entity_selection();
     void _draw_ui_fleet_window();
+    void _draw_ui_star_window();
     void _draw_ui_debug_log_window();
     void _draw_ui_game_log_window();
     void _register_path_selection(const std::vector<entt::entity> &calculated_path);
 };
 
-#endif//TLEILAX_GALAXY_H
+#endif//TLEILAX_GALAXY_HPP

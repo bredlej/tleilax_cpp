@@ -1,8 +1,8 @@
 //
 // Created by geoco on 20.02.2022.
 //
-#include <tleilax.h>
 #include <gtest/gtest.h>
+#include <tleilax.hpp>
 using namespace components;
 
 class TleilaxShipTest : public testing::Test {

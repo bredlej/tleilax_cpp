@@ -2,8 +2,8 @@
 // Created by geoco on 02.05.2022.
 //
 
-#ifndef TLEILAX_GRAPHICS_BASE_H
-#define TLEILAX_GRAPHICS_BASE_H
+#ifndef TLEILAX_GRAPHICS_BASE_HPP
+#define TLEILAX_GRAPHICS_BASE_HPP
 #include <imgui/imgui.h>
 #include <imgui/rlImGui.h>
 #include <raylib.h>
@@ -20,16 +20,24 @@ struct RenderInstance {
     int count {0};
 };
 
-struct TleilaxAppLog {
-    ImGuiTextBuffer Buf;
-    ImGuiTextFilter Filter;
-    ImVector<int> LineOffsets;// Index to lines offset. We maintain this with AddLog() calls.
-    bool AutoScroll;          // Keep scrolling if already at the bottom.
-
-    TleilaxAppLog() {
+class TleilaxAppLog {
+public:
+    explicit TleilaxAppLog() noexcept {
         AutoScroll = true;
         clear();
     }
+    TleilaxAppLog(const TleilaxAppLog&) noexcept = delete;
+    TleilaxAppLog(TleilaxAppLog&) noexcept = delete;
+    TleilaxAppLog(TleilaxAppLog&&) noexcept = delete;
+    TleilaxAppLog& operator=(const TleilaxAppLog&) noexcept = delete;
+    TleilaxAppLog& operator=(TleilaxAppLog&&) noexcept = delete;
+    ~TleilaxAppLog() noexcept = default;
+
+    ImGuiTextBuffer Buf;
+    ImGuiTextFilter Filter;
+    ImVector<int> LineOffsets;// Index to lines offset. We maintain this with AddLog() calls.
+
+    bool AutoScroll;          // Keep scrolling if already at the bottom.
 
     void clear() {
         Buf.clear();
@@ -37,7 +45,7 @@ struct TleilaxAppLog {
         LineOffsets.push_back(0);
     }
 
-    void debug(const char *fmt, ...) IM_FMTARGS(2) {
+    void message(const char *fmt, ...) IM_FMTARGS(2) {
         int old_size = Buf.size();
         va_list args;
         va_start(args, fmt);
@@ -198,4 +206,4 @@ struct TleilaxAppLog {
         ImGui::End();
     }
 };
-#endif//TLEILAX_GRAPHICS_BASE_H
+#endif//TLEILAX_GRAPHICS_BASE_HPP

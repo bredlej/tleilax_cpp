@@ -2,10 +2,12 @@
 // Created by geoco on 01.05.2022.
 //
 
-#ifndef TLEILAX_COLORS_H
-#define TLEILAX_COLORS_H
+#ifndef TLEILAX_COLORS_HPP
+#define TLEILAX_COLORS_HPP
 
 #include <raylib.h>
+#include <array>
+
 struct Colors {
     constexpr static Color col_0 = {0x2e, 0x2c, 0x3b, 0xff};
     constexpr static Color col_1 = {0x3e, 0x41, 0x5f, 0xff};
@@ -26,6 +28,7 @@ struct Colors {
     constexpr static Color col_16 = {0xc1, 0xe5, 0xea, 0xff};
 
     constexpr static std::array<Color, 17> all{col_0, col_1, col_2, col_3, col_4, col_5, col_6, col_7, col_8, col_9, col_10, col_11, col_12, col_13, col_14, col_15, col_16};
-    constexpr static std::array<Color, 8> star_colors{col_4, col_5, col_6, col_8, col_9, col_11, col_12, col_15};
+    //constexpr static std::array<Color, 8> star_colors{col_4, col_5, col_6, col_8, col_9, col_11, col_12, col_15};
+    constexpr static std::array<Color, 8> star_colors{col_12, col_11, col_9, col_8, col_6, col_5, col_4, col_15};
 };
-#endif//TLEILAX_COLORS_H
+#endif//TLEILAX_COLORS_HPP

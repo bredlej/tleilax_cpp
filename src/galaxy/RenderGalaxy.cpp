@@ -1,7 +1,7 @@
 //
 // Created by geoco on 02.05.2022.
 //
-#include <galaxy.h>
+#include <galaxy.hpp>
 #include <raylib_extension.h>
 #if defined(PLATFORM_DESKTOP)
 #define GLSL_VERSION            330
@@ -77,17 +77,17 @@ void Galaxy::_render_stars() {
     raylib_ext::RenderInstanced(_star_render_instance.model.meshes[0], _star_render_instance.model.materials[0], _star_render_instance.matrices, _star_render_instance.colors,_star_render_instance.count);
     _core->registry.view<Vector3, components::Star, components::Size>().each([&](const entt::entity entity, const Vector3 &coords, const components::Star color, const components::Size size) {
         Vector3 star_coords = local_to_global_coords(coords, _visible_size);
-        bool star_is_selected = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
-        StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, star_is_selected);
-        if (star_is_selected) {
+        bool is_mouse_over_star = GetRayCollisionSphere(GetMouseRay(GetMousePosition(), _camera), star_coords, size.size).hit;
+        StarEntity::render(_core, _camera, _visible_size, entity, coords, color, size, is_mouse_over_star);
+        if (is_mouse_over_star) {
             _entities_under_cursor.emplace_back(entity);
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (_camera_settings.focus_on_clicked) {
                     focus_camera(_camera, star_coords, _camera.fovy);
                 }
-                _core->dispatcher.enqueue<StarSelectedEvent>(entity);
+                _core->dispatcher.enqueue<StarSelectedEvent>(entity, seed_function(static_cast<uint32_t>(coords.x), static_cast<uint32_t>(coords.y), static_cast<uint32_t>(coords.z)));
             }
-            _selected_star = entity;
+            _star_mouse_over = entity;
         }
     });
 }
@@ -155,9 +155,9 @@ static void _place_render_instance_at(EntityRenderInstance &render_instance, ent
     auto rotation = MatrixRotate({1,0,0}, 0);
     auto scaling = MatrixScale(scale.x, scale.y, scale.z);
 
+    m = MatrixMultiply(m, scaling);
     m = MatrixMultiply(m, translation);
     m = MatrixMultiply(m, rotation);
-    m = MatrixMultiply(m, scaling);
 
     render_instance.matrices.emplace_back(m);
     render_instance.colors.emplace_back(c);
@@ -166,5 +166,6 @@ static void _place_render_instance_at(EntityRenderInstance &render_instance, ent
 }
 
 void Galaxy::_place_star_instance_at(entt::entity entity, float x, float y, float z, Color c, const Vector3 visible_size) {
-    _place_render_instance_at(_star_render_instance, entity, x, y, z, c, visible_size, Vector3{1.0f, 1.0f, 1.0f});
+    const components::Size *size = _core->registry.try_get<components::Size>(entity);
+    _place_render_instance_at(_star_render_instance, entity, x, y, z, c, visible_size, size ? Vector3{size->size, size->size, size->size} : Vector3{1.0f, 1.0f, 1.0f});
 }

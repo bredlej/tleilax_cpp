@@ -1,9 +1,9 @@
 //
 // Created by geoco on 19.03.2022.
 //
-#include <gtest/gtest.h>
 #include <cstdio>
-#include <graph.h>
+#include <graph.hpp>
+#include <gtest/gtest.h>
 
 struct Node {
     explicit Node(int number) : number(number) {};
