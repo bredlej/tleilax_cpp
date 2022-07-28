@@ -12,13 +12,11 @@ void Galaxy::render() {
     BeginDrawing();
     ClearBackground(_core->colors.col_0);
     _render_visible();
-    DrawFPS(1200, 10);
     _draw_ui();
     EndDrawing();
 }
 
 void Galaxy::_render_visible() {
-
     BeginMode3D(_camera);
     _entities_under_cursor.clear();
     _render_stars();
@@ -26,6 +24,7 @@ void Galaxy::_render_visible() {
     _render_fleets();
     _render_mouse_selection();
     EndMode3D();
+    DrawFPS(1200, 10);
 }
 
 void Galaxy::_render_fleets() {

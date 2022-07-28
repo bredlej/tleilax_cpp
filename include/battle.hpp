@@ -34,15 +34,23 @@ namespace battle {
     class Battle : public UIView {
     public:
         explicit Battle(std::shared_ptr<Core> core, entt::entity attacker, entt::entity opponent) noexcept
-            : _core{core}, _attacker{attacker}, _opponent{opponent} {}
+            : _core{core},
+              _attacker{attacker},
+              _opponent{opponent},
+              _camera{_initialize_camera({0., 0., 0.}, 101., 10., 90., 90.)}
+        {}
         void render() override;
         void update() override;
     private:
         std::shared_ptr<Core> _core;
         entt::entity _attacker;
         entt::entity _opponent;
+        Camera _camera;
         bool _open_demo{false};
         void _draw_ui();
+        Camera _initialize_camera(const Vector3 &cameraInitialPosition, const float cameraDistance, const float horizontalDistance, const float horizontalAngle, const float verticalAngle);
+        void _render_visible();
+        void _render_grid();
     };
 }// namespace battle
 #endif//TLEILAX_BATTLE_HPP

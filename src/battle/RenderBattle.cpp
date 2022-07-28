@@ -5,7 +5,7 @@
 void battle::Battle::render() {
     BeginDrawing();
     ClearBackground(Colors::col_0);
-    //_render_visible();
+    _render_visible();
     DrawText("Battle", 50, 50, 50, Colors::col_10);
     char attacker[10], opponent[10];
     std::sprintf(attacker, "%u", _attacker);
@@ -16,7 +16,6 @@ void battle::Battle::render() {
     DrawFPS(1200, 10);
     _draw_ui();
     EndDrawing();
-
 }
 
 void battle::Battle::update() {
@@ -47,4 +46,30 @@ void battle::Battle::_draw_ui() {
         ImGui::End();
     }
     rlImGuiEnd();
+}
+
+Camera battle::Battle::_initialize_camera(const Vector3 &cameraInitialPosition, const float cameraDistance,
+                                  const float horizontalDistance, const float horizontalAngle,
+                                  const float verticalAngle) {
+    Camera camera;
+    camera.target = cameraInitialPosition;
+    camera.up = Vector3{0.0f, 1.0f, 0.0f};
+    camera.fovy = 45.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
+    camera.position.x = horizontalDistance * std::cosh(horizontalAngle * PI / 180.0f);
+    camera.position.y = horizontalDistance * std::sinh(horizontalAngle * PI / 180.0f);
+    camera.position.z = cameraDistance * sinf(verticalAngle * PI / 180.0f);
+    SetCameraMode(camera, CAMERA_ORBITAL);
+    UpdateCamera(&camera);
+    return camera;
+}
+
+void battle::Battle::_render_visible() {
+    BeginMode3D(_camera);
+    _render_grid();
+    EndMode3D();
+}
+
+void battle::Battle::_render_grid() {
+    DrawGrid(50, 10.0f);
 }

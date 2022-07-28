@@ -98,7 +98,6 @@ void Galaxy::_draw_ui_fleet_window() {
                             }
                             ImGui::PopID();
                         }
-
                     }
                     components::Name *object_name = _core->registry.try_get<components::Name>(object);
                     if (object_name) {
@@ -269,6 +268,48 @@ void Galaxy::_draw_ui_tab_debug() {
         }
         if (_ui_show_log && ImGui::Button("Hide log")) {
             _ui_show_log = false;
+        }
+        // fleet battles
+        static int selected_fleet_idx = 0;
+        const auto fleet_view = _core->registry.view<components::Fleet>();
+        std::vector<entt::entity> fleet_entities;
+        std::vector<size_t> fleet_sizes;
+        static entt::entity player_fleet = entt::null;
+        static entt::entity selected_fleet = entt::null;
+        fleet_view.each([&](const entt::entity entity, const components::Fleet &fleet) {
+            components::PlayerControlled *player_controlled = _core->registry.try_get<components::PlayerControlled>(entity);
+            if (!player_controlled) {
+                fleet_entities.push_back(entity);
+                fleet_sizes.push_back(fleet.ships.size());
+            } else {
+                player_fleet = entity;
+            }
+        });
+        if (!fleet_entities.empty()) {
+            char first_selection[20];
+            std::sprintf(first_selection, "%d (%lu ships)", fleet_entities[selected_fleet_idx], fleet_sizes[selected_fleet_idx]);
+            if (ImGui::BeginCombo("Fleets", first_selection)) {
+                for (int idx = 0; idx < fleet_entities.size(); idx++) {
+                    const bool is_selected = (selected_fleet_idx == idx);
+                    char combo_item[20];
+                    std::sprintf(combo_item, "%d (%lu ships)", fleet_entities[idx], fleet_sizes[idx]);
+                    if (ImGui::Selectable(combo_item, is_selected)) {
+                        selected_fleet_idx = idx;
+                        selected_fleet = fleet_entities[selected_fleet_idx];
+                        _core->game_log.message("Selected %d\n", selected_fleet);
+                    }
+                    if (is_selected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if (player_fleet != entt::null && selected_fleet != entt::null) {
+                ImGui::SameLine();
+                if (ImGui::Button("Attack")) {
+                    _core->dispatcher.enqueue<PlayerBattleStartEvent>(player_fleet, selected_fleet);
+                }
+            }
         }
         ImGui::EndTabItem();
     }
