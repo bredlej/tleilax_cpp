@@ -42,6 +42,11 @@ static void add_vicinity(std::shared_ptr<Core> &core, entt::entity what, entt::e
         std::vector<entt::entity> vicinity{where};
         core->registry.emplace<components::Vicinity>(what, vicinity);
     }
+    if (auto *what_fleet = core->registry.try_get<components::Fleet>(what)) {
+        if (auto *where_fleet = core->registry.try_get<components::Fleet>(where)) {
+            core->game_log.message("Fleet=[%u] meets fleet=[%u]\n", what, where);
+        }
+    }
 }
 
 static void focus_camera(Camera &camera, Vector3 target, float fov = 45.0f) {

@@ -10,6 +10,7 @@ void tleilax::Application::run(const Config &config) {
     InitWindow(tleilax::Config::window.width, tleilax::Config::window.height, tleilax::Config::title.data());
     SetTargetFPS(144);
     _setup_imgui();
+    _register_events();
     auto g = std::make_unique<Galaxy>(_core, _assets);
     g->populate();
     _views[ViewMode::Galaxy] = std::move(g);
@@ -102,4 +103,17 @@ void tleilax::Application::_setup_imgui() {
     colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+}
+
+void tleilax::Application::_register_events() {
+    _core->dispatcher.sink<PlayerBattleStartEvent>().connect<&tleilax::Application::_on_start_battle>(this);
+    _core->dispatcher.sink<PlayerBattleEndEvent>().connect<&tleilax::Application::_on_end_battle>(this);
+}
+void tleilax::Application::_on_start_battle(const PlayerBattleStartEvent &event) {
+    _views[ViewMode::Battle] = std::make_unique<battle::Battle>(_core, event.player, event.opponent);
+    _view_mode = ViewMode::Battle;
+}
+void tleilax::Application::_on_end_battle(const PlayerBattleEndEvent &) {
+    _views[ViewMode::Battle] = nullptr;
+    _view_mode = ViewMode::Galaxy;
 }

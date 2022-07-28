@@ -41,6 +41,17 @@ struct StarScanEvent {
     entt::entity scanner;
     entt::entity star;
 };
-struct PlayerBattleStartEvent {};
+struct FleetsMeetEvent {
+    entt::entity fleet1;
+    entt::entity fleet2;
+};
+struct FleetsSeparateEvent {
+    entt::entity fleet1;
+    entt::entity fleet2;
+};
+struct PlayerBattleStartEvent {
+    entt::entity player;
+    entt::entity opponent;
+};
 struct PlayerBattleEndEvent{};
 #endif//TLEILAX_EVENTS_HPP

@@ -52,10 +52,11 @@ namespace tleilax {
         ViewMode _view_mode;
         std::unordered_map<ViewMode, std::unique_ptr<UIView>> _views;
         void _setup_imgui();
+        void _register_events();
         void _toggle_fullscreen();
 
-        void _on_start_battle(const battle::Battle&);
-        void _on_end_battle();
+        void _on_start_battle(const PlayerBattleStartEvent &);
+        void _on_end_battle(const PlayerBattleEndEvent &);
     };
 }// namespace tleilax
 

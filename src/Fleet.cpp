@@ -13,6 +13,16 @@ void FleetEntity::update(const std::shared_ptr<Core>& core, const entt::entity e
             path.checkpoints.erase(path.checkpoints.begin());
         }
     }
+    const auto &my_vicinity = core->registry.get<components::Vicinity>(entity);
+    core->registry.view<components::Fleet, Vector3, components::Vicinity>().each([&core, my_vicinity, entity, pos](entt::entity other, components::Fleet fleet, Vector3 position, components::Vicinity &vicinity){
+        if (entity != other) {
+            if (Vector3Distance(pos, position) < 1.5f) {
+                if (std::find(my_vicinity.objects.begin(), my_vicinity.objects.end(), other) == my_vicinity.objects.end()) {
+                    core->dispatcher.enqueue<ArrivalEvent>(entity, other);
+                }
+            }
+        }
+    });
 }
 
 void FleetEntity::on_click(const entt::registry &registry, entt::entity entity) {

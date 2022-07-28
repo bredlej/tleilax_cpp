@@ -217,7 +217,10 @@ void Galaxy::_send_fleet_to_nova(const NovaSeekEvent &ev) {
 
 void Galaxy::_fleet_arrived_at_star(const ArrivalEvent &ev) {
     add_vicinity(_core, ev.what, ev.where);
-    add_vicinity(_core, ev.where, ev.what);
+    auto is_star = _core->registry.try_get<components::Star>(ev.where);
+    if (is_star) {
+        add_vicinity(_core, ev.where, ev.what);
+    }
     auto is_tleilaxian = _core->registry.try_get<components::Tleilaxian>(ev.what);
     auto is_infectable = _core->registry.try_get<components::Infectable>(ev.where);
     if (is_tleilaxian && is_infectable) {
@@ -237,6 +240,11 @@ void Galaxy::_fleet_arrived_at_star(const ArrivalEvent &ev) {
 void Galaxy::_entity_left_vicinity(const LeaveEvent &ev) {
     components::Vicinity &vicinity_of_what = _core->registry.get<components::Vicinity>(ev.what);
     vicinity_of_what.objects.erase(std::remove(vicinity_of_what.objects.begin(), vicinity_of_what.objects.end(), ev.where), vicinity_of_what.objects.end());
+    if (auto *what_fleet = _core->registry.try_get<components::Fleet>(ev.what)) {
+        if (auto *where_fleet = _core->registry.try_get<components::Fleet>(ev.where)) {
+            _core->game_log.message("Fleet=[%u] leaves the vicinity of fleet=[%u]\n", ev.what, ev.where);
+        }
+    }
 }
 
 void Galaxy::_update_vicinities() {

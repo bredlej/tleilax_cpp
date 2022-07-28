@@ -33,11 +33,16 @@ namespace battle {
 
     class Battle : public UIView {
     public:
-        explicit Battle(std::shared_ptr<Core> core) noexcept : _core{core} {}
+        explicit Battle(std::shared_ptr<Core> core, entt::entity attacker, entt::entity opponent) noexcept
+            : _core{core}, _attacker{attacker}, _opponent{opponent} {}
         void render() override;
         void update() override;
     private:
         std::shared_ptr<Core> _core;
+        entt::entity _attacker;
+        entt::entity _opponent;
+        bool _open_demo{false};
+        void _draw_ui();
     };
 }// namespace battle
 #endif//TLEILAX_BATTLE_HPP
