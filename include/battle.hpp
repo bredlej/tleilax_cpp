@@ -44,13 +44,17 @@ namespace battle {
             _initialize();
 
         }
-        ~Battle() { UnloadModel(_spaceships.model);
-            UnloadShader(_spaceships.shader); }
+        ~Battle() {
+            UnloadModel(_spaceships.model);
+            UnloadShader(_spaceships.shader);
+            UnloadTexture(_texture);
+        }
         void render() override;
         void update() override;
     private:
         void _initialize();
         RenderInstance _spaceships;
+        Texture2D _texture;
         std::shared_ptr<Core> _core;
         entt::entity _attacker;
         entt::entity _opponent;

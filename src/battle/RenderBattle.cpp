@@ -122,5 +122,11 @@ void battle::Battle::_initialize() {
     _spaceships.matrices.emplace_back(m);
     _spaceships.colors.emplace_back(Colors::col_10);
     _spaceships.count += 1;
+
+    _texture = LoadTexture("assets/textures/spaceship.png");
+    _spaceships.model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = _texture;
+
+    _camera.target = Vector3{0, 30, 0};
+
     //_spaceships.entities.emplace_back(entity);
 }

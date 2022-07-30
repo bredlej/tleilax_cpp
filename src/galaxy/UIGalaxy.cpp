@@ -289,12 +289,12 @@ void Galaxy::_draw_ui_tab_debug() {
         });
         if (!fleet_entities.empty()) {
             char first_selection[40];
-            std::sprintf(first_selection, "%d (%lu ships)", fleet_entities[selected_fleet_idx], fleet_sizes[selected_fleet_idx]);
+            std::sprintf(first_selection, "%d (%llu ships)", fleet_entities[selected_fleet_idx], fleet_sizes[selected_fleet_idx]);
             if (ImGui::BeginCombo("Fleets", first_selection)) {
                 for (int idx = 0; idx < fleet_entities.size(); idx++) {
                     const bool is_selected = (selected_fleet_idx == idx);
                     char combo_item[20];
-                    std::sprintf(combo_item, "%d (%lu ships)", fleet_entities[idx], fleet_sizes[idx]);
+                    std::sprintf(combo_item, "%d (%llu ships)", fleet_entities[idx], fleet_sizes[idx]);
                     if (ImGui::Selectable(combo_item, is_selected)) {
                         selected_fleet_idx = idx;
                         selected_fleet = fleet_entities[selected_fleet_idx];
