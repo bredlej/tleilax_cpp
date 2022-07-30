@@ -4,7 +4,13 @@
 
 #ifndef TLEILAX_RAYLIB_EXTENSION_H
 #define TLEILAX_RAYLIB_EXTENSION_H
-#define RLIGHTS_IMPLEMENTATION
+
+#if defined(PLATFORM_DESKTOP)
+#define GLSL_VERSION            330
+#else   // PLATFORM_RPI, PLATFORM_ANDROID, PLATFORM_WEB
+#define GLSL_VERSION            100
+#endif
+
 #include <rlights.h>
 #include <vector>
 

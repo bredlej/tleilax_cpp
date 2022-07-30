@@ -15,6 +15,7 @@ set(SOURCES
         Core.cpp
         battle/Battle.cpp
         battle/RenderBattle.cpp
+        rlights.c
         )
 
 add_library(tleilax-lib ${SOURCES})
