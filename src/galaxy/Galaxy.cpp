@@ -119,7 +119,7 @@ void Galaxy::_generate_fleets() {
         auto path = calculate_path<Vector3, DistanceFunction, components::Star>(stars_graph, _core->registry, spawn_star, entity);
         if (!path.empty()) {
             _core->game_log.message("The tleilaxian fleet is heading towards %s!\n", name.name.c_str());
-            _core->registry.emplace<components::Path>(fleet_entity, path);
+            _core->registry.emplace_or_replace<components::Path>(fleet_entity, path);
             break;
         }
     }

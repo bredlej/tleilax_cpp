@@ -3,6 +3,7 @@
 //
 #include <events.hpp>
 #include <galaxy.hpp>
+
 void Galaxy::_draw_ui() {
     rlImGuiBegin();
 
@@ -82,7 +83,7 @@ void Galaxy::_draw_ui_fleet_window() {
                 ImGui::Text("Is near of");
                 int i = 0;
                 std::for_each(vicinity->objects.begin(), vicinity->objects.end(), [&](entt::entity object) {
-                    if (components::Fleet *fleet = _core->registry.try_get<components::Fleet>(object)) {
+                   if (components::Fleet *fleet = _core->registry.try_get<components::Fleet>(object)) {
                         ImGui::Text("Fleet: ");
                         ImGui::SameLine();
                         ImGui::TextColored(ImVec4(static_cast<float>(Colors::col_5.r) / 255.0f, static_cast<float>(Colors::col_5.g) / 255.0f, static_cast<float>(Colors::col_5.b) / 255.0f, 1), "%d (%lu ships)", object, fleet->ships.size());
@@ -276,8 +277,9 @@ void Galaxy::_draw_ui_tab_debug() {
         std::vector<size_t> fleet_sizes;
         static entt::entity player_fleet = entt::null;
         static entt::entity selected_fleet = entt::null;
-        fleet_view.each([&](const entt::entity entity, const components::Fleet &fleet) {
-            components::PlayerControlled *player_controlled = _core->registry.try_get<components::PlayerControlled>(entity);
+        auto &registry = _core->registry;
+        fleet_view.each([&registry, &fleet_entities, &fleet_sizes](const entt::entity entity, const components::Fleet &fleet) {
+            components::PlayerControlled *player_controlled = registry.try_get<components::PlayerControlled>(entity);
             if (!player_controlled) {
                 fleet_entities.push_back(entity);
                 fleet_sizes.push_back(fleet.ships.size());
@@ -286,7 +288,7 @@ void Galaxy::_draw_ui_tab_debug() {
             }
         });
         if (!fleet_entities.empty()) {
-            char first_selection[20];
+            char first_selection[40];
             std::sprintf(first_selection, "%d (%lu ships)", fleet_entities[selected_fleet_idx], fleet_sizes[selected_fleet_idx]);
             if (ImGui::BeginCombo("Fleets", first_selection)) {
                 for (int idx = 0; idx < fleet_entities.size(); idx++) {
@@ -308,6 +310,10 @@ void Galaxy::_draw_ui_tab_debug() {
                 ImGui::SameLine();
                 if (ImGui::Button("Attack")) {
                     _core->dispatcher.enqueue<PlayerBattleStartEvent>(player_fleet, selected_fleet);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Select")) {
+                    _selected_fleet = selected_fleet;
                 }
             }
         }
