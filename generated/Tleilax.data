@@ -113,7 +113,107 @@
       "capacity": 3
     }
   ]
-}#version 300 es
+}Acantha
+Aella
+Alektos
+Alkippe
+Andromeda
+Antigone
+Ariadne
+Astraea
+Chloros
+Chryseos
+Daphne
+Despoina
+Dione
+Eileithyia
+Elektra
+Euadne
+Eudora
+Eunomia
+Hekabe
+Helene
+Hermoione
+Hippolyte
+Ianthe
+Iokaste
+Iole
+Iphigenia
+Ismene
+Kalliope
+Kallisto
+Kalypso
+Karme
+Kassandra
+Kassiopeia
+Kirke
+Kleio
+Klotho
+Klytie
+Kynthia
+Leto
+Megaera
+Melaina
+Melpomene
+Nausikaa
+Nemesis
+Niobe
+Ourania
+Phaenna
+Polymnia
+Semele
+Theia
+Abha
+Aishwarya
+Amala
+Ananda
+Ankita
+Archana
+Avani
+Chandana
+Chandrakanta
+Chetan
+Darshana
+Devi
+Dipti
+Esha
+Gauro
+Gita
+Indira
+Indu
+Jaya
+Kala
+Kalpana
+Kamala
+Kanta
+Kashi
+Kishori
+Lalita
+Lina
+Madhur
+Manju
+Meera
+Mohana
+Mukta
+Nisha
+Nitya
+Padma
+Pratima
+Priya
+Rani
+Sarala
+Shakti
+Shanta
+Shobha
+Sima
+Sonal
+Sumana
+Sunita
+Tara
+Valli
+Vijaya
+Vimala
+#version 300 es
 
 // Input vertex attributes (from vertex shader)
 in vec2 fragTexCoord;
@@ -172,88 +272,149 @@ void main()
 
     // Calculate final vertex position
     gl_Position = mvpi*vec4(vertexPosition, 1.0);
-}#version 300 es
+}#version 100
+
+precision mediump float;
 
 // Input vertex attributes (from vertex shader)
-in lowp vec3 fragPosition;
-in lowp vec2 fragTexCoord;
-in lowp vec4 fragColor;
-in lowp vec3 fragNormal;
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
 
 // Input uniform values
 uniform sampler2D texture0;
-uniform lowp vec4 colDiffuse;
-
-// Output fragment color
-out lowp vec4 finalColor;
+uniform vec4 colDiffuse;
 
 // NOTE: Add here your custom variables
-
-#define     MAX_LIGHTS              4
-#define     LIGHT_DIRECTIONAL       0
-#define     LIGHT_POINT             1
-
-struct MaterialProperty {
-    lowp vec3 color;
-    int useSampler;
-    sampler2D sampler;
-};
-
-struct Light {
-    int enabled;
-    int type;
-    lowp vec3 position;
-    lowp vec3 target;
-    lowp vec4 color;
-};
-
-// Input lighting values
-uniform Light lights[MAX_LIGHTS];
-uniform lowp vec4 ambient;
-uniform lowp vec3 viewPos;
 
 void main()
 {
     // Texel color fetching from texture sampler
-    lowp vec4 texelColor = fragColor;
-    lowp vec3 lightDot = vec3(0.0);
-    lowp vec3 normal = normalize(fragNormal);
-    lowp vec3 viewD = normalize(viewPos - fragPosition);
-    lowp vec3 specular = vec3(0.0);
+    vec4 texelColor = texture2D(texture0, fragTexCoord);
 
     // NOTE: Implement here your fragment shader code
 
-    for (int i = 0; i < MAX_LIGHTS; i++)
-    {
-        if (lights[i].enabled == 1)
-        {
-            lowp vec3 light = vec3(0.0);
-
-            if (lights[i].type == LIGHT_DIRECTIONAL)
-            {
-                light = -normalize(lights[i].target - lights[i].position);
-            }
-
-            if (lights[i].type == LIGHT_POINT)
-            {
-                light = normalize(lights[i].position - fragPosition);
-            }
-
-            lowp float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
-
-            lowp float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            specular += specCo;
-        }
-    }
-
-    finalColor = (texelColor*((colDiffuse + vec4(specular, 1.0))* vec4(lightDot, 1.0)));
-    finalColor += texelColor*(ambient/10.0)*colDiffuse;
-
-    // Gamma correction
-    finalColor = pow(finalColor, vec4(1.0/2.2));
+    gl_FragColor = texelColor*colDiffuse;
 }#version 100
+
+// Input vertex attributes
+attribute vec3 vertexPosition;
+attribute vec2 vertexTexCoord;
+attribute vec3 vertexNormal;
+attribute vec4 vertexColor;
+
+// Input uniform values
+uniform mat4 mvp;
+
+// Output vertex attributes (to fragment shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// NOTE: Add here your custom variables
+
+void main()
+{
+    // Send vertex attributes to fragment shader
+    fragTexCoord = vertexTexCoord;
+    fragColor = vertexColor;
+
+    // Calculate final vertex position
+    gl_Position = mvp*vec4(vertexPosition, 1.0);
+}#version 100
+
+// Input vertex attributes
+attribute vec3 vertexPosition;
+attribute vec2 vertexTexCoord;
+attribute vec3 vertexNormal;
+attribute vec4 vertexColor;
+
+// Input uniform values
+uniform mat4 mvp;
+uniform mat4 matModel;
+
+// Output vertex attributes (to fragment shader)
+varying vec3 fragPosition;
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+varying vec3 fragNormal;
+
+// NOTE: Add here your custom variables
+
+// https://github.com/glslify/glsl-inverse
+mat3 inverse(mat3 m)
+{
+  float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
+  float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];
+  float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];
+
+  float b01 = a22*a11 - a12*a21;
+  float b11 = -a22*a10 + a12*a20;
+  float b21 = a21*a10 - a11*a20;
+
+  float det = a00*b01 + a01*b11 + a02*b21;
+
+  return mat3(b01, (-a22*a01 + a02*a21), (a12*a01 - a02*a11),
+              b11, (a22*a00 - a02*a20), (-a12*a00 + a02*a10),
+              b21, (-a21*a00 + a01*a20), (a11*a00 - a01*a10))/det;
+}
+
+// https://github.com/glslify/glsl-transpose
+mat3 transpose(mat3 m)
+{
+  return mat3(m[0][0], m[1][0], m[2][0],
+              m[0][1], m[1][1], m[2][1],
+              m[0][2], m[1][2], m[2][2]);
+}
+
+void main()
+{
+    // Send vertex attributes to fragment shader
+    fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));
+    fragTexCoord = vertexTexCoord;
+    fragColor = vertexColor;
+
+    mat3 normalMatrix = transpose(inverse(mat3(matModel)));
+    fragNormal = normalize(normalMatrix*vertexNormal);
+
+    // Calculate final vertex position
+    gl_Position = mvp*vec4(vertexPosition, 1.0);
+}
+#version 100
+
+// Input vertex attributes
+attribute vec3 vertexPosition;
+attribute vec2 vertexTexCoord;
+attribute vec3 vertexNormal;
+attribute vec4 vertexColor;
+
+attribute mat4 instanceTransform;
+
+// Input uniform values
+uniform mat4 mvp;
+uniform mat4 matNormal;
+
+// Output vertex attributes (to fragment shader)
+varying vec3 fragPosition;
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+varying vec3 fragNormal;
+
+// NOTE: Add here your custom variables
+
+void main()
+{
+    // Compute MVP for current instance
+    mat4 mvpi = mvp*instanceTransform;
+
+    // Send vertex attributes to fragment shader
+    fragPosition = vec3(mvpi*vec4(vertexPosition, 1.0));
+    fragTexCoord = vertexTexCoord;
+    fragColor = vertexColor;
+    fragNormal = normalize(vec3(matNormal*vec4(vertexNormal, 1.0)));
+
+    // Calculate final vertex position
+    gl_Position = mvpi*vec4(vertexPosition, 1.0);
+}
+#version 100
 
 precision mediump float;
 uniform float time; // time
@@ -334,35 +495,25 @@ uniform vec4 colDiffuse;
 
 // NOTE: Add here your custom variables
 
-float offset = 0.0;
-float frequency = 450.0/3.0;
+// NOTE: Render size values must be passed from code
+const float renderWidth = 800.0;
+const float renderHeight = 450.0;
 
-uniform float time;
+vec3 offset = vec3(0.0, 1.3846153846, 3.2307692308);
+vec3 weight = vec3(0.2270270270, 0.3162162162, 0.0702702703);
 
 void main()
 {
-/*
-    // Scanlines method 1
-    float tval = 0; //time
-    vec2 uv = 0.5 + (fragTexCoord - 0.5)*(0.9 + 0.01*sin(0.5*tval));
+    // Texel color fetching from texture sampler
+    vec3 tc = texture2D(texture0, fragTexCoord).rgb*weight.x;
 
-    vec4 color = texture2D(texture0, fragTexCoord);
+    tc += texture2D(texture0, fragTexCoord + vec2(offset.y)/renderWidth, 0.0).rgb*weight.y;
+    tc += texture2D(texture0, fragTexCoord - vec2(offset.y)/renderWidth, 0.0).rgb*weight.y;
 
-    color = clamp(color*0.5 + 0.5*color*color*1.2, 0.0, 1.0);
-    color *= 0.5 + 0.5*16.0*uv.x*uv.y*(1.0 - uv.x)*(1.0 - uv.y);
-    color *= vec4(0.8, 1.0, 0.7, 1);
-    color *= 0.9 + 0.1*sin(10.0*tval + uv.y*1000.0);
-    color *= 0.97 + 0.03*sin(110.0*tval);
+    tc += texture2D(texture0, fragTexCoord + vec2(offset.z)/renderWidth, 0.0).rgb*weight.z;
+    tc += texture2D(texture0, fragTexCoord - vec2(offset.z)/renderWidth, 0.0).rgb*weight.z;
 
-    fragColor = color;
-*/
-    // Scanlines method 2
-    float globalPos = (fragTexCoord.y + offset) * frequency;
-    float wavePos = cos((fract(globalPos) - 0.5)*3.14);
-
-    vec4 color = texture2D(texture0, fragTexCoord);
-
-    gl_FragColor = mix(vec4(0.0, 0.3, 0.0, 0.0), color, wavePos);
+    gl_FragColor = vec4(tc, 1.0);
 }#version 100
 
 precision mediump float;
@@ -373,19 +524,23 @@ varying vec4 fragColor;
 
 // Input uniform values
 uniform sampler2D texture0;
+uniform sampler2D texture1;
 uniform vec4 colDiffuse;
 
-// NOTE: Add here your custom variables
+uniform float divider;
 
 void main()
 {
     // Texel color fetching from texture sampler
-    vec4 texelColor = texture2D(texture0, fragTexCoord);
+    vec4 texelColor0 = texture2D(texture0, fragTexCoord);
+    vec4 texelColor1 = texture2D(texture1, fragTexCoord);
 
-    // NOTE: Implement here your fragment shader code
+    float x = fract(fragTexCoord.s);
+    float final = smoothstep(divider - 0.1, divider + 0.1, x);
 
-    gl_FragColor = texelColor*colDiffuse;
-}# version 100
+    gl_FragColor = mix(texelColor0, texelColor1, final);
+}
+# version 100
 
 precision mediump float;
 
@@ -555,37 +710,77 @@ varying vec2 fragTexCoord;
 varying vec4 fragColor;
 
 // Input uniform values
-uniform sampler2D texture0;
+uniform sampler2D texture0;     // Depth texture
 uniform vec4 colDiffuse;
 
 // NOTE: Add here your custom variables
-vec2 resolution = vec2(800.0, 450.0);
 
 void main()
 {
-    float x = 1.0/resolution.x;
-    float y = 1.0/resolution.y;
+    float zNear = 0.01; // camera z near
+    float zFar = 10.0;  // camera z far
+    float z = texture2D(texture0, fragTexCoord).x;
 
-    vec4 horizEdge = vec4(0.0);
-    horizEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y - y))*1.0;
-    horizEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y    ))*2.0;
-    horizEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y + y))*1.0;
-    horizEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y - y))*1.0;
-    horizEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y    ))*2.0;
-    horizEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y + y))*1.0;
+    // Linearize depth value
+    float depth = (2.0*zNear)/(zFar + zNear - z*(zFar - zNear));
 
-    vec4 vertEdge = vec4(0.0);
-    vertEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y - y))*1.0;
-    vertEdge -= texture2D(texture0, vec2(fragTexCoord.x    , fragTexCoord.y - y))*2.0;
-    vertEdge -= texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y - y))*1.0;
-    vertEdge += texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y + y))*1.0;
-    vertEdge += texture2D(texture0, vec2(fragTexCoord.x    , fragTexCoord.y + y))*2.0;
-    vertEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y + y))*1.0;
-
-    vec3 edge = sqrt((horizEdge.rgb*horizEdge.rgb) + (vertEdge.rgb*vertEdge.rgb));
-
-    gl_FragColor = vec4(edge, texture2D(texture0, fragTexCoord).a);
+    // Calculate final fragment color
+    gl_FragColor = vec4(depth, depth, depth, 1.0f);
 }#version 100
+
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+
+// Input uniform values
+uniform sampler2D texture0;
+
+// NOTE: Default parameters for Oculus Rift DK2 device
+const vec2 LeftLensCenter = vec2(0.2863248, 0.5);
+const vec2 RightLensCenter = vec2(0.7136753, 0.5);
+const vec2 LeftScreenCenter = vec2(0.25, 0.5);
+const vec2 RightScreenCenter = vec2(0.75, 0.5);
+const vec2 Scale = vec2(0.25, 0.45);
+const vec2 ScaleIn = vec2(4.0, 2.5);
+const vec4 HmdWarpParam = vec4(1.0, 0.22, 0.24, 0.0);
+const vec4 ChromaAbParam = vec4(0.996, -0.004, 1.014, 0.0);
+
+void main()
+{
+    // The following two variables need to be set per eye
+    vec2 LensCenter = fragTexCoord.x < 0.5 ? LeftLensCenter : RightLensCenter;
+    vec2 ScreenCenter = fragTexCoord.x < 0.5 ? LeftScreenCenter : RightScreenCenter;
+
+    // Scales input texture coordinates for distortion: vec2 HmdWarp(vec2 fragTexCoord, vec2 LensCenter)
+    vec2 theta = (fragTexCoord - LensCenter)*ScaleIn;   // Scales to [-1, 1]
+    float rSq = theta.x*theta.x + theta.y*theta.y;
+    vec2 theta1 = theta*(HmdWarpParam.x + HmdWarpParam.y*rSq + HmdWarpParam.z*rSq*rSq + HmdWarpParam.w*rSq*rSq*rSq);
+    //vec2 tc = LensCenter + Scale*theta1;
+
+    // Detect whether blue texture coordinates are out of range since these will scaled out the furthest
+    vec2 thetaBlue = theta1*(ChromaAbParam.z + ChromaAbParam.w*rSq);
+    vec2 tcBlue = LensCenter + Scale*thetaBlue;
+
+    if (any(bvec2(clamp(tcBlue, ScreenCenter - vec2(0.25, 0.5), ScreenCenter + vec2(0.25, 0.5)) - tcBlue))) gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    else
+    {
+        // Do blue texture lookup
+        float blue = texture2D(texture0, tcBlue).b;
+
+        // Do green lookup (no scaling)
+        vec2 tcGreen = LensCenter + Scale*theta1;
+        float green = texture2D(texture0, tcGreen).g;
+
+        // Do red scale and lookup
+        vec2 thetaRed = theta1*(ChromaAbParam.x + ChromaAbParam.y*rSq);
+        vec2 tcRed = LensCenter + Scale*thetaRed;
+        float red = texture2D(texture0, tcRed).r;
+
+        gl_FragColor = vec4(red, green, blue, 1.0);
+    }
+}
+#version 100
 
 precision mediump float;
 
@@ -595,23 +790,135 @@ varying vec4 fragColor;
 
 // Input uniform values
 uniform sampler2D texture0;
-uniform sampler2D texture1;
 uniform vec4 colDiffuse;
 
-uniform float divider;
+// NOTE: Add here your custom variables
 
 void main()
 {
-    // Texel color fetching from texture sampler
-    vec4 texelColor0 = texture2D(texture0, fragTexCoord);
-    vec4 texelColor1 = texture2D(texture1, fragTexCoord);
+    vec4 color = texture2D(texture0, fragTexCoord);
 
-    float x = fract(fragTexCoord.s);
-    float final = smoothstep(divider - 0.1, divider + 0.1, x);
+    color += texture2D(texture0, fragTexCoord + 0.001);
+    color += texture2D(texture0, fragTexCoord + 0.003);
+    color += texture2D(texture0, fragTexCoord + 0.005);
+    color += texture2D(texture0, fragTexCoord + 0.007);
+    color += texture2D(texture0, fragTexCoord + 0.009);
+    color += texture2D(texture0, fragTexCoord + 0.011);
 
-    gl_FragColor = mix(texelColor0, texelColor1, final);
+    color += texture2D(texture0, fragTexCoord - 0.001);
+    color += texture2D(texture0, fragTexCoord - 0.003);
+    color += texture2D(texture0, fragTexCoord - 0.005);
+    color += texture2D(texture0, fragTexCoord - 0.007);
+    color += texture2D(texture0, fragTexCoord - 0.009);
+    color += texture2D(texture0, fragTexCoord - 0.011);
+
+    color.rgb = vec3((color.r + color.g + color.b)/3.0);
+    color = color/9.5;
+
+    gl_FragColor = color;
+}            #version 100
+
+precision mediump float;
+
+/*************************************************************************************
+
+  The Sieve of Eratosthenes -- a simple shader by ProfJski
+  An early prime number sieve: https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
+
+  The screen is divided into a square grid of boxes, each representing an integer value.
+  Each integer is tested to see if it is a prime number.  Primes are colored white.
+  Non-primes are colored with a color that indicates the smallest factor which evenly divdes our integer.
+
+  You can change the scale variable to make a larger or smaller grid.
+  Total number of integers displayed = scale squared, so scale = 100 tests the first 10,000 integers.
+
+  WARNING: If you make scale too large, your GPU may bog down!
+
+***************************************************************************************/
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// Make a nice spectrum of colors based on counter and maxSize
+vec4 Colorizer(float counter, float maxSize)
+{
+    float red = 0.0, green = 0.0, blue = 0.0;
+    float normsize = counter/maxSize;
+
+    red = smoothstep(0.3, 0.7, normsize);
+    green = sin(3.14159*normsize);
+    blue = 1.0 - smoothstep(0.0, 0.4, normsize);
+
+    return vec4(0.8*red, 0.8*green, 0.8*blue, 1.0);
+}
+
+void main()
+{
+    vec4 color = vec4(1.0);
+    float scale = 1000.0; // Makes 100x100 square grid. Change this variable to make a smaller or larger grid.
+    float value = scale*floor(fragTexCoord.y*scale) + floor(fragTexCoord.x*scale);  // Group pixels into boxes representing integer values
+    int valuei = int(value);
+
+    //if ((valuei == 0) || (valuei == 1) || (valuei == 2)) gl_FragColor = vec4(1.0);
+    //else
+    {
+        //for (int i = 2; (i < int(max(2.0, sqrt(value) + 1.0))); i++)
+        // NOTE: On GLSL 100 for loops are restricted and loop condition must be a constant
+        // Tested on RPI, it seems loops are limited around 60 iteractions
+        for (int i = 2; i < 48; i++)
+        {
+            if ((value - float(i)*floor(value/float(i))) <= 0.0)
+            {
+                gl_FragColor = Colorizer(float(i), scale);
+                //break;    // Uncomment to color by the largest factor instead
+            }
+        }
+    }
 }
 #version 100
+
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// NOTE: Add here your custom variables
+
+const float PI = 3.1415926535;
+
+void main()
+{
+    float aperture = 178.0;
+    float apertureHalf = 0.5 * aperture * (PI / 180.0);
+    float maxFactor = sin(apertureHalf);
+
+    vec2 uv = vec2(0.0);
+    vec2 xy = 2.0 * fragTexCoord.xy - 1.0;
+    float d = length(xy);
+
+    if (d < (2.0 - maxFactor))
+    {
+        d = length(xy * maxFactor);
+        float z = sqrt(1.0 - d * d);
+        float r = atan(d, z) / PI;
+        float phi = atan(xy.y, xy.x);
+
+        uv.x = r * cos(phi) + 0.5;
+        uv.y = r * sin(phi) + 0.5;
+    }
+    else
+    {
+        uv = fragTexCoord.xy;
+    }
+
+    gl_FragColor = texture2D(texture0, uv);
+}#version 100
 
 precision mediump float;
 
@@ -707,31 +1014,6 @@ void main()
 }
 #version 100
 
-// Input vertex attributes
-attribute vec3 vertexPosition;
-attribute vec2 vertexTexCoord;
-attribute vec3 vertexNormal;
-attribute vec4 vertexColor;
-
-// Input uniform values
-uniform mat4 mvp;
-
-// Output vertex attributes (to fragment shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// NOTE: Add here your custom variables
-
-void main()
-{
-    // Send vertex attributes to fragment shader
-    fragTexCoord = vertexTexCoord;
-    fragColor = vertexColor;
-
-    // Calculate final vertex position
-    gl_Position = mvp*vec4(vertexPosition, 1.0);
-}#version 100
-
 precision mediump float;
 
 // Input vertex attributes (from vertex shader)
@@ -744,204 +1026,179 @@ uniform vec4 colDiffuse;
 
 // NOTE: Add here your custom variables
 
-// NOTE: Render size values should be passed from code
-const float renderWidth = 800.0;
-const float renderHeight = 450.0;
+void main()
+{
+    // Texel color fetching from texture sampler
+    vec4 texelColor = texture2D(texture0, fragTexCoord)*colDiffuse*fragColor;
 
-float radius = 250.0;
-float angle = 0.8;
+    // Convert texel color to grayscale using NTSC conversion weights
+    float gray = dot(texelColor.rgb, vec3(0.299, 0.587, 0.114));
 
-uniform vec2 center;
+    // Calculate final fragment color
+    gl_FragColor = vec4(gray, gray, gray, texelColor.a);
+}#version 100
+
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+uniform vec2 screenDims;        // Dimensions of the screen
+uniform vec2 c;                 // c.x = real, c.y = imaginary component. Equation done is z^2 + c
+uniform vec2 offset;            // Offset of the scale.
+uniform float zoom;             // Zoom of the scale.
+
+// NOTE: Maximum number of shader for-loop iterations depend on GPU,
+// for example, on RasperryPi for this examply only supports up to 60
+const int MAX_ITERATIONS = 48;  // Max iterations to do
+
+// Square a complex number
+vec2 ComplexSquare(vec2 z)
+{
+    return vec2(
+        z.x * z.x - z.y * z.y,
+        z.x * z.y * 2.0
+    );
+}
+
+// Convert Hue Saturation Value (HSV) color into RGB
+vec3 Hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
 void main()
 {
-    vec2 texSize = vec2(renderWidth, renderHeight);
-    vec2 tc = fragTexCoord*texSize;
-    tc -= center;
+    /**********************************************************************************************
+      Julia sets use a function z^2 + c, where c is a constant.
+      This function is iterated until the nature of the point is determined.
 
-    float dist = length(tc);
+      If the magnitude of the number becomes greater than 2, then from that point onward
+      the number will get bigger and bigger, and will never get smaller (tends towards infinity).
+      2^2 = 4, 4^2 = 8 and so on.
+      So at 2 we stop iterating.
 
-    if (dist < radius)
+      If the number is below 2, we keep iterating.
+      But when do we stop iterating if the number is always below 2 (it converges)?
+      That is what MAX_ITERATIONS is for.
+      Then we can divide the iterations by the MAX_ITERATIONS value to get a normalized value that we can
+      then map to a color.
+
+      We use dot product (z.x * z.x + z.y * z.y) to determine the magnitude (length) squared.
+      And once the magnitude squared is > 4, then magnitude > 2 is also true (saves computational power).
+    *************************************************************************************************/
+
+    // The pixel coordinates are scaled so they are on the mandelbrot scale
+    // NOTE: fragTexCoord already comes as normalized screen coordinates but offset must be normalized before scaling and zoom
+    vec2 z = vec2((fragTexCoord.x + offset.x/screenDims.x)*2.5/zoom, (fragTexCoord.y + offset.y/screenDims.y)*1.5/zoom);
+
+    int iter = 0;
+    for (int iterations = 0; iterations < 60; iterations++)
     {
-        float percent = (radius - dist)/radius;
-        float theta = percent*percent*angle*8.0;
-        float s = sin(theta);
-        float c = cos(theta);
+        z = ComplexSquare(z) + c;  // Iterate function
+        if (dot(z, z) > 4.0) break;
 
-        tc = vec2(dot(tc, vec2(c, -s)), dot(tc, vec2(s, c)));
+        iter = iterations;
     }
 
-    tc += center;
-    vec4 color = texture2D(texture0, tc/texSize)*colDiffuse*fragColor;;
+    // Another few iterations decreases errors in the smoothing calculation.
+    // See http://linas.org/art-gallery/escape/escape.html for more information.
+    z = ComplexSquare(z) + c;
+    z = ComplexSquare(z) + c;
 
-    gl_FragColor = vec4(color.rgb, 1.0);;
+    // This last part smooths the color (again see link above).
+    float smoothVal = float(iter) + 1.0 - (log(log(length(z)))/log(2.0));
+
+    // Normalize the value so it is between 0 and 1.
+    float norm = smoothVal/float(MAX_ITERATIONS);
+
+    // If in set, color black. 0.999 allows for some float accuracy error.
+    if (norm > 0.999) gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    else gl_FragColor = vec4(Hsv2rgb(vec3(norm, 1.0, 1.0)), 1.0);
 }
 #version 100
 
-// Input vertex attributes
-attribute vec3 vertexPosition;
-attribute vec2 vertexTexCoord;
-attribute vec3 vertexNormal;
-attribute vec4 vertexColor;
+precision mediump float;
 
-// Input uniform values
-uniform mat4 mvp;
-uniform mat4 matModel;
-
-// Output vertex attributes (to fragment shader)
+// Input vertex attributes (from vertex shader)
 varying vec3 fragPosition;
 varying vec2 fragTexCoord;
 varying vec4 fragColor;
 varying vec3 fragNormal;
 
-// NOTE: Add here your custom variables
-
-// https://github.com/glslify/glsl-inverse
-mat3 inverse(mat3 m)
-{
-  float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
-  float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];
-  float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];
-
-  float b01 = a22*a11 - a12*a21;
-  float b11 = -a22*a10 + a12*a20;
-  float b21 = a21*a10 - a11*a20;
-
-  float det = a00*b01 + a01*b11 + a02*b21;
-
-  return mat3(b01, (-a22*a01 + a02*a21), (a12*a01 - a02*a11),
-              b11, (a22*a00 - a02*a20), (-a12*a00 + a02*a10),
-              b21, (-a21*a00 + a01*a20), (a11*a00 - a01*a10))/det;
-}
-
-// https://github.com/glslify/glsl-transpose
-mat3 transpose(mat3 m)
-{
-  return mat3(m[0][0], m[1][0], m[2][0],
-              m[0][1], m[1][1], m[2][1],
-              m[0][2], m[1][2], m[2][2]);
-}
-
-void main()
-{
-    // Send vertex attributes to fragment shader
-    fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));
-    fragTexCoord = vertexTexCoord;
-    fragColor = vertexColor;
-
-    mat3 normalMatrix = transpose(inverse(mat3(matModel)));
-    fragNormal = normalize(normalMatrix*vertexNormal);
-
-    // Calculate final vertex position
-    gl_Position = mvp*vec4(vertexPosition, 1.0);
-}
-#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
 // Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
 
 // NOTE: Add here your custom variables
 
-const float PI = 3.1415926535;
+#define     MAX_LIGHTS              4
+#define     LIGHT_DIRECTIONAL       0
+#define     LIGHT_POINT             1
+
+struct MaterialProperty {
+    vec3 color;
+    int useSampler;
+    sampler2D sampler;
+};
+
+struct Light {
+    int enabled;
+    int type;
+    vec3 position;
+    vec3 target;
+    vec4 color;
+};
+
+// Input lighting values
+uniform Light lights[MAX_LIGHTS];
+uniform vec4 ambient;
+uniform vec3 viewPos;
 
 void main()
 {
-    float aperture = 178.0;
-    float apertureHalf = 0.5 * aperture * (PI / 180.0);
-    float maxFactor = sin(apertureHalf);
+    // Texel color fetching from texture sampler
+    vec4 texelColor = fragColor;
+    vec3 lightDot = vec3(0.0);
+    vec3 normal = normalize(fragNormal);
+    vec3 viewD = normalize(viewPos - fragPosition);
+    vec3 specular = vec3(0.0);
 
-    vec2 uv = vec2(0.0);
-    vec2 xy = 2.0 * fragTexCoord.xy - 1.0;
-    float d = length(xy);
+    // NOTE: Implement here your fragment shader code
 
-    if (d < (2.0 - maxFactor))
+    for (int i = 0; i < MAX_LIGHTS; i++)
     {
-        d = length(xy * maxFactor);
-        float z = sqrt(1.0 - d * d);
-        float r = atan(d, z) / PI;
-        float phi = atan(xy.y, xy.x);
+        if (lights[i].enabled == 1)
+        {
+            vec3 light = vec3(0.0);
 
-        uv.x = r * cos(phi) + 0.5;
-        uv.y = r * sin(phi) + 0.5;
-    }
-    else
-    {
-        uv = fragTexCoord.xy;
+            if (lights[i].type == LIGHT_DIRECTIONAL)
+            {
+                light = -normalize(lights[i].target - lights[i].position);
+            }
+
+            if (lights[i].type == LIGHT_POINT)
+            {
+                light = normalize(lights[i].position - fragPosition);
+            }
+
+            float NdotL = max(dot(normal, light), 0.0);
+            lightDot += lights[i].color.rgb*NdotL;
+
+            float specCo = 0.0;
+            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
+            specular += specCo;
+        }
     }
 
-    gl_FragColor = texture2D(texture0, uv);
-}#version 100
+    vec4 finalColor = (texelColor*((colDiffuse + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
+    finalColor += texelColor*(ambient/10.0);
 
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// Input uniform values
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
-
-// NOTE: Add here your custom variables
-
-void main()
-{
-    vec3 color = texture2D(texture0, fragTexCoord).rgb;
-    vec3 colors[3];
-    colors[0] = vec3(0.0, 0.0, 1.0);
-    colors[1] = vec3(1.0, 1.0, 0.0);
-    colors[2] = vec3(1.0, 0.0, 0.0);
-
-    float lum = (color.r + color.g + color.b)/3.0;
-
-    vec3 tc = vec3(0.0, 0.0, 0.0);
-
-    if (lum < 0.5) tc = mix(colors[0], colors[1], lum/0.5);
-    else tc = mix(colors[1], colors[2], (lum - 0.5)/0.5);
-
-    gl_FragColor = vec4(tc, 1.0);
-}#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// Input uniform values
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
-
-uniform float secondes;
-
-uniform vec2 size;
-
-uniform float freqX;
-uniform float freqY;
-uniform float ampX;
-uniform float ampY;
-uniform float speedX;
-uniform float speedY;
-
-void main() {
-    float pixelWidth = 1.0 / size.x;
-    float pixelHeight = 1.0 / size.y;
-    float aspect = pixelHeight / pixelWidth;
-    float boxLeft = 0.0;
-    float boxTop = 0.0;
-
-    vec2 p = fragTexCoord;
-    p.x += cos((fragTexCoord.y - boxTop) * freqX / ( pixelWidth * 750.0) + (secondes * speedX)) * ampX * pixelWidth;
-    p.y += sin((fragTexCoord.x - boxLeft) * freqY * aspect / ( pixelHeight * 750.0) + (secondes * speedY)) * ampY * pixelHeight;
-
-    gl_FragColor = texture2D(texture0, p)*colDiffuse*fragColor;
+    // Gamma correction
+    gl_FragColor = pow(finalColor, vec4(1.0/2.2));
 }
 #version 100
 
@@ -1004,141 +1261,6 @@ void main()
 
 precision mediump float;
 
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// Input uniform values
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
-
-// NOTE: Add here your custom variables
-
-// NOTE: Render size values must be passed from code
-const float renderWidth = 800.0;
-const float renderHeight = 450.0;
-
-vec3 offset = vec3(0.0, 1.3846153846, 3.2307692308);
-vec3 weight = vec3(0.2270270270, 0.3162162162, 0.0702702703);
-
-void main()
-{
-    // Texel color fetching from texture sampler
-    vec3 tc = texture2D(texture0, fragTexCoord).rgb*weight.x;
-
-    tc += texture2D(texture0, fragTexCoord + vec2(offset.y)/renderWidth, 0.0).rgb*weight.y;
-    tc += texture2D(texture0, fragTexCoord - vec2(offset.y)/renderWidth, 0.0).rgb*weight.y;
-
-    tc += texture2D(texture0, fragTexCoord + vec2(offset.z)/renderWidth, 0.0).rgb*weight.z;
-    tc += texture2D(texture0, fragTexCoord - vec2(offset.z)/renderWidth, 0.0).rgb*weight.z;
-
-    gl_FragColor = vec4(tc, 1.0);
-}#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// Input uniform values
-uniform sampler2D texture0;     // Depth texture
-uniform vec4 colDiffuse;
-
-// NOTE: Add here your custom variables
-
-void main()
-{
-    float zNear = 0.01; // camera z near
-    float zFar = 10.0;  // camera z far
-    float z = texture2D(texture0, fragTexCoord).x;
-
-    // Linearize depth value
-    float depth = (2.0*zNear)/(zFar + zNear - z*(zFar - zNear));
-
-    // Calculate final fragment color
-    gl_FragColor = vec4(depth, depth, depth, 1.0f);
-}#version 100
-
-precision mediump float;
-
-#define MAX_SPOTS   3
-
-struct Spot {
-    vec2 pos;        // window coords of spot
-    float inner;    // inner fully transparent centre radius
-    float radius;    // alpha fades out to this radius
-};
-
-uniform Spot spots[MAX_SPOTS];  // Spotlight positions array
-uniform float screenWidth;      // Width of the screen
-
-void main()
-{
-    float alpha = 1.0;
-
-    // Get the position of the current fragment (screen coordinates!)
-    vec2 pos = vec2(gl_FragCoord.x, gl_FragCoord.y);
-
-    // Find out which spotlight is nearest
-    float d = 65000.0;  // some high value
-    int fi = -1;        // found index
-
-    for (int i = 0; i < MAX_SPOTS; i++)
-    {
-        for (int j = 0; j < MAX_SPOTS; j++)
-        {
-            float dj = distance(pos, spots[j].pos) - spots[j].radius + spots[i].radius;
-
-            if (d > dj)
-            {
-                d = dj;
-                fi = i;
-            }
-        }
-    }
-
-    // d now equals distance to nearest spot...
-    // allowing for the different radii of all spotlights
-    if (fi == 0)
-    {
-        if (d > spots[0].radius) alpha = 1.0;
-        else
-        {
-            if (d < spots[0].inner) alpha = 0.0;
-            else alpha = (d - spots[0].inner)/(spots[0].radius - spots[0].inner);
-        }
-    }
-    else if (fi == 1)
-    {
-        if (d > spots[1].radius) alpha = 1.0;
-        else
-        {
-            if (d < spots[1].inner) alpha = 0.0;
-            else alpha = (d - spots[1].inner)/(spots[1].radius - spots[1].inner);
-        }
-    }
-    else if (fi == 2)
-    {
-        if (d > spots[2].radius) alpha = 1.0;
-        else
-        {
-            if (d < spots[2].inner) alpha = 0.0;
-            else alpha = (d - spots[2].inner)/(spots[2].radius - spots[2].inner);
-        }
-    }
-
-    // Right hand side of screen is dimly lit,
-    // could make the threshold value user definable
-    if ((pos.x > screenWidth/2.0) && (alpha > 0.9)) alpha = 0.9;
-
-    // could make the black out colour user definable...
-    gl_FragColor = vec4(0, 0, 0, alpha);
-}
-#version 100
-
-precision mediump float;
-
 const int colors = 8;
 
 // Input vertex attributes (from vertex shader)
@@ -1190,29 +1312,52 @@ uniform vec4 colDiffuse;
 
 // NOTE: Add here your custom variables
 
+// NOTE: Render size values must be passed from code
+const float renderWidth = 800.0;
+const float renderHeight = 450.0;
+
+float pixelWidth = 5.0;
+float pixelHeight = 5.0;
+
 void main()
 {
-    vec4 color = texture2D(texture0, fragTexCoord);
+    float dx = pixelWidth*(1.0/renderWidth);
+    float dy = pixelHeight*(1.0/renderHeight);
 
-    color += texture2D(texture0, fragTexCoord + 0.001);
-    color += texture2D(texture0, fragTexCoord + 0.003);
-    color += texture2D(texture0, fragTexCoord + 0.005);
-    color += texture2D(texture0, fragTexCoord + 0.007);
-    color += texture2D(texture0, fragTexCoord + 0.009);
-    color += texture2D(texture0, fragTexCoord + 0.011);
+    vec2 coord = vec2(dx*floor(fragTexCoord.x/dx), dy*floor(fragTexCoord.y/dy));
 
-    color += texture2D(texture0, fragTexCoord - 0.001);
-    color += texture2D(texture0, fragTexCoord - 0.003);
-    color += texture2D(texture0, fragTexCoord - 0.005);
-    color += texture2D(texture0, fragTexCoord - 0.007);
-    color += texture2D(texture0, fragTexCoord - 0.009);
-    color += texture2D(texture0, fragTexCoord - 0.011);
+    vec3 tc = texture2D(texture0, coord).rgb;
 
-    color.rgb = vec3((color.r + color.g + color.b)/3.0);
-    color = color/9.5;
+    gl_FragColor = vec4(tc, 1.0);
+}#version 100
 
-    gl_FragColor = color;
-}            #version 100
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// NOTE: Add here your custom variables
+
+float gamma = 0.6;
+float numColors = 8.0;
+
+void main()
+{
+    vec3 color = texture2D(texture0, fragTexCoord.xy).rgb;
+
+    color = pow(color, vec3(gamma, gamma, gamma));
+    color = color*numColors;
+    color = floor(color);
+    color = color/numColors;
+    color = pow(color, vec3(1.0/gamma));
+
+    gl_FragColor = vec4(color, 1.0);
+}#version 100
 
 precision mediump float;
 
@@ -1228,69 +1373,21 @@ uniform vec4 colDiffuse;
 
 void main()
 {
-    // Texel color fetching from texture sampler
-    vec4 texelColor = texture2D(texture0, fragTexCoord)*colDiffuse*fragColor;
+    vec3 color = texture2D(texture0, fragTexCoord).rgb;
+    vec3 colors[3];
+    colors[0] = vec3(0.0, 0.0, 1.0);
+    colors[1] = vec3(1.0, 1.0, 0.0);
+    colors[2] = vec3(1.0, 0.0, 0.0);
 
-    // Convert texel color to grayscale using NTSC conversion weights
-    float gray = dot(texelColor.rgb, vec3(0.299, 0.587, 0.114));
+    float lum = (color.r + color.g + color.b)/3.0;
 
-    // Calculate final fragment color
-    gl_FragColor = vec4(gray, gray, gray, texelColor.a);
+    vec3 tc = vec3(0.0, 0.0, 0.0);
+
+    if (lum < 0.5) tc = mix(colors[0], colors[1], lum/0.5);
+    else tc = mix(colors[1], colors[2], (lum - 0.5)/0.5);
+
+    gl_FragColor = vec4(tc, 1.0);
 }#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-
-// Input uniform values
-uniform sampler2D texture0;
-
-// NOTE: Default parameters for Oculus Rift DK2 device
-const vec2 LeftLensCenter = vec2(0.2863248, 0.5);
-const vec2 RightLensCenter = vec2(0.7136753, 0.5);
-const vec2 LeftScreenCenter = vec2(0.25, 0.5);
-const vec2 RightScreenCenter = vec2(0.75, 0.5);
-const vec2 Scale = vec2(0.25, 0.45);
-const vec2 ScaleIn = vec2(4.0, 2.5);
-const vec4 HmdWarpParam = vec4(1.0, 0.22, 0.24, 0.0);
-const vec4 ChromaAbParam = vec4(0.996, -0.004, 1.014, 0.0);
-
-void main()
-{
-    // The following two variables need to be set per eye
-    vec2 LensCenter = fragTexCoord.x < 0.5 ? LeftLensCenter : RightLensCenter;
-    vec2 ScreenCenter = fragTexCoord.x < 0.5 ? LeftScreenCenter : RightScreenCenter;
-
-    // Scales input texture coordinates for distortion: vec2 HmdWarp(vec2 fragTexCoord, vec2 LensCenter)
-    vec2 theta = (fragTexCoord - LensCenter)*ScaleIn;   // Scales to [-1, 1]
-    float rSq = theta.x*theta.x + theta.y*theta.y;
-    vec2 theta1 = theta*(HmdWarpParam.x + HmdWarpParam.y*rSq + HmdWarpParam.z*rSq*rSq + HmdWarpParam.w*rSq*rSq*rSq);
-    //vec2 tc = LensCenter + Scale*theta1;
-
-    // Detect whether blue texture coordinates are out of range since these will scaled out the furthest
-    vec2 thetaBlue = theta1*(ChromaAbParam.z + ChromaAbParam.w*rSq);
-    vec2 tcBlue = LensCenter + Scale*thetaBlue;
-
-    if (any(bvec2(clamp(tcBlue, ScreenCenter - vec2(0.25, 0.5), ScreenCenter + vec2(0.25, 0.5)) - tcBlue))) gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    else
-    {
-        // Do blue texture lookup
-        float blue = texture2D(texture0, tcBlue).b;
-
-        // Do green lookup (no scaling)
-        vec2 tcGreen = LensCenter + Scale*theta1;
-        float green = texture2D(texture0, tcGreen).g;
-
-        // Do red scale and lookup
-        vec2 thetaRed = theta1*(ChromaAbParam.x + ChromaAbParam.y*rSq);
-        vec2 tcRed = LensCenter + Scale*thetaRed;
-        float red = texture2D(texture0, tcRed).r;
-
-        gl_FragColor = vec4(red, green, blue, 1.0);
-    }
-}
-#version 100
 
 precision mediump float;
 
@@ -1726,325 +1823,6 @@ void main()
 precision mediump float;
 
 // Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-uniform vec2 screenDims;        // Dimensions of the screen
-uniform vec2 c;                 // c.x = real, c.y = imaginary component. Equation done is z^2 + c
-uniform vec2 offset;            // Offset of the scale.
-uniform float zoom;             // Zoom of the scale.
-
-// NOTE: Maximum number of shader for-loop iterations depend on GPU,
-// for example, on RasperryPi for this examply only supports up to 60
-const int MAX_ITERATIONS = 48;  // Max iterations to do
-
-// Square a complex number
-vec2 ComplexSquare(vec2 z)
-{
-    return vec2(
-        z.x * z.x - z.y * z.y,
-        z.x * z.y * 2.0
-    );
-}
-
-// Convert Hue Saturation Value (HSV) color into RGB
-vec3 Hsv2rgb(vec3 c)
-{
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-void main()
-{
-    /**********************************************************************************************
-      Julia sets use a function z^2 + c, where c is a constant.
-      This function is iterated until the nature of the point is determined.
-
-      If the magnitude of the number becomes greater than 2, then from that point onward
-      the number will get bigger and bigger, and will never get smaller (tends towards infinity).
-      2^2 = 4, 4^2 = 8 and so on.
-      So at 2 we stop iterating.
-
-      If the number is below 2, we keep iterating.
-      But when do we stop iterating if the number is always below 2 (it converges)?
-      That is what MAX_ITERATIONS is for.
-      Then we can divide the iterations by the MAX_ITERATIONS value to get a normalized value that we can
-      then map to a color.
-
-      We use dot product (z.x * z.x + z.y * z.y) to determine the magnitude (length) squared.
-      And once the magnitude squared is > 4, then magnitude > 2 is also true (saves computational power).
-    *************************************************************************************************/
-
-    // The pixel coordinates are scaled so they are on the mandelbrot scale
-    // NOTE: fragTexCoord already comes as normalized screen coordinates but offset must be normalized before scaling and zoom
-    vec2 z = vec2((fragTexCoord.x + offset.x/screenDims.x)*2.5/zoom, (fragTexCoord.y + offset.y/screenDims.y)*1.5/zoom);
-
-    int iter = 0;
-    for (int iterations = 0; iterations < 60; iterations++)
-    {
-        z = ComplexSquare(z) + c;  // Iterate function
-        if (dot(z, z) > 4.0) break;
-
-        iter = iterations;
-    }
-
-    // Another few iterations decreases errors in the smoothing calculation.
-    // See http://linas.org/art-gallery/escape/escape.html for more information.
-    z = ComplexSquare(z) + c;
-    z = ComplexSquare(z) + c;
-
-    // This last part smooths the color (again see link above).
-    float smoothVal = float(iter) + 1.0 - (log(log(length(z)))/log(2.0));
-
-    // Normalize the value so it is between 0 and 1.
-    float norm = smoothVal/float(MAX_ITERATIONS);
-
-    // If in set, color black. 0.999 allows for some float accuracy error.
-    if (norm > 0.999) gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    else gl_FragColor = vec4(Hsv2rgb(vec3(norm, 1.0, 1.0)), 1.0);
-}
-#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec3 fragPosition;
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-varying vec3 fragNormal;
-
-// Input uniform values
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
-
-// NOTE: Add here your custom variables
-
-#define     MAX_LIGHTS              4
-#define     LIGHT_DIRECTIONAL       0
-#define     LIGHT_POINT             1
-
-struct MaterialProperty {
-    vec3 color;
-    int useSampler;
-    sampler2D sampler;
-};
-
-struct Light {
-    int enabled;
-    int type;
-    vec3 position;
-    vec3 target;
-    vec4 color;
-};
-
-// Input lighting values
-uniform Light lights[MAX_LIGHTS];
-uniform vec4 ambient;
-uniform vec3 viewPos;
-
-void main()
-{
-    // Texel color fetching from texture sampler
-    vec4 texelColor = fragColor;
-    vec3 lightDot = vec3(0.0);
-    vec3 normal = normalize(fragNormal);
-    vec3 viewD = normalize(viewPos - fragPosition);
-    vec3 specular = vec3(0.0);
-
-    // NOTE: Implement here your fragment shader code
-
-    for (int i = 0; i < MAX_LIGHTS; i++)
-    {
-        if (lights[i].enabled == 1)
-        {
-            vec3 light = vec3(0.0);
-
-            if (lights[i].type == LIGHT_DIRECTIONAL)
-            {
-                light = -normalize(lights[i].target - lights[i].position);
-            }
-
-            if (lights[i].type == LIGHT_POINT)
-            {
-                light = normalize(lights[i].position - fragPosition);
-            }
-
-            float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
-
-            float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            specular += specCo;
-        }
-    }
-
-    vec4 finalColor = (texelColor*((colDiffuse + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
-    finalColor += texelColor*(ambient/10.0);
-
-    // Gamma correction
-    gl_FragColor = pow(finalColor, vec4(1.0/2.2));
-}
-#version 100
-
-precision mediump float;
-
-/*************************************************************************************
-
-  The Sieve of Eratosthenes -- a simple shader by ProfJski
-  An early prime number sieve: https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
-
-  The screen is divided into a square grid of boxes, each representing an integer value.
-  Each integer is tested to see if it is a prime number.  Primes are colored white.
-  Non-primes are colored with a color that indicates the smallest factor which evenly divdes our integer.
-
-  You can change the scale variable to make a larger or smaller grid.
-  Total number of integers displayed = scale squared, so scale = 100 tests the first 10,000 integers.
-
-  WARNING: If you make scale too large, your GPU may bog down!
-
-***************************************************************************************/
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// Make a nice spectrum of colors based on counter and maxSize
-vec4 Colorizer(float counter, float maxSize)
-{
-    float red = 0.0, green = 0.0, blue = 0.0;
-    float normsize = counter/maxSize;
-
-    red = smoothstep(0.3, 0.7, normsize);
-    green = sin(3.14159*normsize);
-    blue = 1.0 - smoothstep(0.0, 0.4, normsize);
-
-    return vec4(0.8*red, 0.8*green, 0.8*blue, 1.0);
-}
-
-void main()
-{
-    vec4 color = vec4(1.0);
-    float scale = 1000.0; // Makes 100x100 square grid. Change this variable to make a smaller or larger grid.
-    float value = scale*floor(fragTexCoord.y*scale) + floor(fragTexCoord.x*scale);  // Group pixels into boxes representing integer values
-    int valuei = int(value);
-
-    //if ((valuei == 0) || (valuei == 1) || (valuei == 2)) gl_FragColor = vec4(1.0);
-    //else
-    {
-        //for (int i = 2; (i < int(max(2.0, sqrt(value) + 1.0))); i++)
-        // NOTE: On GLSL 100 for loops are restricted and loop condition must be a constant
-        // Tested on RPI, it seems loops are limited around 60 iteractions
-        for (int i = 2; i < 48; i++)
-        {
-            if ((value - float(i)*floor(value/float(i))) <= 0.0)
-            {
-                gl_FragColor = Colorizer(float(i), scale);
-                //break;    // Uncomment to color by the largest factor instead
-            }
-        }
-    }
-}
-#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// Input uniform values
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
-
-// NOTE: Add here your custom variables
-
-// NOTE: Render size values must be passed from code
-const float renderWidth = 800.0;
-const float renderHeight = 450.0;
-
-float pixelWidth = 5.0;
-float pixelHeight = 5.0;
-
-void main()
-{
-    float dx = pixelWidth*(1.0/renderWidth);
-    float dy = pixelHeight*(1.0/renderHeight);
-
-    vec2 coord = vec2(dx*floor(fragTexCoord.x/dx), dy*floor(fragTexCoord.y/dy));
-
-    vec3 tc = texture2D(texture0, coord).rgb;
-
-    gl_FragColor = vec4(tc, 1.0);
-}#version 100
-
-// Input vertex attributes
-attribute vec3 vertexPosition;
-attribute vec2 vertexTexCoord;
-attribute vec3 vertexNormal;
-attribute vec4 vertexColor;
-
-attribute mat4 instanceTransform;
-
-// Input uniform values
-uniform mat4 mvp;
-uniform mat4 matNormal;
-
-// Output vertex attributes (to fragment shader)
-varying vec3 fragPosition;
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-varying vec3 fragNormal;
-
-// NOTE: Add here your custom variables
-
-void main()
-{
-    // Compute MVP for current instance
-    mat4 mvpi = mvp*instanceTransform;
-
-    // Send vertex attributes to fragment shader
-    fragPosition = vec3(mvpi*vec4(vertexPosition, 1.0));
-    fragTexCoord = vertexTexCoord;
-    fragColor = vertexColor;
-    fragNormal = normalize(vec3(matNormal*vec4(vertexNormal, 1.0)));
-
-    // Calculate final vertex position
-    gl_Position = mvpi*vec4(vertexPosition, 1.0);
-}
-#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
-
-// Input uniform values
-uniform sampler2D texture0;
-uniform vec4 colDiffuse;
-
-// NOTE: Add here your custom variables
-
-float gamma = 0.6;
-float numColors = 8.0;
-
-void main()
-{
-    vec3 color = texture2D(texture0, fragTexCoord.xy).rgb;
-
-    color = pow(color, vec3(gamma, gamma, gamma));
-    color = color*numColors;
-    color = floor(color);
-    color = color/numColors;
-    color = pow(color, vec3(1.0/gamma));
-
-    gl_FragColor = vec4(color, 1.0);
-}#version 100
-
-precision mediump float;
-
-// Input vertex attributes (from vertex shader)
 varying vec2 fragTexCoord;           // Texture coordinates (sampler2D)
 varying vec4 fragColor;              // Tint color
 
@@ -2079,103 +1857,326 @@ void main()
     // Blend the two layers
     gl_FragColor = mix(layer1, layer2, layer2.a);
 }
-Acantha
-Aella
-Alektos
-Alkippe
-Andromeda
-Antigone
-Ariadne
-Astraea
-Chloros
-Chryseos
-Daphne
-Despoina
-Dione
-Eileithyia
-Elektra
-Euadne
-Eudora
-Eunomia
-Hekabe
-Helene
-Hermoione
-Hippolyte
-Ianthe
-Iokaste
-Iole
-Iphigenia
-Ismene
-Kalliope
-Kallisto
-Kalypso
-Karme
-Kassandra
-Kassiopeia
-Kirke
-Kleio
-Klotho
-Klytie
-Kynthia
-Leto
-Megaera
-Melaina
-Melpomene
-Nausikaa
-Nemesis
-Niobe
-Ourania
-Phaenna
-Polymnia
-Semele
-Theia
-Abha
-Aishwarya
-Amala
-Ananda
-Ankita
-Archana
-Avani
-Chandana
-Chandrakanta
-Chetan
-Darshana
-Devi
-Dipti
-Esha
-Gauro
-Gita
-Indira
-Indu
-Jaya
-Kala
-Kalpana
-Kamala
-Kanta
-Kashi
-Kishori
-Lalita
-Lina
-Madhur
-Manju
-Meera
-Mohana
-Mukta
-Nisha
-Nitya
-Padma
-Pratima
-Priya
-Rani
-Sarala
-Shakti
-Shanta
-Shobha
-Sima
-Sonal
-Sumana
-Sunita
-Tara
-Valli
-Vijaya
-Vimala
+#version 100
+
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// NOTE: Add here your custom variables
+
+float offset = 0.0;
+float frequency = 450.0/3.0;
+
+uniform float time;
+
+void main()
+{
+/*
+    // Scanlines method 1
+    float tval = 0; //time
+    vec2 uv = 0.5 + (fragTexCoord - 0.5)*(0.9 + 0.01*sin(0.5*tval));
+
+    vec4 color = texture2D(texture0, fragTexCoord);
+
+    color = clamp(color*0.5 + 0.5*color*color*1.2, 0.0, 1.0);
+    color *= 0.5 + 0.5*16.0*uv.x*uv.y*(1.0 - uv.x)*(1.0 - uv.y);
+    color *= vec4(0.8, 1.0, 0.7, 1);
+    color *= 0.9 + 0.1*sin(10.0*tval + uv.y*1000.0);
+    color *= 0.97 + 0.03*sin(110.0*tval);
+
+    fragColor = color;
+*/
+    // Scanlines method 2
+    float globalPos = (fragTexCoord.y + offset) * frequency;
+    float wavePos = cos((fract(globalPos) - 0.5)*3.14);
+
+    vec4 color = texture2D(texture0, fragTexCoord);
+
+    gl_FragColor = mix(vec4(0.0, 0.3, 0.0, 0.0), color, wavePos);
+}#version 100
+
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// NOTE: Add here your custom variables
+vec2 resolution = vec2(800.0, 450.0);
+
+void main()
+{
+    float x = 1.0/resolution.x;
+    float y = 1.0/resolution.y;
+
+    vec4 horizEdge = vec4(0.0);
+    horizEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y - y))*1.0;
+    horizEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y    ))*2.0;
+    horizEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y + y))*1.0;
+    horizEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y - y))*1.0;
+    horizEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y    ))*2.0;
+    horizEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y + y))*1.0;
+
+    vec4 vertEdge = vec4(0.0);
+    vertEdge -= texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y - y))*1.0;
+    vertEdge -= texture2D(texture0, vec2(fragTexCoord.x    , fragTexCoord.y - y))*2.0;
+    vertEdge -= texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y - y))*1.0;
+    vertEdge += texture2D(texture0, vec2(fragTexCoord.x - x, fragTexCoord.y + y))*1.0;
+    vertEdge += texture2D(texture0, vec2(fragTexCoord.x    , fragTexCoord.y + y))*2.0;
+    vertEdge += texture2D(texture0, vec2(fragTexCoord.x + x, fragTexCoord.y + y))*1.0;
+
+    vec3 edge = sqrt((horizEdge.rgb*horizEdge.rgb) + (vertEdge.rgb*vertEdge.rgb));
+
+    gl_FragColor = vec4(edge, texture2D(texture0, fragTexCoord).a);
+}#version 100
+
+precision mediump float;
+
+#define MAX_SPOTS   3
+
+struct Spot {
+    vec2 pos;        // window coords of spot
+    float inner;    // inner fully transparent centre radius
+    float radius;    // alpha fades out to this radius
+};
+
+uniform Spot spots[MAX_SPOTS];  // Spotlight positions array
+uniform float screenWidth;      // Width of the screen
+
+void main()
+{
+    float alpha = 1.0;
+
+    // Get the position of the current fragment (screen coordinates!)
+    vec2 pos = vec2(gl_FragCoord.x, gl_FragCoord.y);
+
+    // Find out which spotlight is nearest
+    float d = 65000.0;  // some high value
+    int fi = -1;        // found index
+
+    for (int i = 0; i < MAX_SPOTS; i++)
+    {
+        for (int j = 0; j < MAX_SPOTS; j++)
+        {
+            float dj = distance(pos, spots[j].pos) - spots[j].radius + spots[i].radius;
+
+            if (d > dj)
+            {
+                d = dj;
+                fi = i;
+            }
+        }
+    }
+
+    // d now equals distance to nearest spot...
+    // allowing for the different radii of all spotlights
+    if (fi == 0)
+    {
+        if (d > spots[0].radius) alpha = 1.0;
+        else
+        {
+            if (d < spots[0].inner) alpha = 0.0;
+            else alpha = (d - spots[0].inner)/(spots[0].radius - spots[0].inner);
+        }
+    }
+    else if (fi == 1)
+    {
+        if (d > spots[1].radius) alpha = 1.0;
+        else
+        {
+            if (d < spots[1].inner) alpha = 0.0;
+            else alpha = (d - spots[1].inner)/(spots[1].radius - spots[1].inner);
+        }
+    }
+    else if (fi == 2)
+    {
+        if (d > spots[2].radius) alpha = 1.0;
+        else
+        {
+            if (d < spots[2].inner) alpha = 0.0;
+            else alpha = (d - spots[2].inner)/(spots[2].radius - spots[2].inner);
+        }
+    }
+
+    // Right hand side of screen is dimly lit,
+    // could make the threshold value user definable
+    if ((pos.x > screenWidth/2.0) && (alpha > 0.9)) alpha = 0.9;
+
+    // could make the black out colour user definable...
+    gl_FragColor = vec4(0, 0, 0, alpha);
+}
+#version 100
+
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// NOTE: Add here your custom variables
+
+// NOTE: Render size values should be passed from code
+const float renderWidth = 800.0;
+const float renderHeight = 450.0;
+
+float radius = 250.0;
+float angle = 0.8;
+
+uniform vec2 center;
+
+void main()
+{
+    vec2 texSize = vec2(renderWidth, renderHeight);
+    vec2 tc = fragTexCoord*texSize;
+    tc -= center;
+
+    float dist = length(tc);
+
+    if (dist < radius)
+    {
+        float percent = (radius - dist)/radius;
+        float theta = percent*percent*angle*8.0;
+        float s = sin(theta);
+        float c = cos(theta);
+
+        tc = vec2(dot(tc, vec2(c, -s)), dot(tc, vec2(s, c)));
+    }
+
+    tc += center;
+    vec4 color = texture2D(texture0, tc/texSize)*colDiffuse*fragColor;;
+
+    gl_FragColor = vec4(color.rgb, 1.0);;
+}
+#version 100
+
+precision mediump float;
+
+// Input vertex attributes (from vertex shader)
+varying vec2 fragTexCoord;
+varying vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+uniform float secondes;
+
+uniform vec2 size;
+
+uniform float freqX;
+uniform float freqY;
+uniform float ampX;
+uniform float ampY;
+uniform float speedX;
+uniform float speedY;
+
+void main() {
+    float pixelWidth = 1.0 / size.x;
+    float pixelHeight = 1.0 / size.y;
+    float aspect = pixelHeight / pixelWidth;
+    float boxLeft = 0.0;
+    float boxTop = 0.0;
+
+    vec2 p = fragTexCoord;
+    p.x += cos((fragTexCoord.y - boxTop) * freqX / ( pixelWidth * 750.0) + (secondes * speedX)) * ampX * pixelWidth;
+    p.y += sin((fragTexCoord.x - boxLeft) * freqY * aspect / ( pixelHeight * 750.0) + (secondes * speedY)) * ampY * pixelHeight;
+
+    gl_FragColor = texture2D(texture0, p)*colDiffuse*fragColor;
+}
+#version 300 es
+
+// Input vertex attributes (from vertex shader)
+in lowp vec3 fragPosition;
+in lowp vec2 fragTexCoord;
+in lowp vec4 fragColor;
+in lowp vec3 fragNormal;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform lowp vec4 colDiffuse;
+
+// Output fragment color
+out lowp vec4 finalColor;
+
+// NOTE: Add here your custom variables
+
+#define     MAX_LIGHTS              4
+#define     LIGHT_DIRECTIONAL       0
+#define     LIGHT_POINT             1
+
+struct MaterialProperty {
+    lowp vec3 color;
+    int useSampler;
+    sampler2D sampler;
+};
+
+struct Light {
+    int enabled;
+    int type;
+    lowp vec3 position;
+    lowp vec3 target;
+    lowp vec4 color;
+};
+
+// Input lighting values
+uniform Light lights[MAX_LIGHTS];
+uniform lowp vec4 ambient;
+uniform lowp vec3 viewPos;
+
+void main()
+{
+    // Texel color fetching from texture sampler
+    lowp vec4 texelColor = fragColor;
+    lowp vec3 lightDot = vec3(0.0);
+    lowp vec3 normal = normalize(fragNormal);
+    lowp vec3 viewD = normalize(viewPos - fragPosition);
+    lowp vec3 specular = vec3(0.0);
+
+    // NOTE: Implement here your fragment shader code
+
+    for (int i = 0; i < MAX_LIGHTS; i++)
+    {
+        if (lights[i].enabled == 1)
+        {
+            lowp vec3 light = vec3(0.0);
+
+            if (lights[i].type == LIGHT_DIRECTIONAL)
+            {
+                light = -normalize(lights[i].target - lights[i].position);
+            }
+
+            if (lights[i].type == LIGHT_POINT)
+            {
+                light = normalize(lights[i].position - fragPosition);
+            }
+
+            lowp float NdotL = max(dot(normal, light), 0.0);
+            lightDot += lights[i].color.rgb*NdotL;
+
+            lowp float specCo = 0.0;
+            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
+            specular += specCo;
+        }
+    }
+
+    finalColor = (texelColor*((colDiffuse + vec4(specular, 1.0))* vec4(lightDot, 1.0)));
+    finalColor += texelColor*(ambient/10.0)*colDiffuse;
+
+    // Gamma correction
+    finalColor = pow(finalColor, vec4(1.0/2.2));
+}
